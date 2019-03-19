@@ -31,7 +31,7 @@ namespace ShaderTestMod
             testshader = capi.Shader.NewShaderProgram();
             int program = capi.Shader.RegisterFileShaderProgram("testshader", testshader);
             testshader = capi.Render.GetShader(program);
-            testshader.PrepareUniformLocations("iTime", "iResolution");
+            testshader.PrepareUniformLocations("iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition");
             testshader.Compile();
 
             if (testRenderer != null)
@@ -78,10 +78,16 @@ namespace ShaderTestMod
             curShader.Stop();
 
             prog.Use();
-
+            
             capi.Render.GlToggleBlend(true);
             prog.Uniform("iTime", capi.World.ElapsedMilliseconds / 500f);
             prog.Uniform("iResolution", new Vec2f(capi.Render.FrameWidth, capi.Render.FrameHeight));
+            prog.Uniform("iMouse", new Vec2f(capi.Input.MouseX, capi.Input.MouseY));
+            prog.Uniform("iCamera", new Vec2f(capi.World.Player.CameraPitch, capi.World.Player.CameraYaw));
+            prog.Uniform("iSunPos", capi.World.Calendar.SunPosition);
+            prog.Uniform("iMoonPos", capi.World.Calendar.MoonPosition);
+            prog.Uniform("iMoonPhase", (float)capi.World.Calendar.MoonPhaseExact);
+            prog.Uniform("iPlayerPosition", capi.World.Player.Entity.LocalPos.XYZ.ToVec3f());
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
