@@ -8,6 +8,11 @@ uniform vec2 iCamera;
 uniform vec3 iSunPos;
 uniform vec3 iMoonPos;
 uniform vec3 iPlayerPosition;
+//0 or 1
+uniform vec4 iControls1; //Backward, Down, FloorSitting, Forward
+uniform vec4 iControls2; //Jump, Left, LeftMouseDown, Right
+uniform vec4 iControls3; //RightMouseDown, Sitting, Sneak, Sprint
+uniform vec2 iControls4; //TriesToMove, Up
 uniform float iMoonPhase;
 uniform float iTime;
 uniform float iTemperature;

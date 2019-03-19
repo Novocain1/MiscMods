@@ -33,7 +33,7 @@ namespace ShaderTestMod
             basicshader = capi.Render.GetShader(program);
             basicshader.PrepareUniformLocations(
                 "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
-                "iTemperature", "iRainfall"
+                "iTemperature", "iRainfall", "iControls1", "iControls2", "iControls3", "iControls4"
                 );
             basicshader.Compile();
 
@@ -77,6 +77,7 @@ namespace ShaderTestMod
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (!capi.World.Player.Entity.Controls.Sneak) return;
+
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
@@ -95,9 +96,37 @@ namespace ShaderTestMod
             prog.Uniform("iTemperature", capi.World.BlockAccessor.GetClimateAt(pos).Temperature);
             prog.Uniform("iRainfall", capi.World.BlockAccessor.GetClimateAt(pos).Rainfall);
 
+            float[] c = ControlsAsFloats(capi.World.Player.Entity);
+            prog.Uniform("iControls1", new Vec4f(c[0], c[1], c[2], c[3]));
+            prog.Uniform("iControls2", new Vec4f(c[4], c[5], c[6], c[7]));
+            prog.Uniform("iControls3", new Vec4f(c[8], c[9], c[10], c[11]));
+            prog.Uniform("iControls4", new Vec2f(c[12], c[13]));
+
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
             curShader.Use();
+        }
+
+        public float[] ControlsAsFloats(EntityPlayer entity)
+        {
+            EntityControls c = entity.Controls;
+            return new float[]
+            {
+                c.Backward ? 1 : 0, //0
+                c.Down ? 1 : 0, //1
+                c.FloorSitting ? 1 : 0, //2
+                c.Forward ? 1 : 0, //3
+                c.Jump ? 1 : 0, //4
+                c.Left ? 1 : 0, //5
+                c.LeftMouseDown ? 1 : 0, //6
+                c.Right ? 1 : 0, //7
+                c.RightMouseDown ? 1 : 0, //8
+                c.Sitting ? 1 : 0, //9
+                c.Sneak ? 1 : 0, //10
+                c.Sprint ? 1 : 0, //11
+                c.TriesToMove ? 1 : 0, // 12
+                c.Up ? 1 : 0, //13
+            };
         }
     }
 }
