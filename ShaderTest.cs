@@ -11,7 +11,7 @@ namespace ShaderTestMod
 {
     public class ShaderTest : ModSystem
     {
-        IShaderProgram testshader;
+        IShaderProgram basicshader;
         ICoreClientAPI capi;
         TestRenderer testRenderer;
 
@@ -22,21 +22,24 @@ namespace ShaderTestMod
             api.Event.ReloadShader += LoadShader;
             LoadShader();
 
-            testRenderer = new TestRenderer(api, testshader);
-            api.Event.RegisterRenderer(testRenderer, EnumRenderStage.Ortho, "testshader");
+            testRenderer = new TestRenderer(api, basicshader);
+            api.Event.RegisterRenderer(testRenderer, EnumRenderStage.Ortho, "basicshader");
         }
 
         public bool LoadShader()
         {
-            testshader = capi.Shader.NewShaderProgram();
-            int program = capi.Shader.RegisterFileShaderProgram("testshader", testshader);
-            testshader = capi.Render.GetShader(program);
-            testshader.PrepareUniformLocations("iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition");
-            testshader.Compile();
+            basicshader = capi.Shader.NewShaderProgram();
+            int program = capi.Shader.RegisterFileShaderProgram("basicshader", basicshader);
+            basicshader = capi.Render.GetShader(program);
+            basicshader.PrepareUniformLocations(
+                "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
+                "iTemperature", "iRainfall"
+                );
+            basicshader.Compile();
 
             if (testRenderer != null)
             {
-                testRenderer.prog = testshader;
+                testRenderer.prog = basicshader;
             }
 
             return true;
@@ -74,6 +77,7 @@ namespace ShaderTestMod
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (!capi.World.Player.Entity.Controls.Sneak) return;
+            BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
 
@@ -88,6 +92,8 @@ namespace ShaderTestMod
             prog.Uniform("iMoonPos", capi.World.Calendar.MoonPosition);
             prog.Uniform("iMoonPhase", (float)capi.World.Calendar.MoonPhaseExact);
             prog.Uniform("iPlayerPosition", capi.World.Player.Entity.LocalPos.XYZ.ToVec3f());
+            prog.Uniform("iTemperature", capi.World.BlockAccessor.GetClimateAt(pos).Temperature);
+            prog.Uniform("iRainfall", capi.World.BlockAccessor.GetClimateAt(pos).Rainfall);
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();

@@ -1,6 +1,7 @@
 #version 330 core
 in vec2 uv;
 out vec4 outColor;
+
 uniform vec2 iResolution;
 uniform vec2 iMouse;
 uniform vec2 iCamera;
@@ -9,6 +10,8 @@ uniform vec3 iMoonPos;
 uniform vec3 iPlayerPosition;
 uniform float iMoonPhase;
 uniform float iTime;
+uniform float iTemperature;
+uniform float iRainfall;
 
 void main () {
 	vec2 uv2 = vec2(uv - 0.5);
