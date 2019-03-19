@@ -76,8 +76,6 @@ namespace ShaderTestMod
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (!capi.World.Player.Entity.Controls.Sneak) return;
-
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
