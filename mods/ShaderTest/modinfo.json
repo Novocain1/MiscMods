@@ -1,0 +1,11 @@
+{
+	"type": "code",
+	"name": "ShaderTest",
+	"modid": "shadertest",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	"game": "1.8.6",
+	}
+}
