@@ -21,6 +21,8 @@ uniform float iRainfall;
 uniform float iCurrentHealth;
 uniform float iMaxHealth;
 uniform float iActiveItem;
+uniform float iLookingAtBlock;
+uniform float iLookingAtEntity;
 
 void main(void)
 {

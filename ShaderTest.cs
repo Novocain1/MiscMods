@@ -29,7 +29,8 @@ namespace ShaderTestMod
             "iControls1", "iControls2",
             "iControls3", "iControls4",
             "iCurrentHealth", "iMaxHealth",
-            "iActiveItem"
+            "iActiveItem", "iLookingAtBlock",
+            "iLookingAtEntity"
         };
 
         readonly string[] orthoShaderKeys = new string[] { "chickenshader" };
@@ -120,6 +121,7 @@ namespace ShaderTestMod
         {
             IPlayer player = capi.World.Player;
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
+            BlockPos lPos = player.CurrentBlockSelection != null ? player.CurrentBlockSelection.Position : new BlockPos(0,-1,0);
             return new float[]
             {
                 (float)capi.World.Calendar.MoonPhaseExact,
@@ -128,6 +130,8 @@ namespace ShaderTestMod
                 (float)healthTree.TryGetFloat("currenthealth"),
                 (float)healthTree.TryGetFloat("maxhealth"),
                 player.InventoryManager.ActiveHotbarSlot.Itemstack != null ? player.InventoryManager.ActiveHotbarSlot.Itemstack.Collectible.Id : -1,
+                capi.World.BlockAccessor.GetBlock(lPos).Id,
+                player.CurrentEntitySelection != null ? player.CurrentEntitySelection.Entity.EntityId : -1,
             };
         }
 
@@ -202,6 +206,8 @@ namespace ShaderTestMod
             prog.Uniform("iCurrentHealth", floats[3]);
             prog.Uniform("iMaxHealth", floats[4]);
             prog.Uniform("iActiveItem", floats[5]);
+            prog.Uniform("iLookingAtBlock", floats[6]);
+            prog.Uniform("iLookingAtEntity", floats[7]);
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
