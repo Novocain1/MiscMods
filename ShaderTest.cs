@@ -13,9 +13,20 @@ namespace ShaderTestMod
     public class ShaderTest : ModSystem
     {
         ICoreClientAPI capi;
-        IShaderProgram[] orthoShaders;
         OrthoRenderer[] orthoRenderers;
         public static float[] controls;
+
+        readonly string[] uniforms = new string[]
+        {
+            "iTime", "iResolution",
+            "iMouse", "iCamera",
+            "iSunPos", "iMoonPos",
+            "iMoonPhase", "iPlayerPosition",
+            "iTemperature", "iRainfall",
+            "iControls1", "iControls2",
+            "iControls3", "iControls4",
+            "iCurrentHealth", "iMaxHealth"
+        };
 
         readonly string[] orthoShaderKeys = new string[] { "basicshader" };
 
@@ -23,24 +34,24 @@ namespace ShaderTestMod
         {
             capi = api;
             api.Event.PlayerJoin += StartShade;
-
         }
 
         public void StartShade(IPlayer player)
         {
+            controls = ControlsAsFloats(player.Entity);
+            capi.Event.RegisterGameTickListener(dt => controls = ControlsAsFloats(player.Entity), 30);
+
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
 
-            for (int i = 0; i < orthoShaders.Length; i++)
+            for (int i = 0; i < orthoRenderers.Length; i++)
             {
                 capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
             }
-            capi.Event.RegisterGameTickListener(dt => controls = ControlsAsFloats(player.Entity), 30);
         }
 
         public bool LoadShaders()
         {
-            List<IShaderProgram> programs = new List<IShaderProgram>();
             List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
 
             for (int i = 0; i < orthoShaderKeys.Length; i++)
@@ -48,10 +59,7 @@ namespace ShaderTestMod
                 IShaderProgram shader = capi.Shader.NewShaderProgram();
                 int program = capi.Shader.RegisterFileShaderProgram(orthoShaderKeys[i], shader);
                 shader = capi.Render.GetShader(program);
-                shader.PrepareUniformLocations(
-                    "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
-                    "iTemperature", "iRainfall", "iControls1", "iControls2", "iControls3", "iControls4", "iCurrentHealth", "iMaxHealth"
-                );
+                shader.PrepareUniformLocations(uniforms);
                 shader.Compile();
 
                 OrthoRenderer renderer = new OrthoRenderer(capi, shader);
@@ -64,12 +72,8 @@ namespace ShaderTestMod
                     orthoRenderers[i].prog = shader;
                     capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
                 }
-
-                programs.Add(shader);
                 rendererers.Add(renderer);
             }
-
-            orthoShaders = programs.ToArray();
             orthoRenderers = rendererers.ToArray();
 
             return true;
@@ -123,10 +127,6 @@ namespace ShaderTestMod
             healthTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
         }
 
-        public void Dispose()
-        {
-        }
-
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (prog.Disposed) return;
@@ -160,6 +160,10 @@ namespace ShaderTestMod
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
             curShader.Use();
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
