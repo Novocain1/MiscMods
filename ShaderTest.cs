@@ -13,10 +13,11 @@ namespace ShaderTestMod
     public class ShaderTest : ModSystem
     {
         ICoreClientAPI capi;
-        IShaderProgram[] shaderPrograms;
-        Renderer[] renderers;
+        IShaderProgram[] orthoShaders;
+        OrthoRenderer[] orthoRenderers;
+        public static float[] controls;
 
-        readonly string[] orthoShaders = new string[] { "basicshader" };
+        readonly string[] orthoShaderKeys = new string[] { "basicshader" };
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -30,21 +31,22 @@ namespace ShaderTestMod
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
 
-            for (int i = 0; i < shaderPrograms.Length; i++)
+            for (int i = 0; i < orthoShaders.Length; i++)
             {
-                capi.Event.RegisterRenderer(renderers[i], EnumRenderStage.Ortho, orthoShaders[i]);
+                capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
             }
+            capi.Event.RegisterGameTickListener(dt => controls = ControlsAsFloats(player.Entity), 30);
         }
 
         public bool LoadShaders()
         {
             List<IShaderProgram> programs = new List<IShaderProgram>();
-            List<Renderer> rendererers = new List<Renderer>();
+            List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
 
-            for (int i = 0; i < orthoShaders.Length; i++)
+            for (int i = 0; i < orthoShaderKeys.Length; i++)
             {
                 IShaderProgram shader = capi.Shader.NewShaderProgram();
-                int program = capi.Shader.RegisterFileShaderProgram(orthoShaders[i], shader);
+                int program = capi.Shader.RegisterFileShaderProgram(orthoShaderKeys[i], shader);
                 shader = capi.Render.GetShader(program);
                 shader.PrepareUniformLocations(
                     "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
@@ -52,29 +54,51 @@ namespace ShaderTestMod
                 );
                 shader.Compile();
 
-                Renderer renderer = new Renderer(capi, shader);
+                OrthoRenderer renderer = new OrthoRenderer(capi, shader);
 
-                if (renderers != null)
+                if (orthoRenderers != null)
                 {
-                    renderers[i].Dispose();
-                    capi.Event.UnregisterRenderer(renderers[i], EnumRenderStage.Ortho);
+                    orthoRenderers[i].Dispose();
+                    capi.Event.UnregisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho);
 
-                    renderers[i].prog = shader;
-                    capi.Event.RegisterRenderer(renderers[i], EnumRenderStage.Ortho, orthoShaders[i]);
+                    orthoRenderers[i].prog = shader;
+                    capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
                 }
 
                 programs.Add(shader);
                 rendererers.Add(renderer);
             }
 
-            shaderPrograms = programs.ToArray();
-            renderers = rendererers.ToArray();
+            orthoShaders = programs.ToArray();
+            orthoRenderers = rendererers.ToArray();
 
             return true;
         }
+
+        public float[] ControlsAsFloats(EntityPlayer entity)
+        {
+            EntityControls c = entity.Controls;
+            return new float[]
+            {
+                c.Backward ? 1 : 0, //0
+                c.Down ? 1 : 0, //1
+                c.FloorSitting ? 1 : 0, //2
+                c.Forward ? 1 : 0, //3
+                c.Jump ? 1 : 0, //4
+                c.Left ? 1 : 0, //5
+                c.LeftMouseDown ? 1 : 0, //6
+                c.Right ? 1 : 0, //7
+                c.RightMouseDown ? 1 : 0, //8
+                c.Sitting ? 1 : 0, //9
+                c.Sneak ? 1 : 0, //10
+                c.Sprint ? 1 : 0, //11
+                c.TriesToMove ? 1 : 0, // 12
+                c.Up ? 1 : 0, //13
+            };
+        }
     }
 
-    public class Renderer : IRenderer
+    public class OrthoRenderer : IRenderer
     {
         MeshRef quadRef;
         ICoreClientAPI capi;
@@ -87,7 +111,7 @@ namespace ShaderTestMod
 
         public int RenderRange => 1;
 
-        public Renderer(ICoreClientAPI api, IShaderProgram prog)
+        public OrthoRenderer(ICoreClientAPI api, IShaderProgram prog)
         {
             this.prog = prog;
             capi = api;
@@ -127,7 +151,7 @@ namespace ShaderTestMod
             prog.Uniform("iCurrentHealth", (float)healthTree.TryGetFloat("currenthealth"));
             prog.Uniform("iMaxHealth", (float)healthTree.TryGetFloat("maxhealth"));
 
-            float[] c = ControlsAsFloats(capi.World.Player.Entity);
+            float[] c = ShaderTest.controls;
             prog.Uniform("iControls1", new Vec4f(c[0], c[1], c[2], c[3]));
             prog.Uniform("iControls2", new Vec4f(c[4], c[5], c[6], c[7]));
             prog.Uniform("iControls3", new Vec4f(c[8], c[9], c[10], c[11]));
@@ -136,28 +160,6 @@ namespace ShaderTestMod
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
             curShader.Use();
-        }
-
-        public float[] ControlsAsFloats(EntityPlayer entity)
-        {
-            EntityControls c = entity.Controls;
-            return new float[]
-            {
-                c.Backward ? 1 : 0, //0
-                c.Down ? 1 : 0, //1
-                c.FloorSitting ? 1 : 0, //2
-                c.Forward ? 1 : 0, //3
-                c.Jump ? 1 : 0, //4
-                c.Left ? 1 : 0, //5
-                c.LeftMouseDown ? 1 : 0, //6
-                c.Right ? 1 : 0, //7
-                c.RightMouseDown ? 1 : 0, //8
-                c.Sitting ? 1 : 0, //9
-                c.Sneak ? 1 : 0, //10
-                c.Sprint ? 1 : 0, //11
-                c.TriesToMove ? 1 : 0, // 12
-                c.Up ? 1 : 0, //13
-            };
         }
     }
 }
