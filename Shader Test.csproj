@@ -98,11 +98,11 @@
     <Compile Include="ShaderTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="mods\ShaderTest\assets\game\shaders\basicshader.fsh" />
+    <None Include="mods\ShaderTest\assets\game\shaders\chickenshader.fsh" />
     <None Include="mods\ShaderTest\modinfo.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="mods\ShaderTest\assets\game\shaders\basicshader.vsh" />
+    <Content Include="mods\ShaderTest\assets\game\shaders\chickenshader.vsh" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>

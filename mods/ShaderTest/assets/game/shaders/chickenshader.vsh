@@ -1,6 +1,7 @@
 #version 330 core
-in vec2 uv;
-out vec4 outColor;
+#extension GL_ARB_explicit_attrib_location: enable
+layout(location = 0) in vec3 vertex;
+out vec2 uv;
 
 uniform vec2 iResolution;
 uniform vec2 iMouse;
@@ -19,12 +20,10 @@ uniform float iTemperature;
 uniform float iRainfall;
 uniform float iCurrentHealth;
 uniform float iMaxHealth;
+uniform float iActiveItem;
 
-void main () {
-	if (iCurrentHealth < iMaxHealth / 2) {
-		vec2 uv2 = vec2(uv - 0.5);
-		float d = length(uv2);
-		vec3 col = vec3(sin(d), 0.0, 0.0);
-    	outColor = vec4(col, (sin(iTime*1.5))/2);
-	}
+void main(void)
+{
+    gl_Position = vec4(vertex.xy, 0, 1);
+    uv = (vertex.xy + 1.0) / 2.0;
 }
