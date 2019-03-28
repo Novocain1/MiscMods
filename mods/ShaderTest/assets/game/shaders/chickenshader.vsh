@@ -9,6 +9,8 @@ uniform vec2 iCamera;
 uniform vec3 iSunPos;
 uniform vec3 iMoonPos;
 uniform vec3 iPlayerPosition;
+uniform vec3 iLookBlockPos;
+uniform vec3 iLookEntityPos;
 
 //0 or 1
 uniform vec4 iControls1; //Backward, Down, FloorSitting, Forward
@@ -31,6 +33,6 @@ uniform float iLookingAtEntity;
 
 void main(void)
 {
-    gl_Position = vec4(vertex.xy, 0, 1);
+    gl_Position = vec4(vertex.xy, 1, 1);
     uv = (vertex.xy + 1.0) / 2.0;
 }

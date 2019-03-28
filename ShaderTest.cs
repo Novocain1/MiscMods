@@ -12,7 +12,7 @@ namespace ShaderTestMod
 {
     public class ShaderTest : ModSystem
     {
-        ICoreClientAPI capi;
+        public static ICoreClientAPI capi;
         OrthoRenderer[] orthoRenderers;
         public static float[] controls;
         public static Vec3f[] vec3s;
@@ -30,7 +30,8 @@ namespace ShaderTestMod
             "iControls3", "iControls4",
             "iCurrentHealth", "iMaxHealth",
             "iActiveItem", "iLookingAtBlock",
-            "iLookingAtEntity"
+            "iLookingAtEntity", "iLookBlockPos",
+            "iLookEntityPos",
         };
 
         readonly string[] orthoShaderKeys = new string[] { "chickenshader" };
@@ -54,7 +55,7 @@ namespace ShaderTestMod
                 controls = GetControls();
                 vec3s = GetVec3s();
                 floats = GetFloats();
-            }, 30);
+            }, 0);
 
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
@@ -121,7 +122,7 @@ namespace ShaderTestMod
         {
             IPlayer player = capi.World.Player;
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
-            BlockPos lPos = player.CurrentBlockSelection != null ? player.CurrentBlockSelection.Position : new BlockPos(0,-1,0);
+            BlockPos lPos = player.CurrentBlockSelection != null ? player.CurrentBlockSelection.Position : new BlockPos(0, -1, 0);
             return new float[]
             {
                 (float)capi.World.Calendar.MoonPhaseExact,
@@ -137,11 +138,16 @@ namespace ShaderTestMod
 
         public Vec3f[] GetVec3s()
         {
+            IPlayer player = capi.World.Player;
+            BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
+            BlockPos lPos = player.CurrentBlockSelection != null ? player.CurrentBlockSelection.Position : new BlockPos(0, -1, 0);
             return new Vec3f[]
             {
                 capi.World.Calendar.SunPosition,
                 capi.World.Calendar.MoonPosition,
-                capi.World.Player.Entity.LocalPos.XYZ.ToVec3f(),
+                player.Entity.LocalPos.XYZ.ToVec3f(),
+                lPos != new BlockPos(0, -1, 0) ? lPos.ToVec3f().Add(0.5f,0.5f,0.5f) : new Vec3f(),
+                player.CurrentEntitySelection != null ? player.CurrentEntitySelection.Entity.Pos.XYZFloat : new Vec3f(),
             };
         }
     }
@@ -182,6 +188,23 @@ namespace ShaderTestMod
             prog.Use();
 
             capi.Render.GlToggleBlend(true);
+            prog.SetDefaultUniforms();
+
+            capi.Render.RenderMesh(quadRef);
+            prog.Stop();
+            curShader.Use();
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    public static class DefaultUniforms
+    {
+        public static void SetDefaultUniforms(this IShaderProgram prog)
+        {
+            ICoreClientAPI capi = ShaderTest.capi;
             float[] controls = ShaderTest.controls;
             Vec3f[] vec3s = ShaderTest.vec3s;
             float[] floats = ShaderTest.floats;
@@ -199,6 +222,8 @@ namespace ShaderTestMod
             prog.Uniform("iSunPos", vec3s[0]);
             prog.Uniform("iMoonPos", vec3s[1]);
             prog.Uniform("iPlayerPosition", vec3s[2]);
+            prog.Uniform("iLookBlockPos", vec3s[3]);
+            prog.Uniform("iLookEntityPos", vec3s[4]);
 
             prog.Uniform("iMoonPhase", floats[0]);
             prog.Uniform("iTemperature", floats[1]);
@@ -208,14 +233,6 @@ namespace ShaderTestMod
             prog.Uniform("iActiveItem", floats[5]);
             prog.Uniform("iLookingAtBlock", floats[6]);
             prog.Uniform("iLookingAtEntity", floats[7]);
-
-            capi.Render.RenderMesh(quadRef);
-            prog.Stop();
-            curShader.Use();
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

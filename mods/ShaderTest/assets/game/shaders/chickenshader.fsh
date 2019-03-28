@@ -8,6 +8,8 @@ uniform vec2 iCamera;
 uniform vec3 iSunPos;
 uniform vec3 iMoonPos;
 uniform vec3 iPlayerPosition;
+uniform vec3 iLookBlockPos;
+uniform vec3 iLookEntityPos;
 
 //0 or 1
 uniform vec4 iControls1; //Backward, Down, FloorSitting, Forward
