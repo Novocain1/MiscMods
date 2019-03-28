@@ -13,6 +13,10 @@ namespace ShaderTestMod
     public class ShaderTest : ModSystem
     {
         ICoreClientAPI capi;
+        IShaderProgram[] shaderPrograms;
+        Renderer[] renderers;
+
+        readonly string[] orthoShaders = new string[] { "basicshader" };
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -25,11 +29,17 @@ namespace ShaderTestMod
         {
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
+
+            for (int i = 0; i < shaderPrograms.Length; i++)
+            {
+                capi.Event.RegisterRenderer(renderers[i], EnumRenderStage.Ortho, orthoShaders[i]);
+            }
         }
 
         public bool LoadShaders()
         {
-            string[] orthoShaders = new string[] { "basicshader" };
+            List<IShaderProgram> programs = new List<IShaderProgram>();
+            List<Renderer> rendererers = new List<Renderer>();
 
             for (int i = 0; i < orthoShaders.Length; i++)
             {
@@ -43,13 +53,19 @@ namespace ShaderTestMod
                 shader.Compile();
 
                 Renderer renderer = new Renderer(capi, shader);
-                capi.Event.RegisterRenderer(renderer, EnumRenderStage.Ortho, orthoShaders[i]);
 
                 if (renderer != null)
                 {
                     renderer.prog = shader;
                 }
+
+                programs.Add(shader);
+                rendererers.Add(renderer);
             }
+
+            shaderPrograms = programs.ToArray();
+            renderers = rendererers.ToArray();
+
             return true;
         }
     }
@@ -59,8 +75,6 @@ namespace ShaderTestMod
         MeshRef quadRef;
         ICoreClientAPI capi;
         public IShaderProgram prog;
-        public bool rD = true;
-        float? startHealth;
         ITreeAttribute healthTree;
 
         public Matrixf ModelMat = new Matrixf();
@@ -79,7 +93,6 @@ namespace ShaderTestMod
 
             quadRef = capi.Render.UploadMesh(quadMesh);
             healthTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
-            startHealth = healthTree.TryGetFloat("currenthealth");
         }
 
         public void Dispose()
@@ -88,7 +101,8 @@ namespace ShaderTestMod
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            
+            if (prog.Disposed) return;
+
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
