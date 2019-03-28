@@ -54,9 +54,13 @@ namespace ShaderTestMod
 
                 Renderer renderer = new Renderer(capi, shader);
 
-                if (renderer != null)
+                if (renderers != null)
                 {
-                    renderer.prog = shader;
+                    renderers[i].Dispose();
+                    capi.Event.UnregisterRenderer(renderers[i], EnumRenderStage.Ortho);
+
+                    renderers[i].prog = shader;
+                    capi.Event.RegisterRenderer(renderers[i], EnumRenderStage.Ortho, orthoShaders[i]);
                 }
 
                 programs.Add(shader);
