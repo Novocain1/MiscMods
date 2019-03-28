@@ -18,6 +18,8 @@ uniform float iMoonPhase;
 uniform float iTime;
 uniform float iTemperature;
 uniform float iRainfall;
+uniform float iCurrentHealth;
+uniform float iMaxHealth;
 
 void main(void)
 {

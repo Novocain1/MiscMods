@@ -5,53 +5,63 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 
 namespace ShaderTestMod
 {
     public class ShaderTest : ModSystem
     {
-        IShaderProgram basicshader;
         ICoreClientAPI capi;
-        TestRenderer testRenderer;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             capi = api;
+            api.Event.PlayerJoin += StartShade;
 
-            api.Event.ReloadShader += LoadShader;
-            LoadShader();
-
-            testRenderer = new TestRenderer(api, basicshader);
-            api.Event.RegisterRenderer(testRenderer, EnumRenderStage.Ortho, "basicshader");
         }
 
-        public bool LoadShader()
+        public void StartShade(IPlayer player)
         {
-            basicshader = capi.Shader.NewShaderProgram();
-            int program = capi.Shader.RegisterFileShaderProgram("basicshader", basicshader);
-            basicshader = capi.Render.GetShader(program);
-            basicshader.PrepareUniformLocations(
-                "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
-                "iTemperature", "iRainfall", "iControls1", "iControls2", "iControls3", "iControls4"
-                );
-            basicshader.Compile();
+            capi.Event.ReloadShader += LoadShaders;
+            LoadShaders();
+        }
 
-            if (testRenderer != null)
+        public bool LoadShaders()
+        {
+            string[] orthoShaders = new string[] { "basicshader" };
+
+            for (int i = 0; i < orthoShaders.Length; i++)
             {
-                testRenderer.prog = basicshader;
-            }
+                IShaderProgram shader = capi.Shader.NewShaderProgram();
+                int program = capi.Shader.RegisterFileShaderProgram(orthoShaders[i], shader);
+                shader = capi.Render.GetShader(program);
+                shader.PrepareUniformLocations(
+                    "iTime", "iResolution", "iMouse", "iCamera", "iSunPos", "iMoonPos", "iMoonPhase", "iPlayerPosition",
+                    "iTemperature", "iRainfall", "iControls1", "iControls2", "iControls3", "iControls4", "iCurrentHealth", "iMaxHealth"
+                );
+                shader.Compile();
 
+                Renderer renderer = new Renderer(capi, shader);
+                capi.Event.RegisterRenderer(renderer, EnumRenderStage.Ortho, orthoShaders[i]);
+
+                if (renderer != null)
+                {
+                    renderer.prog = shader;
+                }
+            }
             return true;
         }
     }
 
-    public class TestRenderer : IRenderer
+    public class Renderer : IRenderer
     {
         MeshRef quadRef;
         ICoreClientAPI capi;
         public IShaderProgram prog;
-
+        public bool rD = true;
+        float? startHealth;
+        ITreeAttribute healthTree;
 
         public Matrixf ModelMat = new Matrixf();
 
@@ -59,7 +69,7 @@ namespace ShaderTestMod
 
         public int RenderRange => 1;
 
-        public TestRenderer(ICoreClientAPI api, IShaderProgram prog)
+        public Renderer(ICoreClientAPI api, IShaderProgram prog)
         {
             this.prog = prog;
             capi = api;
@@ -68,6 +78,8 @@ namespace ShaderTestMod
             quadMesh.Rgba = null;
 
             quadRef = capi.Render.UploadMesh(quadMesh);
+            healthTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
+            startHealth = healthTree.TryGetFloat("currenthealth");
         }
 
         public void Dispose()
@@ -76,6 +88,7 @@ namespace ShaderTestMod
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
+            
             BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
@@ -93,6 +106,8 @@ namespace ShaderTestMod
             prog.Uniform("iPlayerPosition", capi.World.Player.Entity.LocalPos.XYZ.ToVec3f());
             prog.Uniform("iTemperature", capi.World.BlockAccessor.GetClimateAt(pos).Temperature);
             prog.Uniform("iRainfall", capi.World.BlockAccessor.GetClimateAt(pos).Rainfall);
+            prog.Uniform("iCurrentHealth", (float)healthTree.TryGetFloat("currenthealth"));
+            prog.Uniform("iMaxHealth", (float)healthTree.TryGetFloat("maxhealth"));
 
             float[] c = ControlsAsFloats(capi.World.Player.Entity);
             prog.Uniform("iControls1", new Vec4f(c[0], c[1], c[2], c[3]));

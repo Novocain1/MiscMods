@@ -17,12 +17,14 @@ uniform float iMoonPhase;
 uniform float iTime;
 uniform float iTemperature;
 uniform float iRainfall;
+uniform float iCurrentHealth;
+uniform float iMaxHealth;
 
 void main () {
-	if (iControls3.z == 1) {
+	if (iCurrentHealth < iMaxHealth / 2) {
 		vec2 uv2 = vec2(uv - 0.5);
 		float d = length(uv2);
 		vec3 col = vec3(sin(d), 0.0, 0.0);
-    	outColor = vec4(col, col.x/2);
+    	outColor = vec4(col, (sin(iTime*1.5))/2);
 	}
 }
