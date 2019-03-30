@@ -30,6 +30,10 @@ uniform float iActiveItem;
 uniform float iLookingAtBlock;
 uniform float iLookingAtEntity;
 
+//Current Enum Tool Type
+//NoTool: -1, Knife: 0, Pickaxe: 1, Axe: 2, Sword: 3, Shovel: 4, Hammer: 5, Spear: 6, Bow: 7, Shears: 8, Sickle: 9, Hoe: 10, Saw: 11, Chisel: 12,
+uniform float iActiveTool;
+
 void main () {
 	if (iActiveItem == 1049) {
 		vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));

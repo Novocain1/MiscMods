@@ -34,7 +34,7 @@ namespace ShaderTestMod
             "iCurrentHealth", "iMaxHealth",
             "iActiveItem", "iLookingAtBlock",
             "iLookingAtEntity", "iLookBlockPos",
-            "iLookEntityPos",
+            "iLookEntityPos", "iActiveTool",
         };
 
         public string[] orthoShaderKeys;
@@ -147,6 +147,7 @@ namespace ShaderTestMod
                 player.InventoryManager.ActiveHotbarSlot.Itemstack != null ? player.InventoryManager.ActiveHotbarSlot.Itemstack.Collectible.Id : -1,
                 capi.World.BlockAccessor.GetBlock(lPos).Id,
                 player.CurrentEntitySelection != null ? player.CurrentEntitySelection.Entity.EntityId : -1,
+                player.InventoryManager.ActiveTool != null ? (float)player.InventoryManager.ActiveTool : -1,
             };
         }
 
@@ -247,6 +248,7 @@ namespace ShaderTestMod
             prog.Uniform("iActiveItem", floats[5]);
             prog.Uniform("iLookingAtBlock", floats[6]);
             prog.Uniform("iLookingAtEntity", floats[7]);
+            prog.Uniform("iActiveTool", floats[8]);
         }
     }
 }
