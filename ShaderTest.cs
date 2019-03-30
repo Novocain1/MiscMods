@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +9,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 
 namespace ShaderTestMod
 {
@@ -34,11 +37,12 @@ namespace ShaderTestMod
             "iLookEntityPos",
         };
 
-        readonly string[] orthoShaderKeys = new string[] { "chickenshader" };
+        public string[] orthoShaderKeys;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             capi = api;
+            
             api.Event.PlayerJoin += StartShade;
         }
 
@@ -68,6 +72,16 @@ namespace ShaderTestMod
 
         public bool LoadShaders()
         {
+            string path = capi.DataBasePath + "\\ModConfigs\\ShadersMod\\";
+            string file = Path.Combine(path, "OrthoShaderList.txt");
+
+            if (!File.Exists(file))
+            {
+                Directory.CreateDirectory(path);
+                File.WriteAllText(file, "chickenshader");
+            }
+            orthoShaderKeys = File.ReadAllLines(file);
+
             List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
 
             for (int i = 0; i < orthoShaderKeys.Length; i++)

@@ -104,6 +104,7 @@
   <ItemGroup>
     <Content Include="mods\ShaderTest\assets\game\shaders\chickenshader.vsh" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />

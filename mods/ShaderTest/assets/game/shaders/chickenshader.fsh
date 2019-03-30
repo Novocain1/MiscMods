@@ -31,7 +31,7 @@ uniform float iLookingAtBlock;
 uniform float iLookingAtEntity;
 
 void main () {
-	if (iActiveItem == 614) {
+	if (iActiveItem == 1049) {
 		vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));
     	outColor = vec4(col, 0.5);
 	}
