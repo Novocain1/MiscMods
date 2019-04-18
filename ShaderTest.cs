@@ -96,11 +96,8 @@ namespace ShaderTestMod
 
                 if (orthoRenderers != null)
                 {
-                    orthoRenderers[i].Dispose();
-                    capi.Event.UnregisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho);
-
                     orthoRenderers[i].prog = shader;
-                    capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
+                    capi.Event.ReRegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho);
                 }
                 rendererers.Add(renderer);
             }
@@ -249,6 +246,13 @@ namespace ShaderTestMod
             prog.Uniform("iLookingAtBlock", floats[6]);
             prog.Uniform("iLookingAtEntity", floats[7]);
             prog.Uniform("iActiveTool", floats[8]);
+        }
+
+        public static void ReRegisterRenderer(this IClientEventAPI events, IRenderer renderer, EnumRenderStage stage)
+        {
+            renderer.Dispose();
+            events.UnregisterRenderer(renderer, stage);
+            events.RegisterRenderer(renderer, stage);
         }
     }
 }

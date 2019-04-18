@@ -1,11 +1,11 @@
 {
 	"type": "code",
-	"name": "ShaderTest",
-	"modid": "shadertest",
+	"name": "ItemSortMod",
+	"modid": "itemsortmod",
 	"description" : "",
 	"authors": ["Novocain"],
 	"version": "1.0.0",
 	"dependencies": {
-	"game": "1.8.6",
+	"game": "1.9.0-pre.7",
 	}
 }
