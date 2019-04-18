@@ -115,7 +115,7 @@ namespace SortTest
                     invid = capi.World.Player.InventoryManager.CurrentHoveredSlot.Inventory.InventoryID;
                 }
 
-                if (capi.Input.KeyboardKeyStateRaw[1])
+                if (capi.Input.KeyboardKeyStateRaw[(int)GlKeys.LShift])
                 {
                     cChannel.SendPacket(new SortResponse()
                     {
