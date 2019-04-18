@@ -88,7 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ItemSortTest.cs" />
-    <Compile Include="ShaderTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mods\ShaderTest\assets\game\shaders\chickenshader.fsh" />

@@ -157,7 +157,7 @@ namespace SortTest
             string name = activeinv.ClassName;
             if (name == "chest" || name == "hotbar" || name == "backpack")
             {
-                List<CollectibleObject> objects = activeinv.Sort(mode);
+                List<ItemStack> objects = activeinv.Sort(mode);
                 if (objects.Count == 0) return;
 
                 for (int j = 0; j < activeinv.Count; j++)
@@ -170,8 +170,7 @@ namespace SortTest
                     for (int o = objects.Count - 1; o >= 0; o--)
                     {
                         ItemStackMoveOperation op = new ItemStackMoveOperation(player.Entity.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
-                        ItemStack stack = new ItemStack(objects[o], 1);
-                        DummySlot slot = new DummySlot(stack);
+                        DummySlot slot = new DummySlot(objects[o]);
 
                         slot.TryPutInto(activeinv[j], ref op);
                         if (op.MovedQuantity > 0)
@@ -184,46 +183,43 @@ namespace SortTest
 
     public static class Sorting
     {
-        public static List<CollectibleObject> ToCollectableList(this ItemSlot[] slots)
+        public static List<ItemStack> ToItemStackList(this ItemSlot[] slots)
         {
-            List<CollectibleObject> objects = new List<CollectibleObject>();
+            List<ItemStack> objects = new List<ItemStack>();
             for (int i = 0; i < slots.Length; i++)
             {
                 if (slots[i].Itemstack != null)
                 {
                     for (int j = 0; j < slots[i].Itemstack.StackSize; j++)
                     {
-                        objects.Add(slots[i].Itemstack.Collectible);
+                        ItemStack tempstack = slots[i].Itemstack.Clone();
+                        tempstack.StackSize = 1;
+                        objects.Add(tempstack);
                     }
                 }
             }
             return objects;
         }
-
-        public static List<CollectibleObject> ToCollectablesList(this IInventory slots) => slots.ToArray().ToCollectableList();
-
-        public static CollectibleObject[] ToCollectables(this IInventory slots) => slots.ToArray().ToCollectableList().ToArray();
-
-        public static List<CollectibleObject> Sort(this IInventory slots, EnumSortMode mode) => slots.ToCollectables().Sort(mode).ToList();
-
-        public static CollectibleObject[] Sort(this CollectibleObject[] arr, EnumSortMode mode)
+        
+        public static List<ItemStack> Sort(this IInventory inv, EnumSortMode mode) => inv.ToArray().ToItemStackList().ToArray().Sort(mode).ToList();
+        public static ItemStack[] Sort(this ItemStack[] arr, EnumSortMode mode)
         {
             switch (mode)
             {
                 case EnumSortMode.ID:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Id.CompareTo(b.Id); });
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.Id.CompareTo(b.Collectible.Id); });
                     break;
                 case EnumSortMode.Name:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Code.ToString().CompareTo(b.Code.ToString()); });
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.Code.ToString().CompareTo(b.Collectible.Code.ToString()); });
                     break;
                 case EnumSortMode.Type:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.ItemClass.CompareTo(b.ItemClass); });
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.ItemClass.CompareTo(b.Collectible.ItemClass); });
                     break;
                 case EnumSortMode.MatterState:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.MatterState.CompareTo(b.MatterState); });
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.MatterState.CompareTo(b.Collectible.MatterState); });
                     break;
                 default:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Id.CompareTo(b.Id); });
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Id.CompareTo(b.Id); });
                     break;
             }
             return arr;
