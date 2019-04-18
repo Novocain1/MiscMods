@@ -17,12 +17,14 @@ namespace SortTest
     public class SortMessage
     {
         public string mode;
+        public string inv;
     }
 
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class SortResponse
     {
         public string mode;
+        public string inv;
     }
 
     class ItemSortTest : ModSystem
@@ -35,6 +37,7 @@ namespace SortTest
         IClientPlayer cPlayer;
         int[] sorting = new int[] { 0, 1, 2, 3 };
         uint index = 0;
+        string laststring;
 
         private bool a = true;
 
@@ -75,18 +78,28 @@ namespace SortTest
         {
             sChannel.BroadcastPacket(new SortMessage()
             {
-                mode = networkMessage.mode
+                mode = networkMessage.mode,
+                inv = networkMessage.inv
             });
             int mode = int.Parse(networkMessage.mode);
-            Sort(fromPlayer, (EnumSortMode)mode);
+            string inv = networkMessage.inv;
+            StartSort(fromPlayer, (EnumSortMode)mode, inv);
         }
 
         public void OnServerMessage(SortMessage networkMessage)
         {
             int mode = int.Parse(networkMessage.mode);
-            Sort(cPlayer, (EnumSortMode)mode);
+
+            string inv = networkMessage.inv;
+
+            StartSort(cPlayer, (EnumSortMode)mode, inv);
             capi.Gui.PlaySound("tick");
-            capi.ShowChatMessage("Sort By " + ((EnumSortMode)mode).ToString());
+
+            if (laststring != "Sort By " + ((EnumSortMode)mode).ToString())
+            {
+                laststring = "Sort By " + ((EnumSortMode)mode).ToString();
+                capi.ShowChatMessage(laststring);
+            }
         }
 
         private bool SortKey(KeyCombination key)
@@ -96,42 +109,73 @@ namespace SortTest
                 a = false;
                 capi.World.RegisterCallback(dt => a = true, 50);
 
-                cChannel.SendPacket(new SortResponse()
+                string invid = "";
+                if (capi.World.Player.InventoryManager.CurrentHoveredSlot != null)
                 {
-                    mode = sorting.Next(ref index).ToString()
-                });
+                    invid = capi.World.Player.InventoryManager.CurrentHoveredSlot.Inventory.InventoryID;
+                }
+
+                if (capi.Input.KeyboardKeyStateRaw[1])
+                {
+                    cChannel.SendPacket(new SortResponse()
+                    {
+                        mode = sorting.Next(ref index).ToString(),
+                        inv = invid
+                    });
+                }
+                else
+                {
+                    cChannel.SendPacket(new SortResponse()
+                    {
+                        mode = sorting[index].ToString(),
+                        inv = invid
+                    });
+                }
             }
 
             return true;
         }
 
-        public void Sort(IPlayer player, EnumSortMode mode)
+        public void StartSort(IPlayer player, EnumSortMode mode, string invstring)
         {
-            for (int i = 0; i < player.InventoryManager.OpenedInventories.Count; i++)
+            if (invstring != "")
             {
-                string name = player.InventoryManager.OpenedInventories[i].ClassName;
-                if (name == "chest" || name == "hotbar" || name == "backpack")
+                IInventory inv = player.InventoryManager.GetInventory(invstring);
+                Sort(player, mode, inv);
+            }
+            else
+            {
+                for (int i = 0; i < player.InventoryManager.OpenedInventories.Count; i++)
                 {
-                    List<CollectibleObject> objects = player.InventoryManager.OpenedInventories[i].Sort(mode);
-                    if (objects.Count == 0) continue;
+                    Sort(player, mode, player.InventoryManager.OpenedInventories[i]);
+                }
+            }
+        }
 
-                    for (int j = 0; j < player.InventoryManager.OpenedInventories[i].Count; j++)
+        public void Sort(IPlayer player, EnumSortMode mode, IInventory activeinv)
+        {
+            string name = activeinv.ClassName;
+            if (name == "chest" || name == "hotbar" || name == "backpack")
+            {
+                List<CollectibleObject> objects = activeinv.Sort(mode);
+                if (objects.Count == 0) return;
+
+                for (int j = 0; j < activeinv.Count; j++)
+                {
+                    if (activeinv[j].Itemstack != null)
                     {
-                        if (player.InventoryManager.OpenedInventories[i][j].Itemstack != null)
-                        {
-                            player.InventoryManager.OpenedInventories[i][j].TakeOutWhole();
-                        }
+                        activeinv[j].TakeOutWhole();
+                    }
 
-                        for (int o = objects.Count - 1; o >= 0; o--)
-                        {
-                            ItemStackMoveOperation op = new ItemStackMoveOperation(player.Entity.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
-                            ItemStack stack = new ItemStack(objects[o], 1);
-                            DummySlot slot = new DummySlot(stack);
+                    for (int o = objects.Count - 1; o >= 0; o--)
+                    {
+                        ItemStackMoveOperation op = new ItemStackMoveOperation(player.Entity.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
+                        ItemStack stack = new ItemStack(objects[o], 1);
+                        DummySlot slot = new DummySlot(stack);
 
-                            slot.TryPutInto(player.InventoryManager.OpenedInventories[i][j], ref op);
-                            if (op.MovedQuantity > 0)
-                                objects.RemoveAt(o);
-                        }
+                        slot.TryPutInto(activeinv[j], ref op);
+                        if (op.MovedQuantity > 0)
+                            objects.RemoveAt(o);
                     }
                 }
             }
