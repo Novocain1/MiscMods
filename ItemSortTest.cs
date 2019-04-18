@@ -16,13 +16,13 @@ namespace SortTest
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class SortMessage
     {
-        public string message;
+        public string mode;
     }
 
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class SortResponse
     {
-        public string response;
+        public string mode;
     }
 
     class ItemSortTest : ModSystem
@@ -33,6 +33,8 @@ namespace SortTest
         IClientNetworkChannel cChannel;
         IServerNetworkChannel sChannel;
         IClientPlayer cPlayer;
+        int[] sorting = new int[] { 0, 1, 2, 3 };
+        uint index = 0;
 
         private bool a = true;
 
@@ -71,14 +73,20 @@ namespace SortTest
 
         public void OnClientMessage(IPlayer fromPlayer, SortResponse networkMessage)
         {
-            sChannel.BroadcastPacket(new SortMessage());
-            Sort(fromPlayer);
+            sChannel.BroadcastPacket(new SortMessage()
+            {
+                mode = networkMessage.mode
+            });
+            int mode = int.Parse(networkMessage.mode);
+            Sort(fromPlayer, (EnumSortMode)mode);
         }
 
         public void OnServerMessage(SortMessage networkMessage)
         {
-            Sort(cPlayer);
+            int mode = int.Parse(networkMessage.mode);
+            Sort(cPlayer, (EnumSortMode)mode);
             capi.Gui.PlaySound("tick");
+            capi.ShowChatMessage("Sort By " + ((EnumSortMode)mode).ToString());
         }
 
         private bool SortKey(KeyCombination key)
@@ -86,22 +94,25 @@ namespace SortTest
             if (a)
             {
                 a = false;
-                capi.World.RegisterCallback(dt => a = true, 500);
+                capi.World.RegisterCallback(dt => a = true, 50);
 
-                cChannel.SendPacket(new SortResponse());
+                cChannel.SendPacket(new SortResponse()
+                {
+                    mode = sorting.Next(ref index).ToString()
+                });
             }
 
             return true;
         }
 
-        public void Sort(IPlayer player)
+        public void Sort(IPlayer player, EnumSortMode mode)
         {
             for (int i = 0; i < player.InventoryManager.OpenedInventories.Count; i++)
             {
                 string name = player.InventoryManager.OpenedInventories[i].ClassName;
                 if (name == "chest" || name == "hotbar" || name == "backpack")
                 {
-                    List<CollectibleObject> objects = player.InventoryManager.OpenedInventories[i].Sort(EnumSortMode.Id);
+                    List<CollectibleObject> objects = player.InventoryManager.OpenedInventories[i].Sort(mode);
                     if (objects.Count == 0) continue;
 
                     for (int j = 0; j < player.InventoryManager.OpenedInventories[i].Count; j++)
@@ -155,14 +166,14 @@ namespace SortTest
         {
             switch (mode)
             {
-                case EnumSortMode.Id:
+                case EnumSortMode.ID:
                     Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Id.CompareTo(b.Id); });
                     break;
                 case EnumSortMode.Name:
                     Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Code.ToString().CompareTo(b.Code.ToString()); });
                     break;
                 case EnumSortMode.Type:
-                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.Class.CompareTo(b.Class); });
+                    Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.ItemClass.CompareTo(b.ItemClass); });
                     break;
                 case EnumSortMode.MatterState:
                     Array.Sort(arr, delegate (CollectibleObject a, CollectibleObject b) { return a.MatterState.CompareTo(b.MatterState); });
@@ -174,17 +185,16 @@ namespace SortTest
             return arr;
         }
 
-        public static List<T> ToList<T>(this T[] arr)
+        public static T Next<T>(this T[] array, ref uint index)
         {
-            List<T> list = new List<T>();
-            for (int i = 0; i < arr.Length; i++) list.Add(arr[i]);
-            return list;
+            index = (uint)(++index % array.Length);
+            return array[index];
         }
     }
 
     public enum EnumSortMode
     {
-        Id,
+        ID,
         Name,
         Type,
         MatterState,
