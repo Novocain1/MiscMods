@@ -259,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/mods/ShaderTest/1.9.0-pre.7-SortingMod-1.0.3.zip
+/mods/ShaderTest/1.8.6-SortingMod-1.0.3.zip
+/mods/ShaderTest/1.9.0-pre.7-SortingMod-1.0.4.zip

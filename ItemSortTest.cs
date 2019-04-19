@@ -71,6 +71,7 @@ namespace SortTest
         {
             cPlayer = byPlayer;
             capi.Input.RegisterHotKey("sort", "Sort", GlKeys.I, HotkeyType.GUIOrOtherControls);
+            capi.Input.RegisterHotKey("sortmodifier", "Sort Modifier", GlKeys.LShift, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("sort", SortKey);
         }
 
@@ -115,7 +116,7 @@ namespace SortTest
                     invid = capi.World.Player.InventoryManager.CurrentHoveredSlot.Inventory.InventoryID;
                 }
 
-                if (capi.Input.KeyboardKeyStateRaw[(int)GlKeys.LShift])
+                if (capi.Input.KeyboardKeyStateRaw[capi.Input.GetHotKeyByCode("sortmodifier").CurrentMapping.KeyCode])
                 {
                     cChannel.SendPacket(new SortResponse()
                     {
