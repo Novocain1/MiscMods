@@ -35,7 +35,7 @@ namespace SortTest
         IClientNetworkChannel cChannel;
         IServerNetworkChannel sChannel;
         IClientPlayer cPlayer;
-        int[] sorting = new int[] { 0, 1, 2, 3 };
+        int[] sorting;
         uint index = 0;
         string laststring;
 
@@ -44,6 +44,8 @@ namespace SortTest
         public override void Start(ICoreAPI api)
         {
             this.api = api;
+            sorting = new int[Enum.GetNames(typeof(EnumSortMode)).Length];
+            for (int i = 0; i < sorting.Length; i++) sorting[i] = i;
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -108,6 +110,7 @@ namespace SortTest
             if (a)
             {
                 a = false;
+                int modid = capi.Input.GetHotKeyByCode("sortmodifier").CurrentMapping.KeyCode;
                 capi.World.RegisterCallback(dt => a = true, 50);
 
                 string invid = "";
@@ -116,7 +119,7 @@ namespace SortTest
                     invid = capi.World.Player.InventoryManager.CurrentHoveredSlot.Inventory.InventoryID;
                 }
 
-                if (capi.Input.KeyboardKeyStateRaw[capi.Input.GetHotKeyByCode("sortmodifier").CurrentMapping.KeyCode])
+                if (capi.Input.KeyboardKeyStateRaw[modid])
                 {
                     cChannel.SendPacket(new SortResponse()
                     {
@@ -163,11 +166,12 @@ namespace SortTest
 
                 for (int j = 0; j < activeinv.Count; j++)
                 {
+                    if (activeinv[j] is ItemSlotOffhand) continue;
+
                     if (activeinv[j].Itemstack != null)
                     {
                         activeinv[j].TakeOutWhole();
                     }
-
                     for (int o = objects.Count - 1; o >= 0; o--)
                     {
                         ItemStackMoveOperation op = new ItemStackMoveOperation(player.Entity.World, EnumMouseButton.Left, 0, EnumMergePriority.AutoMerge, 1);
@@ -176,6 +180,7 @@ namespace SortTest
                         slot.TryPutInto(activeinv[j], ref op);
                         if (op.MovedQuantity > 0)
                             objects.RemoveAt(o);
+                        else break;
                     }
                 }
             }
@@ -184,12 +189,12 @@ namespace SortTest
 
     public static class Sorting
     {
-        public static List<ItemStack> ToItemStackList(this ItemSlot[] slots)
+        public static ItemStack[] ToItemStacks(this IInventory slots)
         {
             List<ItemStack> objects = new List<ItemStack>();
-            for (int i = 0; i < slots.Length; i++)
+            for (int i = 0; i < slots.Count; i++)
             {
-                if (slots[i].Itemstack != null)
+                if (slots[i].Itemstack != null && !(slots[i] is ItemSlotOffhand))
                 {
                     for (int j = 0; j < slots[i].Itemstack.StackSize; j++)
                     {
@@ -199,10 +204,10 @@ namespace SortTest
                     }
                 }
             }
-            return objects;
+            return objects.ToArray();
         }
         
-        public static List<ItemStack> Sort(this IInventory inv, EnumSortMode mode) => inv.ToArray().ToItemStackList().ToArray().Sort(mode).ToList();
+        public static List<ItemStack> Sort(this IInventory inv, EnumSortMode mode) => inv.ToItemStacks().Sort(mode).ToList();
         public static ItemStack[] Sort(this ItemStack[] arr, EnumSortMode mode)
         {
             switch (mode)
@@ -218,6 +223,9 @@ namespace SortTest
                     break;
                 case EnumSortMode.MatterState:
                     Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.MatterState.CompareTo(b.Collectible.MatterState); });
+                    break;
+                case EnumSortMode.Durability:
+                    Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Collectible.Durability.CompareTo(b.Collectible.Durability); });
                     break;
                 default:
                     Array.Sort(arr, delegate (ItemStack a, ItemStack b) { return a.Id.CompareTo(b.Id); });
@@ -239,5 +247,6 @@ namespace SortTest
         Name,
         Type,
         MatterState,
+        Durability,
     }
 }

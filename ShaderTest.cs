@@ -34,7 +34,7 @@ namespace ShaderTestMod
             "iCurrentHealth", "iMaxHealth",
             "iActiveItem", "iLookingAtBlock",
             "iLookingAtEntity", "iLookBlockPos",
-            "iLookEntityPos", "iActiveTool",
+            "iLookEntityPos", "iActiveTool", "iDepthBuffer", "iTempScalar"
         };
 
         public string[] orthoShaderKeys;
@@ -145,6 +145,7 @@ namespace ShaderTestMod
                 capi.World.BlockAccessor.GetBlock(lPos).Id,
                 player.CurrentEntitySelection != null ? player.CurrentEntitySelection.Entity.EntityId : -1,
                 player.InventoryManager.ActiveTool != null ? (float)player.InventoryManager.ActiveTool : -1,
+                (capi.World.BlockAccessor.GetClimateAt(pos).Temperature + 50.0f) * 0.01f,
             };
         }
 
@@ -201,6 +202,7 @@ namespace ShaderTestMod
 
             capi.Render.GlToggleBlend(true);
             prog.SetDefaultUniforms();
+            prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
@@ -236,6 +238,7 @@ namespace ShaderTestMod
             prog.Uniform("iPlayerPosition", vec3s[2]);
             prog.Uniform("iLookBlockPos", vec3s[3]);
             prog.Uniform("iLookEntityPos", vec3s[4]);
+            
 
             prog.Uniform("iMoonPhase", floats[0]);
             prog.Uniform("iTemperature", floats[1]);
@@ -246,6 +249,7 @@ namespace ShaderTestMod
             prog.Uniform("iLookingAtBlock", floats[6]);
             prog.Uniform("iLookingAtEntity", floats[7]);
             prog.Uniform("iActiveTool", floats[8]);
+            prog.Uniform("iTempScalar", floats[9]);
         }
 
         public static void ReRegisterRenderer(this IClientEventAPI events, IRenderer renderer, EnumRenderStage stage)
@@ -254,5 +258,21 @@ namespace ShaderTestMod
             events.UnregisterRenderer(renderer, stage);
             events.RegisterRenderer(renderer, stage);
         }
+    }
+
+    public enum EnumFrameBuffer
+    {
+        Default = -1,
+        Primary = 0,
+        Transparent = 1,
+        BlurHorizontalMedRes = 2,
+        BlurVerticalMedRes = 3,
+        FindBright = 4,
+        GodRays = 7,
+        BlurVerticalLowRes = 8,
+        BlurHorizontalLowRes = 9,
+        Luma = 10,
+        ShadowmapFar = 11,
+        ShadowmapNear = 12
     }
 }

@@ -4,8 +4,8 @@
 	"modid": "itemsortmod",
 	"description" : "Allows the player to sort inventories by pressing 'i' on their keyboard",
 	"authors": ["Novocain"],
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"dependencies": {
-	"game": "1.9.0-pre.7",
+	"game": "1.9.0-pre.8",
 	}
 }
