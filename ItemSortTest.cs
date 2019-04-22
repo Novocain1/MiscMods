@@ -161,7 +161,7 @@ namespace SortTest
         {
             string name = activeinv.ClassName;
 
-            if (name == "chest" || name == "hotbar" || name == "backpack")
+            if (name == "basket" || name == "chest" || name == "hotbar" || name == "backpack")
             {
                 List<ItemStack> objects = activeinv.Sort(mode);
                 if (objects.Count == 0) return;
