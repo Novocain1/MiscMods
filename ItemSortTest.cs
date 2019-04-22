@@ -10,6 +10,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using Vintagestory.Common;
 
 namespace SortTest
 {
@@ -159,6 +160,7 @@ namespace SortTest
         public void Sort(IPlayer player, EnumSortMode mode, IInventory activeinv)
         {
             string name = activeinv.ClassName;
+
             if (name == "chest" || name == "hotbar" || name == "backpack")
             {
                 List<ItemStack> objects = activeinv.Sort(mode);
@@ -170,6 +172,8 @@ namespace SortTest
 
                     if (activeinv[j].Itemstack != null)
                     {
+                        if (activeinv[j].Itemstack.Attributes["backpack"] != null) continue;
+
                         activeinv[j].TakeOutWhole();
                     }
                     for (int o = objects.Count - 1; o >= 0; o--)
@@ -192,9 +196,10 @@ namespace SortTest
         public static ItemStack[] ToItemStacks(this IInventory slots)
         {
             List<ItemStack> objects = new List<ItemStack>();
+            
             for (int i = 0; i < slots.Count; i++)
             {
-                if (slots[i].Itemstack != null && !(slots[i] is ItemSlotOffhand))
+                if (slots[i].Itemstack != null && !(slots[i] is ItemSlotOffhand) && slots[i].Itemstack.Attributes["backpack"] == null)
                 {
                     for (int j = 0; j < slots[i].Itemstack.StackSize; j++)
                     {
