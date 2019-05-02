@@ -35,6 +35,7 @@ uniform float iTempScalar;
 uniform float iActiveItem;
 uniform float iLookingAtBlock;
 uniform float iLookingAtEntity;
+float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898 + iTime, 78.233 + iTime)))*43758.5453123 + iTime);
 
 //Current Enum Tool Type
 //NoTool: -1, Knife: 0, Pickaxe: 1, Axe: 2, Sword: 3, Shovel: 4, Hammer: 5, Spear: 6, Bow: 7, Shears: 8, Sickle: 9, Hoe: 10, Saw: 11, Chisel: 12,
@@ -42,6 +43,6 @@ uniform float iActiveTool;
 
 void main(void)
 {
-    gl_Position = vec4(vertex.xy, 1, 1);
+    gl_Position = vec4(vertex.xy , 1, 1);
     uv = (vertex.xy + 1.0) / 2.0;
 }

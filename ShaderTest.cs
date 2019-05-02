@@ -34,7 +34,8 @@ namespace ShaderTestMod
             "iCurrentHealth", "iMaxHealth",
             "iActiveItem", "iLookingAtBlock",
             "iLookingAtEntity", "iLookBlockPos",
-            "iLookEntityPos", "iActiveTool", "iDepthBuffer", "iTempScalar"
+            "iLookEntityPos", "iActiveTool", "iDepthBuffer", "iTempScalar", "iColor", "iLight",
+            "iCameraPos",
         };
 
         public string[] orthoShaderKeys;
@@ -203,6 +204,8 @@ namespace ShaderTestMod
             capi.Render.GlToggleBlend(true);
             prog.SetDefaultUniforms();
             prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
+            prog.BindTexture2D("iColor", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[0], 1);
+            prog.BindTexture2D("iLight", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[1], 2);
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
@@ -227,6 +230,7 @@ namespace ShaderTestMod
             prog.Uniform("iResolution", new Vec2f(capi.Render.FrameWidth, capi.Render.FrameHeight));
             prog.Uniform("iMouse", new Vec2f(capi.Input.MouseX, capi.Input.MouseY));
             prog.Uniform("iCamera", new Vec2f(capi.World.Player.CameraPitch, capi.World.Player.CameraYaw));
+            prog.Uniform("iCameraPos", new Vec3f());
 
             prog.Uniform("iControls1", new Vec4f(controls[0], controls[1], controls[2], controls[3]));
             prog.Uniform("iControls2", new Vec4f(controls[4], controls[5], controls[6], controls[7]));
@@ -258,21 +262,5 @@ namespace ShaderTestMod
             events.UnregisterRenderer(renderer, stage);
             events.RegisterRenderer(renderer, stage);
         }
-    }
-
-    public enum EnumFrameBuffer
-    {
-        Default = -1,
-        Primary = 0,
-        Transparent = 1,
-        BlurHorizontalMedRes = 2,
-        BlurVerticalMedRes = 3,
-        FindBright = 4,
-        GodRays = 7,
-        BlurVerticalLowRes = 8,
-        BlurHorizontalLowRes = 9,
-        Luma = 10,
-        ShadowmapFar = 11,
-        ShadowmapNear = 12
     }
 }

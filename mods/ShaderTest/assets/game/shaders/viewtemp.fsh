@@ -3,6 +3,8 @@ in vec2 uv;
 out vec4 outColor;
 
 uniform sampler2D iDepthBuffer;
+uniform sampler2D iColor;
+uniform sampler2D iLight;
 
 uniform vec2 iResolution;
 uniform vec2 iMouse;
@@ -12,6 +14,7 @@ uniform vec3 iMoonPos;
 uniform vec3 iPlayerPosition;
 uniform vec3 iLookBlockPos;
 uniform vec3 iLookEntityPos;
+uniform vec3 iCameraPos;
 
 //0 or 1
 uniform vec4 iControls1; //Backward, Down, FloorSitting, Forward
@@ -51,23 +54,52 @@ vec2 Rotate(float speedx, float speedy, float radius){
 	return vec2(sin(iTime*speedx)*radius, cos(iTime*speedy)*radius);
 }
 
-float LinearizeDepth()
+float near = 0.001; 
+float far  = 1500.0; 
+
+float Depth() 
 {
-	return texture(iDepthBuffer, uv).x;
+	float depth = texture(iDepthBuffer, uv).x;
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
+vec3 vDepth = vec3(Depth(), Depth(), Depth());
+vec4 Color = texture(iColor, uv);
+vec4 Light = texture(iLight, uv);
+float iGlow = Light.r;
+float iGodRay = Light.g;
+
+vec4 pColor(vec2 uva){
+	return texture(iColor, uva);
+}
+
+vec3 camVec()
+{
+	float xzLen = cos(iCamera.x);
+	float y = xzLen * cos(-iCamera.y);
+	float z = sin(iCamera.x);
+	float x = xzLen * sin(iCamera.y);
+	return vec3(x,y,z);
+}
+
+vec3 Nrm = normalize(vec3(Depth(), 1.0 - Depth(), 1.0));
+float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898 + iTime,78.233 + iTime)))*43758.5453123 + iTime);
+
 void main () {
+
 	vec2 uv2 = uv - 0.5;
 	uv2.x *= iResolution.x / iResolution.y;
 	
-	vec2 pos = vec2(-0.425,-0.492);	
-	vec3 col = mix(blue, red, iTempScalar);
+//	vec2 pos = vec2(-0.425,-0.492);	
+//	vec3 col = mix(blue, red, iTempScalar);
 
-	float circle = Circle(uv2, pos, (0.0125*0.5), 0.001);
-	for (int i = 0; i < 8; i++){
-		circle += Circle(uv2, pos+vec2(0,i*0.0058), (0.01*0.5), 0.001);
-	}
-    outColor = vec4(col, circle);
+//	float circle = Circle(uv2, pos, (0.0125*0.5), 0.001);
+//	for (int i = 0; i < 8; i++){
+//		circle += Circle(uv2, pos+vec2(0,i*0.0058), (0.01*0.5), 0.001);
+//	}
+	//vec3 f = vDepth.r > 0.9 ? vec3(sin(Color.r * iTempScalar),Color.g,Color.b) : Color.xyz;
+	outColor = vec4(Color.xyz, 1.0);
 }
 
 
