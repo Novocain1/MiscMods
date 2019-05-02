@@ -1,6 +1,9 @@
 #version 330 core
-in vec2 uv;
-out vec4 outColor;
+#extension GL_ARB_explicit_attrib_location: enable
+layout(location = 0) in vec3 vertex;
+out vec2 uv;
+
+uniform sampler2D iDepthBuffer;
 
 uniform vec2 iResolution;
 uniform vec2 iMouse;
@@ -25,18 +28,21 @@ uniform float iRainfall;
 uniform float iCurrentHealth;
 uniform float iMaxHealth;
 
+//scalar
+uniform float iTempScalar;
+
 //By ID, if it's null, it'll be -1
 uniform float iActiveItem;
 uniform float iLookingAtBlock;
 uniform float iLookingAtEntity;
+float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898 + iTime, 78.233 + iTime)))*43758.5453123 + iTime);
 
 //Current Enum Tool Type
 //NoTool: -1, Knife: 0, Pickaxe: 1, Axe: 2, Sword: 3, Shovel: 4, Hammer: 5, Spear: 6, Bow: 7, Shears: 8, Sickle: 9, Hoe: 10, Saw: 11, Chisel: 12,
 uniform float iActiveTool;
 
-void main () {
-	if (iActiveItem == 1057) {
-		vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));
-    	outColor = vec4(col, 0.5);
-	}
+void main(void)
+{
+    gl_Position = vec4(vertex.xy , 1.0, 1);
+    uv = (vertex.xy + 1.0) / 2.0;
 }

@@ -113,15 +113,15 @@
     <Compile Include="ShaderTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="mods\ShaderTest\assets\game\shaders\viewtemp.fsh" />
-    <None Include="mods\ShaderTest\assets\game\shaders\chickenshader.fsh" />
+    <None Include="mods\ShaderTest\assets\game\shaders\testshader.fsh" />
     <None Include="mods\ShaderTest\modinfo.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="mods\ShaderTest\assets\game\shaders\viewtemp.vsh" />
-    <Content Include="mods\ShaderTest\assets\game\shaders\chickenshader.vsh" />
+    <Content Include="mods\ShaderTest\assets\game\shaders\testshader.vsh" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="mods\ShaderTest\assets\game\shaderincludes\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />

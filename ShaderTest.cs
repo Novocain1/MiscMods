@@ -79,7 +79,7 @@ namespace ShaderTestMod
             if (!File.Exists(file))
             {
                 Directory.CreateDirectory(path);
-                File.WriteAllText(file, "chickenshader");
+                File.WriteAllText(file, "testshader");
             }
             orthoShaderKeys = File.ReadAllLines(file);
 

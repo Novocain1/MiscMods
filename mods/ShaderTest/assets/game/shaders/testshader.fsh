@@ -1,4 +1,6 @@
 #version 330 core
+//#include dither.fsh
+
 in vec2 uv;
 out vec4 outColor;
 
@@ -55,16 +57,18 @@ vec2 Rotate(float speedx, float speedy, float radius){
 }
 
 float near = 0.001; 
-float far  = 1500.0; 
+float far  = 1500.0;
 
 float Depth() 
 {
 	float depth = texture(iDepthBuffer, uv).x;
     float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));	
+    return (2.0 * near * far) / (far + near - z * (far - near));// + NoiseFromPixelPosition(ivec2(int(iResolution.x * uv.x), int(iResolution.y * uv.y)), int(iTime), int(iResolution.x)).x;
+	//return depth;
 }
+float depth = Depth();
 
-vec3 vDepth = vec3(Depth(), Depth(), Depth());
+vec3 vDepth = vec3(Depth());
 vec4 Color = texture(iColor, uv);
 vec4 Light = texture(iLight, uv);
 float iGlow = Light.r;
@@ -74,32 +78,34 @@ vec4 pColor(vec2 uva){
 	return texture(iColor, uva);
 }
 
-vec3 camVec()
+vec3 camVec = vec3(cos(iCamera.x) * cos(iCamera.y), sin(iCamera.x), cos(iCamera.x) * sin(-iCamera.y));
+vec3 camNrm = normalize(camVec);
+
+//vec3 Nrm = normalize(vec3(Depth(), 1.0 - Depth(), 1.0));
+float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898, 78.233)))*43758.5453123);
+const vec3 nrmavg = vec3(128.0/255.0, 128.0/255.0, 1);
+
+vec3 test()
 {
-	float xzLen = cos(iCamera.x);
-	float x = xzLen * cos(iCamera.y);
-	float y = sin(iCamera.x);
-	float z = xzLen * sin(-iCamera.y);
-	return vec3(x,y,z);
+	if(depth > far)
+	{
+		return nrmavg;
+	}
+	else
+	{	
+		vec4 pos = vec4((uv.xy * 0.5) / (depth), uv.x, 1.0) * uv.y;
+		vec3 n = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz))) * 0.5 + 0.5;
+		return n;
+	}
 }
+vec3 Nrm = test();
 
-vec3 Nrm = normalize(vec3(Depth(), 1.0 - Depth(), 1.0));
-float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898 + iTime,78.233 + iTime)))*43758.5453123 + iTime);
-
-void main () {
-
+void main () 
+{
 	vec2 uv2 = uv - 0.5;
 	uv2.x *= iResolution.x / iResolution.y;
-	
-//	vec2 pos = vec2(-0.425,-0.492);	
-//	vec3 col = mix(blue, red, iTempScalar);
 
-//	float circle = Circle(uv2, pos, (0.0125*0.5), 0.001);
-//	for (int i = 0; i < 8; i++){
-//		circle += Circle(uv2, pos+vec2(0,i*0.0058), (0.01*0.5), 0.001);
-//	}
-	//vec3 f = vDepth.r > 0.9 ? vec3(sin(Color.r * iTempScalar),Color.g,Color.b) : Color.xyz;
-	outColor = vec4(Color.xyz, 1.0);
+	outColor = vec4(Nrm, 1.0);
 }
 
 
