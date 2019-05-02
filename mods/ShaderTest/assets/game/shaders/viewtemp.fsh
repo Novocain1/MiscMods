@@ -77,9 +77,9 @@ vec4 pColor(vec2 uva){
 vec3 camVec()
 {
 	float xzLen = cos(iCamera.x);
-	float y = xzLen * cos(-iCamera.y);
-	float z = sin(iCamera.x);
-	float x = xzLen * sin(iCamera.y);
+	float x = xzLen * cos(iCamera.y);
+	float y = sin(iCamera.x);
+	float z = xzLen * sin(-iCamera.y);
 	return vec3(x,y,z);
 }
 
