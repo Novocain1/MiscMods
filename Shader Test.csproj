@@ -109,6 +109,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoDeathWaypoints.cs" />
     <Compile Include="ItemSortTest.cs" />
     <Compile Include="ShaderTest.cs" />
   </ItemGroup>

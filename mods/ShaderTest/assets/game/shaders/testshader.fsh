@@ -1,6 +1,8 @@
 #version 330 core
 //#include dither.fsh
 
+precision highp float;
+
 in vec2 uv;
 out vec4 outColor;
 
@@ -87,16 +89,9 @@ const vec3 nrmavg = vec3(128.0/255.0, 128.0/255.0, 1);
 
 vec3 test()
 {
-	if(depth > far)
-	{
-		return nrmavg;
-	}
-	else
-	{	
-		vec4 pos = vec4((uv.xy * 0.5) / (depth), uv.x, 1.0) * uv.y;
-		vec3 n = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz))) * 0.5 + 0.5;
-		return n;
-	}
+	vec4 pos = vec4((uv.xy * 0.5) / (depth), uv.x, 1.0) * uv.y;
+	vec3 n = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz))) * 0.5 + 0.5;
+	return n;
 }
 vec3 Nrm = test();
 
@@ -105,7 +100,7 @@ void main ()
 	vec2 uv2 = uv - 0.5;
 	uv2.x *= iResolution.x / iResolution.y;
 
-	outColor = vec4(Nrm, 1.0);
+	//outColor = vec4(clamp(Color.xyz / Nrm.y, 0, 1), 1.0);
 }
 
 
