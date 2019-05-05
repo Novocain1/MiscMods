@@ -5,7 +5,7 @@
     <ProjectGuid>{A60D74D9-62A5-450C-928D-C64462F1473C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>SortingMod</AssemblyName>
+    <AssemblyName>AutoDeathWaypoints</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -110,8 +110,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoDeathWaypoints.cs" />
-    <Compile Include="ItemSortTest.cs" />
-    <Compile Include="ShaderTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mods\ShaderTest\assets\game\shaders\testshader.fsh" />

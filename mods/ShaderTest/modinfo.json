@@ -1,11 +1,11 @@
 {
 	"type": "code",
-	"name": "ItemSortMod",
-	"modid": "itemsortmod",
-	"description" : "Allows the player to sort inventories by pressing 'i' on their keyboard",
+	"name": "AutoDeathWaypoints",
+	"modid": "autodeathwaypoints",
+	"description" : "Automatically creates waypoints on player death",
 	"authors": ["Novocain"],
-	"version": "1.0.8",
+	"version": "1.0.1",
 	"dependencies": {
-	"game": "1.9.0-rc.2",
+	"game": "1.9.1",
 	}
 }
