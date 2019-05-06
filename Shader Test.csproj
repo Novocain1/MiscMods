@@ -5,7 +5,7 @@
     <ProjectGuid>{A60D74D9-62A5-450C-928D-C64462F1473C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <AssemblyName>AutoDeathWaypoints</AssemblyName>
+    <AssemblyName>WaypointUtils</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

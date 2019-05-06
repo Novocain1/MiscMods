@@ -47,8 +47,7 @@ namespace DeathWaypoints
                     {
                         WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
                         WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
-                        List<Waypoint> waypoints = HaxorMan.GetInstanceField(typeof(WaypointMapLayer), layer, "ownWaypoints") as List<Waypoint>;
-                        if (waypoints.Count > 0 || capi.World.Calendar.TotalHours > time)
+                        if (layer.ownWaypoints.Count > 0 || capi.World.Calendar.TotalHours > time)
                         {
                             if (capi.Settings.Bool["floatywaypoints"]) OpenWaypoints();
                             api.World.UnregisterGameTickListener(id2);
@@ -86,16 +85,15 @@ namespace DeathWaypoints
         {
             WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
             WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
-            List<Waypoint> waypoints = HaxorMan.GetInstanceField(typeof(WaypointMapLayer), layer, "ownWaypoints") as List<Waypoint>;
 
             guiDialogs = new List<GuiDialogFloatyWaypoints>();
 
-            for (int i = 0; i < waypoints.Count; i++)
+            for (int i = 0; i < layer.ownWaypoints.Count; i++)
             {
-                string text = waypoints[i].Title != null ? "Waypoint: " + waypoints[i].Title : "Waypoint: ";
-                int color = waypoints[i].Color;
+                string text = layer.ownWaypoints[i].Title != null ? "Waypoint: " + layer.ownWaypoints[i].Title : "Waypoint: ";
+                int color = layer.ownWaypoints[i].Color;
 
-                floatyPoints = new GuiDialogFloatyWaypoints(text, capi, waypoints[i].Position, color);
+                floatyPoints = new GuiDialogFloatyWaypoints(text, capi, layer.ownWaypoints[i].Position, color);
 
                 floatyPoints.OnOwnPlayerDataReceived();
                 if (floatyPoints.TryOpen())
@@ -111,6 +109,7 @@ namespace DeathWaypoints
         Vec3d waypointPos;
         string DialogTitle;
         int color;
+        string dialogText = "";
 
         public GuiDialogFloatyWaypoints(string DialogTitle, ICoreClientAPI capi, Vec3d waypointPos, int color) : base(capi)
         {
@@ -136,10 +135,19 @@ namespace DeathWaypoints
                 .Compose()
             ;
             if (capi.Settings.Bool["floatywaypoints"]) TryOpen();
+
+            capi.World.RegisterGameTickListener(dt => 
+            {
+                EntityPlayer entityPlayer = capi.World.Player.Entity;
+                double distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
+                dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
+            }, 500);
         }
 
         protected virtual double FloatyDialogPosition => 0.75;
         protected virtual double FloatyDialogAlign => 0.75;
+
+        public override bool ShouldReceiveMouseEvents() => false;
 
         public void RenderWaypoint()
         {
@@ -166,10 +174,8 @@ namespace DeathWaypoints
             else
             {
                 double distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
-                SingleComposer.GetDynamicText("text").SetNewText(DialogTitle + " " + distance + "m" + "\n\u2022");
+                SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             }
-
-
         }
 
         public override void OnRenderGUI(float deltaTime)

@@ -1,10 +1,10 @@
 {
 	"type": "code",
-	"name": "AutoDeathWaypoints",
-	"modid": "autodeathwaypoints",
-	"description" : "Automatically creates waypoints on player death",
+	"name": "WaypointUtils",
+	"modid": "waypointutils",
+	"description" : "Automatically creates waypoints on player death, floaty waypoints, and other things",
 	"authors": ["Novocain"],
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"dependencies": {
 	"game": "1.9.1",
 	}
