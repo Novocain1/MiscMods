@@ -35,12 +35,16 @@ namespace DeathWaypoints
                     {
                         if (player.WatchedAttributes["entityDead"].ToString() == "1")
                         {
-                            api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " Player Death Waypoint");
+                            api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " *Player Death Waypoint*");
                         }
                     });
 
                     capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
                     capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
+
+                    capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
+                    capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
+
                     double time = capi.World.Calendar.TotalHours + 0.2;
 
                     id2 = api.World.RegisterGameTickListener(dt2 => 
@@ -53,6 +57,16 @@ namespace DeathWaypoints
                             api.World.UnregisterGameTickListener(id2);
                         }
                         
+                    }, 500);
+
+                    api.World.RegisterGameTickListener(dt2 =>
+                    {
+                        WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
+                        WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
+                        if (layer.ownWaypoints.Count != guiDialogs.Count && guiDialogs.Count > 0)
+                        {
+                            Repopulate();
+                        }
                     }, 500);
 
 
@@ -102,6 +116,36 @@ namespace DeathWaypoints
                 }
             }
         }
+
+        public bool CullDeathWaypoints(KeyCombination t1)
+        {
+            WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
+            WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
+            List<string> commands = new List<string>();
+
+            for (int i = 0; i < layer.ownWaypoints.Count; i++)
+            {
+                if (layer.ownWaypoints[i].Title.Contains("*Player Death Waypoint*"))
+                {
+                    commands.Add("/waypoint remove " + i);
+                }
+            }
+
+            for (int i = commands.Count; i --> 0; )
+            {
+                capi.SendChatMessage(commands[i]);
+            }
+
+            Repopulate();
+
+            return true;
+        }
+
+        public void Repopulate()
+        {
+            ViewWaypoints(new KeyCombination());
+            ViewWaypoints(new KeyCombination());
+        }
     }
 
     public class GuiDialogFloatyWaypoints : HudElement
@@ -110,6 +154,7 @@ namespace DeathWaypoints
         string DialogTitle;
         int color;
         string dialogText = "";
+        double distance = 0;
 
         public GuiDialogFloatyWaypoints(string DialogTitle, ICoreClientAPI capi, Vec3d waypointPos, int color) : base(capi)
         {
@@ -139,7 +184,7 @@ namespace DeathWaypoints
             capi.World.RegisterGameTickListener(dt => 
             {
                 EntityPlayer entityPlayer = capi.World.Player.Entity;
-                double distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
+                distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
                 dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
             }, 500);
         }
@@ -156,7 +201,8 @@ namespace DeathWaypoints
             Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             ElementBounds bounds = ElementBounds.Empty;
-            if (pos.Z < 0) return;
+
+            if (pos.Z < 0 || (distance > 2000 && !dialogText.Contains("*"))) return;
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;
             SingleComposer.Bounds.fixedOffsetX = 0;
@@ -166,7 +212,7 @@ namespace DeathWaypoints
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            if (Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)) > 500)
+            if (distance > 500 && !dialogText.Contains("*"))
             {
                 SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
                 return;
