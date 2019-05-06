@@ -35,13 +35,13 @@ namespace DeathWaypoints
                     {
                         if (player.WatchedAttributes["entityDead"].ToString() == "1")
                         {
-                            api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColor(api) + " Player Death Waypoint");
+                            api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " Player Death Waypoint");
                         }
                     });
 
                     capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
                     capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
-                    double time = capi.World.Calendar.TotalHours + 1;
+                    double time = capi.World.Calendar.TotalHours + 0.2;
 
                     id2 = api.World.RegisterGameTickListener(dt2 => 
                     {
@@ -104,11 +104,6 @@ namespace DeathWaypoints
                 }
             }
         }
-
-        public void UpdateWaypoints()
-        {
-
-        }
     }
 
     public class GuiDialogFloatyWaypoints : HudElement
@@ -133,6 +128,7 @@ namespace DeathWaypoints
 
             CairoFont font = CairoFont.WhiteSmallText();
             font.Color = dColor;
+            font = font.WithStroke(new double[] { 0, 0, 0, 1 }, 0.5);
 
             SingleComposer = capi.Gui
                 .CreateCompo(DialogTitle + capi.Gui.OpenedGuis.Count + 1, dialogBounds)
@@ -204,6 +200,16 @@ namespace DeathWaypoints
             );
 
         public static string RandomHexColor(ICoreAPI api) => RandomColor(api).ToString("X");
+        public static string RandomHexColorVClamp(ICoreAPI api, double min, double max) => ClampedRandomColorValue(api, min, max).ToString("X");
+
+        public static int ClampedRandomColorValue(ICoreAPI api, double min, double max)
+        {
+            return ColorUtil.HsvToRgb(
+            (int)(api.World.Rand.NextDouble() * 255),
+            (int)(api.World.Rand.NextDouble() * 255),
+            (int)(GameMath.Clamp(api.World.Rand.NextDouble(), min, max) * 255)
+            );
+        }
     }
 
     class HaxorMan

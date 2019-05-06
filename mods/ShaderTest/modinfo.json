@@ -4,7 +4,7 @@
 	"modid": "autodeathwaypoints",
 	"description" : "Automatically creates waypoints on player death",
 	"authors": ["Novocain"],
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"dependencies": {
 	"game": "1.9.1",
 	}
