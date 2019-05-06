@@ -130,14 +130,15 @@ namespace DeathWaypoints
                     commands.Add("/waypoint remove " + i);
                 }
             }
-
-            for (int i = commands.Count; i --> 0; )
+            if (commands.Count > 0)
             {
-                capi.SendChatMessage(commands[i]);
+                for (int i = commands.Count; i-- > 0;)
+                {
+                    capi.SendChatMessage(commands[i]);
+                }
+
+                Repopulate();
             }
-
-            Repopulate();
-
             return true;
         }
 
@@ -202,7 +203,8 @@ namespace DeathWaypoints
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             ElementBounds bounds = ElementBounds.Empty;
 
-            if (pos.Z < 0 || (distance > 2000 && !dialogText.Contains("*"))) return;
+            if (pos.Z < 0 || (distance > 2000 && !dialogText.Contains("*")))
+                return;
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;
             SingleComposer.Bounds.fixedOffsetX = 0;
@@ -212,16 +214,11 @@ namespace DeathWaypoints
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            if (distance > 500 && !dialogText.Contains("*"))
-            {
-                SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
-                return;
-            }
-            else
-            {
-                double distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
-                SingleComposer.GetDynamicText("text").SetNewText(dialogText);
-            }
+            bool testY = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight > 0.40 && SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight < 0.60);
+            bool testX = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth > 0.40 && SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth < 0.60);
+
+            if ((testY && testX) || distance < 500 || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
+            else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
         }
 
         public override void OnRenderGUI(float deltaTime)
@@ -263,7 +260,7 @@ namespace DeathWaypoints
             );
         }
     }
-
+    /*
     class HaxorMan
     {
         internal static object GetInstanceField(Type type, object instance, string fieldName)
@@ -274,4 +271,5 @@ namespace DeathWaypoints
             return field.GetValue(instance);
         }
     }
+    */
 }
