@@ -214,8 +214,11 @@ namespace DeathWaypoints
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            bool testY = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight > 0.40 && SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight < 0.60);
-            bool testX = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth > 0.40 && SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth < 0.60);
+            double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
+            double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
+
+            bool testY = (yBounds > 0.49 && yBounds < 0.51);
+            bool testX = (xBounds > 0.49 && xBounds < 0.51);
 
             if ((testY && testX) || distance < 500 || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
