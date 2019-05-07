@@ -109,9 +109,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutoDeathWaypoints.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="mods\ShaderTest\assets\game\shaders\testshader.fsh" />
     <None Include="mods\ShaderTest\modinfo.json" />
   </ItemGroup>
@@ -120,6 +117,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="mods\ShaderTest\assets\game\shaderincludes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="WaypointUtils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>

@@ -6,29 +6,45 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
-namespace DeathWaypoints
+namespace WaypointUtils
 {
-    class AutoDeathWaypoints : ModSystem
+    class WaypointUtilConfig
+    {
+        public double DotRange { get; set; } = 2000.0;
+        public double TitleRange { get; set; } = 500.0;
+    }
+
+    class WaypointUtilSystem : ModSystem
     {
         long id;
-        long id2;
         ICoreClientAPI capi;
         GuiDialogFloatyWaypoints floatyPoints;
+        public static WaypointUtilConfig Config = new WaypointUtilConfig();
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             base.StartClientSide(api);
             capi = api;
 
+            LoadConfig();
+
+            capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
+            capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
+            capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => LoadConfig());
+
             id = api.World.RegisterGameTickListener(dt =>
             {
                 EntityPlayer player = api.World.Player.Entity;
-
+                
                 if (player != null)
                 {
                     player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
@@ -39,34 +55,14 @@ namespace DeathWaypoints
                         }
                     });
 
-                    capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
-                    capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
-
-                    capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
-                    capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
-
-                    double time = capi.World.Calendar.TotalHours + 0.2;
-
-                    id2 = api.World.RegisterGameTickListener(dt2 => 
+                    api.World.RegisterCallback(d => 
                     {
-                        WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
-                        WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
-                        if (layer.ownWaypoints.Count > 0 || capi.World.Calendar.TotalHours > time)
-                        {
-                            if (capi.Settings.Bool["floatywaypoints"]) OpenWaypoints();
-                            api.World.UnregisterGameTickListener(id2);
-                        }
-                        
+                        if (Layer().ownWaypoints.Count > 0 && capi.Settings.Bool["floatywaypoints"]) OpenWaypoints();
                     }, 500);
 
-                    api.World.RegisterGameTickListener(dt2 =>
+                    api.World.RegisterGameTickListener(d =>
                     {
-                        WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
-                        WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
-                        if (layer.ownWaypoints.Count != guiDialogs.Count && guiDialogs.Count > 0)
-                        {
-                            Repopulate();
-                        }
+                        if (Layer().ownWaypoints.Count != guiDialogs.Count && guiDialogs.Count > 0) Repopulate();
                     }, 500);
 
 
@@ -76,8 +72,21 @@ namespace DeathWaypoints
 
         }
 
-        List<GuiDialogFloatyWaypoints> guiDialogs = new List<GuiDialogFloatyWaypoints>();
+        public bool LoadConfig()
+        {
+            if (capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json") == null) capi.StoreModConfig(Config, "waypointutils.json");
 
+            Config = capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json");
+            return true;
+        }
+
+        WaypointMapLayer Layer()
+        {
+            WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
+            return modMapManager.MapLayers.Single(l => l is WaypointMapLayer) as WaypointMapLayer;
+        }
+
+        List<GuiDialogFloatyWaypoints> guiDialogs = new List<GuiDialogFloatyWaypoints>();
         private bool ViewWaypoints(KeyCombination t1)
         {
             if (guiDialogs.Count > 0)
@@ -88,17 +97,13 @@ namespace DeathWaypoints
                 }
                 guiDialogs.Clear();
             }
-            else
-            {
-                OpenWaypoints();
-            }
+            else OpenWaypoints();
             return true;
         }
 
         public void OpenWaypoints()
         {
-            WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
-            WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
+            WaypointMapLayer layer = Layer();
 
             guiDialogs = new List<GuiDialogFloatyWaypoints>();
 
@@ -119,8 +124,7 @@ namespace DeathWaypoints
 
         public bool CullDeathWaypoints(KeyCombination t1)
         {
-            WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
-            WaypointMapLayer layer = modMapManager.MapLayers.Single(ml => ml is WaypointMapLayer) as WaypointMapLayer;
+            WaypointMapLayer layer = Layer();
             List<string> commands = new List<string>();
 
             for (int i = 0; i < layer.ownWaypoints.Count; i++)
@@ -180,14 +184,18 @@ namespace DeathWaypoints
                 .AddDynamicText("", font, EnumTextOrientation.Center, textBounds, "text")
                 .Compose()
             ;
+            UpdateDialog();
+
             if (capi.Settings.Bool["floatywaypoints"]) TryOpen();
 
-            capi.World.RegisterGameTickListener(dt => 
-            {
-                EntityPlayer entityPlayer = capi.World.Player.Entity;
-                distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
-                dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
-            }, 500);
+            capi.World.RegisterGameTickListener(dt => UpdateDialog(), 500);
+        }
+
+        public void UpdateDialog()
+        {
+            EntityPlayer entityPlayer = capi.World.Player.Entity;
+            distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
+            dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
         }
 
         protected virtual double FloatyDialogPosition => 0.75;
@@ -198,13 +206,15 @@ namespace DeathWaypoints
         public void RenderWaypoint()
         {
             if (!capi.Settings.Bool["floatywaypoints"]) return;
+
+            WaypointUtilConfig config = WaypointUtilSystem.Config;
+
             EntityPlayer entityPlayer = capi.World.Player.Entity;
             Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             ElementBounds bounds = ElementBounds.Empty;
 
-            if (pos.Z < 0 || (distance > 2000 && !dialogText.Contains("*")))
-                return;
+            if (pos.Z < 0 || (distance > config.DotRange && !dialogText.Contains("*"))) return;
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;
             SingleComposer.Bounds.fixedOffsetX = 0;
@@ -217,10 +227,9 @@ namespace DeathWaypoints
             double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
-            bool testY = (yBounds > 0.49 && yBounds < 0.51);
-            bool testX = (xBounds > 0.49 && xBounds < 0.51);
+            bool isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
 
-            if ((testY && testX) || distance < 500 || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
+            if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
         }
 
