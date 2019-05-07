@@ -89,16 +89,18 @@ namespace WaypointUtils
         List<GuiDialogFloatyWaypoints> guiDialogs = new List<GuiDialogFloatyWaypoints>();
         private bool ViewWaypoints(KeyCombination t1)
         {
-            if (guiDialogs.Count > 0)
-            {
-                for (int i = 0; i < guiDialogs.Count; i++)
-                {
-                    guiDialogs[i].TryClose();
-                }
-                guiDialogs.Clear();
-            }
+            if (guiDialogs.Count != 0) CloseAndClear();
             else OpenWaypoints();
             return true;
+        }
+
+        public void CloseAndClear()
+        {
+            for (int i = 0; i < guiDialogs.Count; i++)
+            {
+                guiDialogs[i].TryClose();
+            }
+            guiDialogs.Clear();
         }
 
         public void OpenWaypoints()
@@ -203,7 +205,7 @@ namespace WaypointUtils
 
         public override bool ShouldReceiveMouseEvents() => false;
 
-        public void RenderWaypoint()
+        public override void OnRenderGUI(float deltaTime)
         {
             if (!capi.Settings.Bool["floatywaypoints"]) return;
 
@@ -214,7 +216,11 @@ namespace WaypointUtils
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             ElementBounds bounds = ElementBounds.Empty;
 
-            if (pos.Z < 0 || (distance > config.DotRange && !dialogText.Contains("*"))) return;
+            if (pos.Z < 0 || (distance > config.DotRange && !dialogText.Contains("*")))
+            {
+                SingleComposer.GetDynamicText("text").SetNewText("");
+                return;
+            }
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;
             SingleComposer.Bounds.fixedOffsetX = 0;
@@ -231,11 +237,7 @@ namespace WaypointUtils
 
             if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
-        }
 
-        public override void OnRenderGUI(float deltaTime)
-        {
-            RenderWaypoint();
             base.OnRenderGUI(deltaTime);
         }
 
