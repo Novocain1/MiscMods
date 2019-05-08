@@ -12,7 +12,7 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.Common;
 
-namespace SortTest
+namespace ItemSorting
 {
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class SortMessage
@@ -28,7 +28,7 @@ namespace SortTest
         public string inv;
     }
 
-    class ItemSortTest : ModSystem
+    class ItemSortingMain : ModSystem
     {
         ICoreAPI api;
         static ICoreClientAPI capi;

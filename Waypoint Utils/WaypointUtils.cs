@@ -18,6 +18,7 @@ namespace WaypointUtils
     {
         public double DotRange { get; set; } = 2000.0;
         public double TitleRange { get; set; } = 500.0;
+        public bool PerBlockWaypoints { get; set; } = false;
     }
 
     class WaypointUtilSystem : ModSystem
@@ -39,12 +40,13 @@ namespace WaypointUtils
             capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
             capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
-            capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => LoadConfig());
+            capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
+            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
             id = api.World.RegisterGameTickListener(dt =>
             {
                 EntityPlayer player = api.World.Player.Entity;
-                
+
                 if (player != null)
                 {
                     player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
@@ -55,7 +57,7 @@ namespace WaypointUtils
                         }
                     });
 
-                    api.World.RegisterCallback(d => 
+                    api.World.RegisterCallback(d =>
                     {
                         if (Layer().ownWaypoints.Count > 0 && capi.Settings.Bool["floatywaypoints"]) OpenWaypoints();
                     }, 500);
@@ -72,13 +74,43 @@ namespace WaypointUtils
 
         }
 
-        public bool LoadConfig()
+        private void CmdWaypointConfig(int groupId, CmdArgs args)
         {
-            if (capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json") == null) capi.StoreModConfig(Config, "waypointutils.json");
+            string arg = args.PopWord();
+            switch (arg)
+            {
+                case "dotrange":
+                    double? dr = args.PopDouble();
+                    Config.DotRange = dr != null ? (double)dr : Config.DotRange;
+                    capi.ShowChatMessage("Dot Range Set To " + Config.DotRange + " Meters.");
+                    break;
+                case "titlerange":
+                    double? tr = args.PopDouble();
+                    Config.TitleRange = tr != null ? (double)tr : Config.TitleRange;
+                    capi.ShowChatMessage("Title Range Set To " + Config.TitleRange + " Meters.");
+                    break;
+                case "perblockwaypoints":
+                    bool? pb = args.PopBool();
+                    Config.PerBlockWaypoints = pb != null ? (bool)pb : Config.PerBlockWaypoints;
+                    capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
+                    break;
+                default:
+                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints]"));
+                    break;
+            }
+            SaveConfig();
+            Repopulate();
+        }
+
+        public void LoadConfig()
+        {
+            if (capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json") == null) { SaveConfig(); return; }
 
             Config = capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json");
-            return true;
+            SaveConfig();
         }
+
+        public void SaveConfig() => capi.StoreModConfig(Config, "waypointutils.json");
 
         WaypointMapLayer Layer()
         {
@@ -113,8 +145,9 @@ namespace WaypointUtils
             {
                 string text = layer.ownWaypoints[i].Title != null ? "Waypoint: " + layer.ownWaypoints[i].Title : "Waypoint: ";
                 int color = layer.ownWaypoints[i].Color;
+                Vec3d wPos = Config.PerBlockWaypoints ? layer.ownWaypoints[i].Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : layer.ownWaypoints[i].Position;
 
-                floatyPoints = new GuiDialogFloatyWaypoints(text, capi, layer.ownWaypoints[i].Position, color);
+                floatyPoints = new GuiDialogFloatyWaypoints(text, capi, wPos, color);
 
                 floatyPoints.OnOwnPlayerDataReceived();
                 if (floatyPoints.TryOpen())
@@ -174,7 +207,7 @@ namespace WaypointUtils
         {
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialogAtPos(0.0);
             ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.CenterMiddle, 0, 0, 250, 50);
-            
+
             double[] dColor = ColorUtil.ToRGBADoubles(color);
 
             CairoFont font = CairoFont.WhiteSmallText();
