@@ -1,0 +1,92 @@
+{
+	"editor": {
+		"allAngles": true,
+		"singleTexture": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"lute": "item/tool/instrument/lute/lute"
+	},
+	"elements": [
+		{
+			"name": "lute_body",
+			"from": [ 0.0, 0.0, 5.0 ], 
+			"to": [ 6.0, 2.0, 11.0 ], 
+			"rotationOrigin": [ 3.0, 1.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#lute", "uv": [ 2.0, 0.0, 8.0, 2.0 ] },
+				"east": { "texture": "#lute", "uv": [ 8.0, 2.0, 10.0, 8.0 ], "rotation": 90 },
+				"south": { "texture": "#lute", "uv": [ 2.0, 8.0, 8.0, 10.0 ] },
+				"west": { "texture": "#lute", "uv": [ 0.0, 2.0, 2.0, 8.0 ], "rotation": 270 },
+				"up": { "texture": "#lute", "uv": [ 2.0, 2.0, 8.0, 8.0 ] },
+				"down": { "texture": "#lute", "uv": [ 10.0, 2.0, 16.0, 8.0 ] }
+			},
+			"children": [
+				{
+					"name": "neck",
+					"from": [ 5.5, 1.1, 2.0 ], 
+					"to": [ 14.0, 2.1, 4.0 ], 
+					"rotationOrigin": [ 5.5, 1.1, 2.0 ],
+					"rotationZ": 3.0,
+					"faces": {
+						"north": { "texture": "#lute", "uv": [ 1.0, 13.0, 9.5, 14.0 ] },
+						"east": { "texture": "#lute", "uv": [ 9.5, 11.0, 10.5, 13.0 ], "rotation": 90 },
+						"south": { "texture": "#lute", "uv": [ 1.0, 10.0, 9.5, 11.0 ], "rotation": 180 },
+						"west": { "texture": "#lute", "uv": [ 0.0, 11.0, 1.0, 13.0 ], "rotation": 270 },
+						"up": { "texture": "#lute", "uv": [ 1.0, 11.0, 9.5, 13.0 ] },
+						"down": { "texture": "#lute", "uv": [ 1.0, 14.0, 9.5, 16.0 ] }
+					},
+					"children": [
+						{
+							"name": "head",
+							"from": [ 8.0, 1.1, -0.2 ], 
+							"to": [ 11.0, 2.1, 2.2 ], 
+							"rotationOrigin": [ 8.0, 1.1, -0.2 ],
+							"rotationZ": -97.0,
+							"faces": {
+								"north": { "texture": "#lute", "uv": [ 10.5, 9.0, 11.5, 12.0 ], "rotation": 270 },
+								"east": { "texture": "#lute", "uv": [ 11.5, 12.0, 14.0, 13.0 ], "rotation": 180, "autoUv": false },
+								"south": { "texture": "#lute", "uv": [ 14.0, 9.0, 15.0, 12.0 ], "rotation": 90 },
+								"west": { "texture": "#lute", "uv": [ 11.5, 8.0, 14.0, 9.0 ], "rotation": 180, "autoUv": false },
+								"up": { "texture": "#lute", "uv": [ 11.5, 9.0, 14.0, 12.0 ], "rotation": 90, "autoUv": false },
+								"down": { "texture": "#lute", "uv": [ 11.5, 13.0, 14.0, 16.0 ], "rotation": 90, "autoUv": false }
+							},
+							"children": [
+								{
+									"name": "peg1",
+									"from": [ 0.5, 0.3, -0.8 ], 
+									"to": [ 1.2, 0.7, 3.2 ], 
+									"rotationOrigin": [ 0.8, 0.5, -0.8 ],
+									"rotationZ": -47.0,
+									"faces": {
+										"north": { "texture": "#lute", "uv": [ 8.5, 0.5, 9.0, 1.0 ] },
+										"east": { "texture": "#lute", "uv": [ 9.0, 0.0, 13.0, 0.5 ] },
+										"south": { "texture": "#lute", "uv": [ 13.0, 0.5, 13.5, 1.0 ] },
+										"west": { "texture": "#lute", "uv": [ 9.0, 0.5, 13.0, 1.0 ] },
+										"up": { "texture": "#lute", "uv": [ 9.0, 1.0, 13.0, 1.5 ], "rotation": 90 },
+										"down": { "texture": "#lute", "uv": [ 9.0, 0.5, 13.0, 1.0 ], "rotation": 90 }
+									}
+								},
+								{
+									"name": "peg2",
+									"from": [ 1.9, 0.3, -0.8 ], 
+									"to": [ 2.6, 0.7, 3.2 ], 
+									"rotationOrigin": [ 2.2, 0.5, -0.8 ],
+									"rotationZ": 25.0,
+									"faces": {
+										"north": { "texture": "#lute", "uv": [ 13.0, 0.5, 13.5, 1.0 ] },
+										"east": { "texture": "#lute", "uv": [ 9.0, 1.0, 13.0, 1.5 ] },
+										"south": { "texture": "#lute", "uv": [ 8.5, 0.5, 9.0, 1.0 ] },
+										"west": { "texture": "#lute", "uv": [ 9.0, 0.5, 13.0, 1.0 ] },
+										"up": { "texture": "#lute", "uv": [ 9.0, 0.0, 13.0, 0.5 ], "rotation": 90 },
+										"down": { "texture": "#lute", "uv": [ 9.0, 0.5, 13.0, 1.0 ], "rotation": 90 }
+									}
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]}

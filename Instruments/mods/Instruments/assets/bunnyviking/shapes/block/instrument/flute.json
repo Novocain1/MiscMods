@@ -1,0 +1,85 @@
+{
+	"editor": {
+		"allAngles": false,
+		"singleTexture": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"flute": "item/tool/instrument/flute/flute"
+	},
+	"elements": [
+		{
+			"name": "flute_root",
+			"from": [ 15.0, 1.0, 8.0 ], 
+			"to": [ 29.0, 2.0, 9.0 ], 
+			"rotationOrigin": [ 15.0, 1.0, 8.0 ],
+			"rotationY": 180.0,
+			"faces": {
+				"north": { "texture": "#flute", "uv": [ 1.0, 1.0, 15.0, 2.0 ] },
+				"east": { "texture": "#flute", "uv": [ 0.0, 0.0, 1.0, 1.0 ] },
+				"south": { "texture": "#flute", "uv": [ 1.0, 1.0, 15.0, 2.0 ], "rotation": 180 },
+				"west": { "texture": "#flute", "uv": [ 0.0, 0.0, 1.0, 1.0 ], "enabled": false },
+				"up": { "texture": "#flute", "uv": [ 1.0, 0.0, 15.0, 1.0 ], "rotation": 180 },
+				"down": { "texture": "#flute", "uv": [ 1.0, 1.0, 15.0, 2.0 ] }
+			},
+			"children": [
+				{
+					"name": "mouthpiece",
+					"from": [ 14.0, 0.5, 0.0 ], 
+					"to": [ 15.0, 1.0, 1.0 ], 
+					"rotationOrigin": [ 14.0, 0.5, 0.0 ],
+					"faces": {
+						"north": { "texture": "#flute", "uv": [ 2.0, 2.0, 3.0, 4.0 ], "rotation": 270, "autoUv": false },
+						"east": { "texture": "#flute", "uv": [ 0.0, 4.0, 2.0, 5.0 ], "autoUv": false },
+						"south": { "texture": "#flute", "uv": [ 2.0, 2.0, 3.0, 4.0 ], "rotation": 90, "autoUv": false },
+						"west": { "texture": "#flute", "uv": [ 0.0, 0.0, 1.0, 0.5 ], "enabled": false },
+						"up": { "texture": "#flute", "uv": [ 0.0, 2.0, 2.0, 4.0 ], "rotation": 90, "autoUv": false },
+						"down": { "texture": "#flute", "uv": [ 3.0, 2.0, 5.0, 4.0 ], "rotation": 270, "autoUv": false }
+					}
+				},
+				{
+					"name": "horn",
+					"from": [ -1.0, -0.4, -0.4 ], 
+					"to": [ 0.0, 1.4, 1.4 ], 
+					"rotationOrigin": [ -1.0, -0.4, -0.4 ],
+					"faces": {
+						"north": { "texture": "#flute", "uv": [ 8.0, 3.0, 9.0, 5.0 ], "autoUv": false },
+						"east": { "texture": "#flute", "uv": [ 9.0, 3.0, 11.0, 5.0 ], "autoUv": false },
+						"south": { "texture": "#flute", "uv": [ 5.0, 3.0, 6.0, 5.0 ], "autoUv": false },
+						"west": { "texture": "#flute", "uv": [ 6.0, 3.0, 8.0, 5.0 ], "autoUv": false },
+						"up": { "texture": "#flute", "uv": [ 6.0, 2.0, 8.0, 3.0 ], "rotation": 90, "autoUv": false },
+						"down": { "texture": "#flute", "uv": [ 6.0, 5.0, 8.0, 6.0 ], "rotation": 90, "autoUv": false }
+					}
+				},
+				{
+					"name": "ridgeA",
+					"from": [ 5.5, -0.3, -0.3 ], 
+					"to": [ 5.8, 1.3, 1.3 ], 
+					"rotationOrigin": [ 5.5, -0.3, -0.3 ],
+					"faces": {
+						"north": { "texture": "#flute", "uv": [ 8.0, 3.0, 8.5, 5.0 ], "autoUv": false },
+						"east": { "texture": "#flute", "uv": [ 9.0, 3.0, 11.0, 5.0 ], "autoUv": false },
+						"south": { "texture": "#flute", "uv": [ 8.5, 3.0, 9.0, 5.0 ], "autoUv": false },
+						"west": { "texture": "#flute", "uv": [ 6.0, 3.0, 8.0, 5.0 ], "autoUv": false },
+						"up": { "texture": "#flute", "uv": [ 6.0, 2.0, 8.0, 2.5 ], "rotation": 90, "autoUv": false },
+						"down": { "texture": "#flute", "uv": [ 6.0, 5.0, 8.0, 5.5 ], "rotation": 90, "autoUv": false }
+					}
+				},
+				{
+					"name": "ridgeB",
+					"from": [ 12.5, -0.3, -0.3 ], 
+					"to": [ 12.8, 1.3, 1.3 ], 
+					"rotationOrigin": [ 12.5, -0.3, -0.3 ],
+					"faces": {
+						"north": { "texture": "#flute", "uv": [ 8.0, 3.0, 8.5, 5.0 ], "autoUv": false },
+						"east": { "texture": "#flute", "uv": [ 9.0, 3.0, 11.0, 5.0 ], "autoUv": false },
+						"south": { "texture": "#flute", "uv": [ 8.5, 3.0, 9.0, 5.0 ], "autoUv": false },
+						"west": { "texture": "#flute", "uv": [ 6.0, 3.0, 8.0, 5.0 ], "autoUv": false },
+						"up": { "texture": "#flute", "uv": [ 6.0, 2.0, 8.0, 2.5 ], "rotation": 90, "autoUv": false },
+						"down": { "texture": "#flute", "uv": [ 6.0, 5.0, 8.0, 5.5 ], "rotation": 90, "autoUv": false }
+					}
+				}
+			]
+		}
+	]}

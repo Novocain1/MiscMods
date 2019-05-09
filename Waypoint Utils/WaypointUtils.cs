@@ -41,7 +41,7 @@ namespace WaypointUtils
             capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
             capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
-            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints]", new ClientChatCommandDelegate(CmdWaypointConfig));
+            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
             id = api.World.RegisterGameTickListener(dt =>
             {
@@ -96,8 +96,19 @@ namespace WaypointUtils
                     Config.PerBlockWaypoints = pb != null ? (bool)pb : Config.PerBlockWaypoints;
                     capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
                     break;
+                case "purge":
+                    string s = args.PopWord();
+                    if (s == "reallyreallyconfirm")
+                    {
+                        Purge();
+                    }
+                    else
+                    {
+                        capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
+                    }
+                    break;
                 default:
-                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints]"));
+                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge]"));
                     break;
             }
             SaveConfig();
@@ -113,6 +124,7 @@ namespace WaypointUtils
         }
 
         public void SaveConfig() => capi.StoreModConfig(Config, "waypointutils.json");
+
 
         WaypointMapLayer Layer()
         {
@@ -162,7 +174,6 @@ namespace WaypointUtils
         public bool CullDeathWaypoints(KeyCombination t1)
         {
             WaypointMapLayer layer = Layer();
-            List<string> commands = new List<string>();
 
             for (int i = layer.ownWaypoints.Count; i-- > 0;)
             {
@@ -173,6 +184,17 @@ namespace WaypointUtils
             }
             Repopulate();
             return true;
+        }
+
+        public void Purge()
+        {
+            WaypointMapLayer layer = Layer();
+
+            for (int i = layer.ownWaypoints.Count; i-- > 0;)
+            {
+                capi.SendChatMessage("/waypoint remove " + 0);
+            }
+            Repopulate();
         }
 
         public void Repopulate()
@@ -238,7 +260,6 @@ namespace WaypointUtils
 
             WaypointUtilConfig config = WaypointUtilSystem.Config;
 
-            EntityPlayer entityPlayer = capi.World.Player.Entity;
             Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             ElementBounds bounds = ElementBounds.Empty;
@@ -301,7 +322,7 @@ namespace WaypointUtils
             );
         }
     }
-    /*
+    
     class HaxorMan
     {
         internal static object GetInstanceField(Type type, object instance, string fieldName)
@@ -312,5 +333,5 @@ namespace WaypointUtils
             return field.GetValue(instance);
         }
     }
-    */
+    
 }
