@@ -51,6 +51,8 @@ namespace WaypointUtils
                 {
                     player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
                     {
+                        if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
+
                         if (player.WatchedAttributes["entityDead"].ToString() == "1")
                         {
                             api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " *Player Death Waypoint*");
@@ -162,22 +164,14 @@ namespace WaypointUtils
             WaypointMapLayer layer = Layer();
             List<string> commands = new List<string>();
 
-            for (int i = 0; i < layer.ownWaypoints.Count; i++)
+            for (int i = layer.ownWaypoints.Count; i-- > 0;)
             {
                 if (layer.ownWaypoints[i].Title.Contains("*Player Death Waypoint*"))
                 {
-                    commands.Add("/waypoint remove " + i);
+                    capi.SendChatMessage("/waypoint remove " + i);
                 }
             }
-            if (commands.Count > 0)
-            {
-                for (int i = commands.Count; i-- > 0;)
-                {
-                    capi.SendChatMessage(commands[i]);
-                }
-
-                Repopulate();
-            }
+            Repopulate();
             return true;
         }
 
