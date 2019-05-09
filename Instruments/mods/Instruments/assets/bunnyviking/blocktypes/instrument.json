@@ -1,28 +1,91 @@
 {
 	code: "instrument",
 	class: "BlockInstrument",
+  behaviors: [
+		{
+			name: "OmniRotatable",
+			properties: {
+				"rotateSides": true,
+				"facing": "block"
+			}
+		}
+	],
 	variantgroups: [
 		{ code: "instrument", states: ["flute", "lute", "harp"] },
+    { code: "rot", states: ["north", "east", "south", "west", "up", "down"] }
 	],
 	creativeinventory: { "general": ["*"], "terrain": ["*"], "construction": ["*"] },
-	shape: { base: "block/basic/cube" },
-	drawtype: "cube",
+  drops: [{ code: "instrument-{instrument}-down" }],
+  shapeByType: {
+    "*-north": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 180},
+    "*-east": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 90},
+    "*-south": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 270 },
+    "*-west": { base: "block/instrument/{instrument}"},
+    "*-up": { base: "block/instrument/{instrument}", rotateZ: 180},
+    "*-down": { base: "block/instrument/{instrument}"},
+  },
 	replaceable: 90,
-	requiredMiningTier: 2,
-	fertility: 0,
+  resistance: 0.75,
 	textures: {
-		all: { base: "block/stone/rock/granite" },
+		flute: { base: "block/instrument/flute" },
+    harp01: { base: "block/instrument/harp01" },
+    harp02: { base: "block/instrument/harp02" },
+    lute: { base: "block/instrument/lute" },
 	},
-	sounds: {
-		walk: "walk/stone",
-		byTool: {
-			"Pickaxe": { hit: "block/rock-hit-pickaxe", break: "block/rock-break-pickaxe" }
-		}
+	soundsbyType: {
+    "*-flute-*":{
+      walk: "walk/stone",
+    },
+    "*":{
+      walk: "walk/stone",
+      hit: "instrument/{instrument}-c3", 
+      break: "instrument/{instrument}-c4",
+    }
+
 	},
-	heldTpIdleAnimation: "holdbothhandslarge",
-	tpHandTransform: {
-		translation: { x: -1.2, y: -1.1, z: -0.8 },
-		rotation: { x: -2, y: 25, z: -78 },
-		scale: 0.37
-	}
+  maxStackSize: 1,
+	heldTpIdleAnimation: "",
+  heldTpUseAnimationByType: {
+    "*-flute-*": "holdbothhands",
+    "*": "holdbothhands",
+  },
+  lightAbsorption: 0,
+  sideopaque: {
+		all: false
+	},
+	sidesolid: {
+		all: false
+	},
+	tpHandTransformByType: {
+    "*-flute-*":{
+		  translation: { x: -1.01, y: -0.89, z: -0.44 },
+		  rotation: { x: 45, y: 18, z: -129 },
+		  origin: { x: 0.49, y: 0.51, z: 0.4 },
+		  scale: 0.86
+    }
+	},
+  fpHandTransformByType: {
+    "*-flute-*":{
+		  translation: { x: -1.3, y: 1.15, z: 0.5 },
+		  rotation: { x: -8, y: 37, z: 1 },
+		  scale: 2.83
+    },
+    "*-lute-*": {
+		  translation: { x: -1.1, y: 0.65, z: 0.8 },
+		  rotation: { x: -69, y: -57, z: 0 },
+		  scale: 2.67
+	  },
+	  "*-harp-*": {
+		  translation: { x: -0.7, y: -0.15, z: 0.5 },
+		  rotation: { x: 10, y: -57, z: -19 },
+		  scale: 2.87
+	  }
+	},
+  guiTransformByType: {
+    "*-flute-*":{
+		  translation: { x: 25.8, y: 8.9, z: -1.8 },
+		  rotation: { x: -79, y: 27, z: -75 },
+		  scale: 3.14
+    }
+	},
 }

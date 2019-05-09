@@ -35,14 +35,20 @@ namespace ModProject
 
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling)
         {
+            if (byEntity.Controls.Sneak)
+            {
+                base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handHandling);
+                return;
+            }
             handHandling = EnumHandHandling.PreventDefault;
         }
 
         public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
         {
+            if (byEntity.Controls.Sneak) return base.OnHeldInteractStep(secondsUsed, slot, byEntity, blockSel, entitySel);
             if (tick && byEntity.World.Side.IsServer())
             {
-                int delay = Variant["instrument"] == "flute" ? 24 : 100;
+                int delay = instrument == "flute" ? 24 : 500;
                 tick = false;
                 Vec3d pos = byEntity.LocalPos.XYZ;
                 float normalizedPitch = 1.0f - GameMathExt.Normalize(byEntity.Pos.Pitch, 1.578125f, 4.6875f);
