@@ -54,7 +54,7 @@ namespace ModProject
                 float normalizedPitch = 1.0f - GameMathExt.Normalize(byEntity.Pos.Pitch, 1.578125f, 4.6875f);
                 int note = (int)Math.Round((octave.Length - 1) * normalizedPitch);
 
-                byEntity.World.PlaySoundAt(new AssetLocation("bunnyviking:sounds/instrument/" + instrument + "-" + octave[note]), pos.X, pos.Y, pos.Z, null, false);
+                byEntity.World.PlaySoundAt(new AssetLocation(Code.Domain + ":sounds/instrument/" + instrument + "-" + octave[note]), pos.X, pos.Y, pos.Z, null, false);
                 byEntity.World.RegisterCallback(dt => tick = true, delay);
             }
             return true;

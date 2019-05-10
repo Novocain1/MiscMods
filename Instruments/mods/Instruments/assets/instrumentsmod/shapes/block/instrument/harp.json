@@ -6,8 +6,6 @@
 	"textureWidth": 16,
 	"textureHeight": 16,
 	"textures": {
-		"harp01": "item/tool/instrument/harp/harp01",
-		"harp02": "item/tool/instrument/harp/harp02"
 	},
 	"elements": [
 		{
@@ -76,6 +74,7 @@
 							"name": "Cube5",
 							"from": [ -7.0, 0.0, -0.3 ], 
 							"to": [ 4.0, 7.0, 0.7 ], 
+							"renderPass": 1,
 							"rotationOrigin": [ -7.0, 0.0, 0.7 ],
 							"rotationZ": 22.0,
 							"faces": {
