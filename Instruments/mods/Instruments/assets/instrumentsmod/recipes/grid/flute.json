@@ -1,0 +1,11 @@
+{
+	ingredientPattern: "KA	L_",
+	ingredients: {
+		"K": { type: "item", code: "game:knife-*", isTool: true },
+    "A": { type: "item", code: "game:axe-*", isTool: true },
+		"L": { type: "block", code: "game:log-*-ud" }
+	},
+	width: 2,
+	height: 2,
+	output: { type: "block", code: "instrument-flute-held"  }
+}

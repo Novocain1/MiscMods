@@ -1,7 +1,14 @@
 {
 	code: "instrument",
 	class: "BlockInstrument",
-  behaviors: [{name: "HorizontalAttachable"}],
+  behaviors: [
+    {
+      name: "HorizontalAttachable", 
+      properties: 
+      {
+        handleDrops: false
+      },
+  }],
 	variantgroups: [
 		{ code: "instrument", states: ["flute", "lute", "harp"] },
     { code: "rot", states: ["north", "east", "south", "west", "held"] }

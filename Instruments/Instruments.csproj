@@ -102,7 +102,48 @@
     <Compile Include="RedirectLogs.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-a3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-b3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-c3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-c4.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-d3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-e3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-f3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-g3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-a3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-b3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-c3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-c4.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-d3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-e3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-f3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\harp-g3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-a3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-b3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-c3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-c4.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-d3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-e3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-f3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\lute-g3.ogg" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\flute.png" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\harp01.png" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\harp02.png" />
+    <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\lute.png" />
+    <Content Include="mods\Instruments\bunnyviking_license.txt" />
+    <Content Include="mods\Instruments\Instruments.dll" />
+    <Content Include="mods\Instruments\Instruments.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mods\Instruments\assets\instrumentsmod\blocktypes\instrument.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\recipes\grid\lute.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\recipes\grid\harp.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\recipes\grid\flute.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\shapes\block\instrument\flute.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\shapes\block\instrument\harp.json" />
+    <None Include="mods\Instruments\assets\instrumentsmod\shapes\block\instrument\lute.json" />
     <None Include="mods\Instruments\modinfo.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

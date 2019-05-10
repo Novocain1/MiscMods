@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 using Vintagestory.API.Server;
 
 namespace ModProject
@@ -60,6 +61,7 @@ namespace ModProject
             return true;
         }
     }
+
     public class GameMathExt : GameMath
     {
         public static float Normalize(float value, float min, float max)

@@ -1,0 +1,12 @@
+{
+	ingredientPattern: "___	KA_	LT_",
+	ingredients: {
+		"K": { type: "item", code: "game:knife-*", isTool: true },
+    "A": { type: "item", code: "game:axe-*", isTool: true },
+		"L": { type: "block", code: "game:log-*-ud" },
+		"T": { type: "item", code: "game:flaxtwine" },
+	},
+	width: 3,
+	height: 3,
+	output: { type: "block", code: "instrument-lute-held"  }
+}
