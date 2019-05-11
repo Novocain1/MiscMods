@@ -31,8 +31,8 @@ namespace ItemSorting
     class ItemSortingMain : ModSystem
     {
         ICoreAPI api;
-        static ICoreClientAPI capi;
-        static ICoreServerAPI sapi;
+        ICoreClientAPI capi;
+        ICoreServerAPI sapi;
         IClientNetworkChannel cChannel;
         IServerNetworkChannel sChannel;
         IClientPlayer cPlayer;

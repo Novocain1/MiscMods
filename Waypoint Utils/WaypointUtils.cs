@@ -84,9 +84,8 @@ namespace WaypointUtils
 
 					api.World.RegisterGameTickListener(d =>
 					{
-						if (guiDialogs.Count > 0 && capi.Settings.Bool["floatywaypoints"]) Repopulate();
+						if (Layer().ownWaypoints.Count != guiDialogs.Count && guiDialogs.Count > 0) Repopulate();
 					}, 500);
-
 
 					api.World.UnregisterGameTickListener(id);
 				}
@@ -329,10 +328,10 @@ namespace WaypointUtils
 				.AddDynamicText("", font, EnumTextOrientation.Center, textBounds, "text")
 				.Compose()
 			;
-			UpdateDialog();
 
 			if (capi.Settings.Bool["floatywaypoints"]) TryOpen();
 
+			UpdateDialog();
 			id = capi.World.RegisterGameTickListener(dt => UpdateDialog(), 500);
 		}
 
@@ -380,10 +379,7 @@ namespace WaypointUtils
 
 			bool isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
 
-			if (isAligned || distance < config.TitleRange || dialogText.Contains("*"))
-			{
-				SingleComposer.GetDynamicText("text").SetNewText(dialogText);
-			}
+			if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
 			else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
 
 			base.OnRenderGUI(deltaTime);
