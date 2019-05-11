@@ -15,6 +15,10 @@
 	],
 	creativeinventory: { "general": ["*-held"], "terrain": ["*-held"], "construction": ["*-held"] },
   shapeByType: {
+		"harp-north": { base: "block/instrument/harp", rotateZ: 90, rotateY: 180},
+    "harp-east": { base: "block/instrument/harp", rotateZ: 90, rotateY: 90},
+    "harp-south": { base: "block/instrument/harp", rotateZ: 90, rotateY: 0},
+    "harp-west": { base: "block/instrument/harp", rotateZ: 90, rotateY: 270},
     "*-north": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 90},
     "*-east": { base: "block/instrument/{instrument}", rotateZ: 90},
     "*-south": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 270 },

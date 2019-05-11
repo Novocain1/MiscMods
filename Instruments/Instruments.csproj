@@ -130,7 +130,6 @@
     <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\harp01.png" />
     <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\harp02.png" />
     <Content Include="mods\Instruments\assets\instrumentsmod\textures\block\instrument\lute.png" />
-    <Content Include="mods\Instruments\bunnyviking_license.txt" />
     <Content Include="mods\Instruments\Instruments.dll" />
     <Content Include="mods\Instruments\Instruments.pdb" />
   </ItemGroup>

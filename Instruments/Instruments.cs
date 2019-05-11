@@ -22,7 +22,7 @@ namespace ModProject
 
     public class BlockInstrument : Block
     {
-        private readonly string[] octave = new string[] { "c3", "d3", "e3", "f3", "g3", "a3", "b3", "c4" };
+        private readonly string[] octave = new string[] { "c3", "cs3", "d3", "ds3", "e3", "f3", "fs3", "g3", "gs3", "a3", "as3", "b3", "c4", "cs4" };
         private bool tick = true;
         private string instrument;
         ICoreClientAPI capi;
@@ -55,11 +55,15 @@ namespace ModProject
                 float normalizedPitch = 1.0f - GameMathExt.Normalize(byEntity.Pos.Pitch, 1.578125f, 4.6875f);
                 int note = (int)Math.Round((octave.Length - 1) * normalizedPitch);
 
-                byEntity.World.PlaySoundAt(new AssetLocation(Code.Domain + ":sounds/instrument/" + instrument + "-" + octave[note]), pos.X, pos.Y, pos.Z, null, false);
+				Play(byEntity, octave, note, pos);
                 byEntity.World.RegisterCallback(dt => tick = true, delay);
             }
             return true;
         }
+		public void Play(EntityAgent byEntity, string[] notes, int note, Vec3d pos)
+		{
+			byEntity.World.PlaySoundAt(new AssetLocation(Code.Domain + ":sounds/instrument/" + instrument + "-" + notes[note]), pos.X, pos.Y, pos.Z, null, false);
+		}
     }
 
     public class GameMathExt : GameMath

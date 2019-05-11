@@ -34,14 +34,31 @@ namespace WaypointUtils
             capi = api;
 
             LoadConfig();
+			WaypointFrontEnd frontEnd = new WaypointFrontEnd(capi);
 
-            capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
+			capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
             capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
             capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
-            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge]", new ClientChatCommandDelegate(CmdWaypointConfig));
+			capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
+			capi.Input.SetHotKeyHandler("waypointfrontend", a => 
+			{
+				
+				if (frontEnd.IsOpened())
+				{
+					frontEnd.TryClose();
+				}
+				else
+				{
+					frontEnd.OnOwnPlayerDataReceived();
+					frontEnd.TryOpen();
+				}
+				return true;
+			});
+			//WaypointFrontEnd
+			capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
             id = api.World.RegisterGameTickListener(dt =>
             {
@@ -49,6 +66,7 @@ namespace WaypointUtils
 
                 if (player != null)
                 {
+					
                     player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
                     {
                         if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
@@ -96,6 +114,12 @@ namespace WaypointUtils
                     Config.PerBlockWaypoints = pb != null ? (bool)pb : Config.PerBlockWaypoints;
                     capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
                     break;
+				case "pdw":
+					CullDeathWaypoints(new KeyCombination());
+					break;
+				case "open":
+					ViewWaypoints(new KeyCombination());
+					break;
                 case "purge":
                     string s = args.PopWord();
                     if (s == "reallyreallyconfirm")
@@ -204,7 +228,75 @@ namespace WaypointUtils
         }
     }
 
-    public class GuiDialogFloatyWaypoints : HudElement
+	public class WaypointFrontEnd : GuiDialog
+	{
+		public WaypointFrontEnd(ICoreClientAPI capi) : base(capi)
+		{
+		}
+		string wpText = "";
+
+		public override string ToggleKeyCombinationCode => "waypointfrontend";
+		public void VClose() => TryClose();
+		public override bool RequiresUngrabbedMouse() => false;
+
+		public override void OnOwnPlayerDataReceived()
+		{
+			base.OnOwnPlayerDataReceived();
+			ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 250, 500);
+			ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -200, 250, 100);
+
+			SingleComposer = capi.Gui.CreateCompo("waypointfrontend", dialogBounds)
+				.AddDialogTitleBar("Waypoint Utils", VClose, CairoFont.WhiteSmallText())
+				.AddDialogBG(bgBounds)
+				.AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 85, -200, 100, 20), OnTextChanged, null, "textinput")
+				.AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints" }, CairoFont.ButtonText().WithFontSize(10), i => 
+				{
+					capi.Event.RegisterCallback(j =>
+					{
+						SingleComposer.Dispose();
+						OnOwnPlayerDataReceived();
+						SingleComposer.Compose();
+					}, 100);
+					switch (i)
+					{
+						case 0:
+							wpText = wpText != "" ? wpText : "Waypoint";
+							capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " " + wpText);
+							break;
+						case 1:
+							capi.TriggerChatMessage(".wpcfg pdw");
+							break;
+						case 2:
+							capi.TriggerChatMessage(".wpcfg open");
+							break;
+						default:
+							break;
+					}
+
+				}, new ElementBounds[] {
+					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 5, -200, 80, 25),
+					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 5, -170, 80, 35),
+					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 85, -170, 80, 35),
+				});
+		}
+
+		public void OnTextChanged(string text)
+		{
+			wpText = text;
+		}
+
+		public override void OnGuiOpened()
+		{
+			SingleComposer.Compose();
+		}
+
+		public override void OnGuiClosed()
+		{
+			SingleComposer.Dispose();
+		}
+	}
+
+	public class GuiDialogFloatyWaypoints : HudElement
     {
         Vec3d waypointPos;
         string DialogTitle;
@@ -226,9 +318,10 @@ namespace WaypointUtils
 
             double[] dColor = ColorUtil.ToRGBADoubles(color);
 
-            CairoFont font = CairoFont.WhiteSmallText();
+			CairoFont font = CairoFont.WhiteSmallText();
             font.Color = dColor;
-            font = font.WithStroke(new double[] { 0, 0, 0, 1 }, 0.5);
+			
+            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0);
 
             SingleComposer = capi.Gui
                 .CreateCompo(DialogTitle + capi.Gui.OpenedGuis.Count + 1, dialogBounds)
@@ -247,14 +340,17 @@ namespace WaypointUtils
             EntityPlayer entityPlayer = capi.World.Player.Entity;
             distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
             dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
-        }
+			order = 1.0 / distance;
+		}
 
         protected virtual double FloatyDialogPosition => 0.75;
         protected virtual double FloatyDialogAlign => 0.75;
+		public double order;
+		public override double DrawOrder => order;
 
-        public override bool ShouldReceiveMouseEvents() => false;
+		public override bool ShouldReceiveMouseEvents() => false;
 
-        public override void OnRenderGUI(float deltaTime)
+		public override void OnRenderGUI(float deltaTime)
         {
             if (!capi.Settings.Bool["floatywaypoints"]) return;
 
@@ -278,7 +374,7 @@ namespace WaypointUtils
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
+			double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
             bool isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
@@ -286,8 +382,8 @@ namespace WaypointUtils
             if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
 
-            base.OnRenderGUI(deltaTime);
-        }
+			base.OnRenderGUI(deltaTime);
+		}
 
         public override void OnGuiClosed()
         {
@@ -302,7 +398,7 @@ namespace WaypointUtils
         }
     }
 
-    class ColorStuff
+    class ColorStuff : ColorUtil
     {
         public static int RandomColor(ICoreAPI api) => ColorUtil.HsvToRgb(
             (int)(api.World.Rand.NextDouble() * 255),
@@ -320,17 +416,6 @@ namespace WaypointUtils
             (int)(api.World.Rand.NextDouble() * 255),
             (int)(GameMath.Clamp(api.World.Rand.NextDouble(), min, max) * 255)
             );
-        }
-    }
-    
-    class HaxorMan
-    {
-        internal static object GetInstanceField(Type type, object instance, string fieldName)
-        {
-            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                | BindingFlags.Static;
-            FieldInfo field = type.GetField(fieldName, bindFlags);
-            return field.GetValue(instance);
         }
     }
     
