@@ -341,9 +341,9 @@ namespace WaypointUtils
 			EntityPlayer entityPlayer = capi.World.Player.Entity;
 			distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
 			dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
-			order = isAligned ? 0 : 1.0 / distance;
+			order = 1.0 / distance;
 		}
-		bool isAligned;
+
 		protected virtual double FloatyDialogPosition => 0.75;
 		protected virtual double FloatyDialogAlign => 0.75;
 		public double order;
@@ -378,9 +378,12 @@ namespace WaypointUtils
 			double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
 			double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
-			isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
+			bool isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
 
-			if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
+			if (isAligned || distance < config.TitleRange || dialogText.Contains("*"))
+			{
+				SingleComposer.GetDynamicText("text").SetNewText(dialogText);
+			}
 			else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
 
 			base.OnRenderGUI(deltaTime);
