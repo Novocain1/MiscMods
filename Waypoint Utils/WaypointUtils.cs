@@ -43,20 +43,7 @@ namespace WaypointUtils
 			capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
 			capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
 			capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
-			capi.Input.SetHotKeyHandler("waypointfrontend", a =>
-			{
-
-				if (frontEnd.IsOpened())
-				{
-					frontEnd.TryClose();
-				}
-				else
-				{
-					frontEnd.OnOwnPlayerDataReceived();
-					frontEnd.TryOpen();
-				}
-				return true;
-			});
+			capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
 			//WaypointFrontEnd
 			capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
@@ -66,7 +53,7 @@ namespace WaypointUtils
 
 				if (player != null)
 				{
-
+					frontEnd.OnOwnPlayerDataReceived();
 					player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
 					{
 						if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
@@ -110,7 +97,7 @@ namespace WaypointUtils
 					break;
 				case "perblockwaypoints":
 					bool? pb = args.PopBool();
-					Config.PerBlockWaypoints = pb != null ? (bool)pb : Config.PerBlockWaypoints;
+					Config.PerBlockWaypoints = pb != null ? (bool)pb : !Config.PerBlockWaypoints;
 					capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
 					break;
 				case "pdw":
@@ -247,8 +234,8 @@ namespace WaypointUtils
 			SingleComposer = capi.Gui.CreateCompo("waypointfrontend", dialogBounds)
 				.AddDialogTitleBar("Waypoint Utils", VClose, CairoFont.WhiteSmallText())
 				.AddDialogBG(bgBounds)
-				.AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 85, -200, 100, 20), OnTextChanged, null, "textinput")
-				.AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints" }, CairoFont.ButtonText().WithFontSize(10), i =>
+				.AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 86.5, -200, 155.8, 20), OnTextChanged, null, "textinput")
+				.AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints", "Toggle Block Waypoints" }, CairoFont.ButtonText().WithFontSize(10), i =>
 				{
 					capi.Event.RegisterCallback(j =>
 					{
@@ -259,14 +246,16 @@ namespace WaypointUtils
 					switch (i)
 					{
 						case 0:
-							wpText = wpText != "" ? wpText : "Waypoint";
-							capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " " + wpText);
+							CreateWaypoint();
 							break;
 						case 1:
 							capi.TriggerChatMessage(".wpcfg pdw");
 							break;
 						case 2:
 							capi.TriggerChatMessage(".wpcfg open");
+							break;
+						case 3:
+							capi.TriggerChatMessage(".wpcfg perblockwaypoints");
 							break;
 						default:
 							break;
@@ -276,7 +265,14 @@ namespace WaypointUtils
 					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 5, -200, 80, 25),
 					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 5, -170, 80, 35),
 					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 85, -170, 80, 35),
+					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 165, -170, 80, 35),
 				});
+		}
+
+		public void CreateWaypoint()
+		{
+			wpText = wpText != "" ? wpText : "Waypoint";
+			capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " " + wpText);
 		}
 
 		public void OnTextChanged(string text)
@@ -292,6 +288,22 @@ namespace WaypointUtils
 		public override void OnGuiClosed()
 		{
 			SingleComposer.Dispose();
+		}
+
+		bool inputbool = true;
+		public override void OnRenderGUI(float deltaTime)
+		{
+			if (capi.Input.KeyboardKeyState[(int)GlKeys.Enter] && inputbool)
+			{
+				inputbool = false;
+				capi.Event.RegisterCallback(j =>
+				{
+					inputbool = true;
+					TryClose();
+				}, 100);
+				CreateWaypoint();
+			}
+			base.OnRenderGUI(deltaTime);
 		}
 	}
 

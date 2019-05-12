@@ -101,5 +101,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RedirectLogs.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="mods\ItemSorting\ItemSorting.dll" />
+    <Content Include="mods\ItemSorting\ItemSorting.pdb" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

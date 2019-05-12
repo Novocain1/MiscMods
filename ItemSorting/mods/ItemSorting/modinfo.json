@@ -1,0 +1,11 @@
+{
+	"type": "code",
+	"name": "Sorting Mod",
+	"modid": "sortingmod",
+	"description" : "Allows the player to sort inventories by pressing 'i' on their keyboard",
+	"authors": ["Novocain"],
+	"version": "1.0.10",
+	"dependencies": {
+	"game": "1.9.3",
+	}
+}
