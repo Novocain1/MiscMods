@@ -302,6 +302,7 @@ namespace WaypointUtils
 					TryClose();
 				}, 100);
 				CreateWaypoint();
+				capi.Gui.PlaySound("tick");
 			}
 			base.OnRenderGUI(deltaTime);
 		}

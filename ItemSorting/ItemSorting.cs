@@ -159,6 +159,7 @@ namespace ItemSorting
 
         public void Sort(IPlayer player, EnumSortMode mode, IInventory activeinv)
         {
+			if (activeinv == null) return;
             string name = activeinv.ClassName;
 
             if (name == "basket" || name == "chest" || name == "hotbar" || name == "backpack")
