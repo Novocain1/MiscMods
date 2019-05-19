@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -19,6 +20,7 @@ namespace WaypointUtils
 		public double DotRange { get; set; } = 2000.0;
 		public double TitleRange { get; set; } = 500.0;
 		public bool PerBlockWaypoints { get; set; } = false;
+		public int SetColorIndex { get; set; } = 0;
 	}
 
 	class WaypointUtilSystem : ModSystem
@@ -40,7 +42,7 @@ namespace WaypointUtils
 			capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
 			capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
 			capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
-			capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.I, HotkeyType.GUIOrOtherControls);
+			capi.Input.RegisterHotKey("reloadwaypointconfig", "Reload Waypoint Util Config", GlKeys.L, HotkeyType.GUIOrOtherControls);
 			capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
 			capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
 			capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
@@ -116,6 +118,8 @@ namespace WaypointUtils
 					{
 						capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
 					}
+					break;
+				case "save":
 					break;
 				default:
 					capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge]"));
@@ -220,21 +224,43 @@ namespace WaypointUtils
 		{
 		}
 		string wpText = "";
+		string color;
 
 		public override string ToggleKeyCombinationCode => "waypointfrontend";
 		public void VClose() => TryClose();
-		public override bool RequiresUngrabbedMouse() => false;
+		public override bool PrefersUngrabbedMouse => false;
 
 		public override void OnOwnPlayerDataReceived()
 		{
 			base.OnOwnPlayerDataReceived();
-			ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 250, 500);
-			ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -200, 250, 100);
+
+			ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 380, 500);
+			ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -200, 380, 100);
+
+			string[] colors;
+			List<string> c = new List<string>() { "Random" };
+			string[] names = Enum.GetNames(typeof(KnownColor));
+
+			for (int i = 28; i < 166; i++)
+			{
+				c.Add(names[i]);
+			}
+			colors = c.ToArray();
+			WaypointUtilSystem.Config.SetColorIndex = WaypointUtilSystem.Config.SetColorIndex < 0 ? 0 : WaypointUtilSystem.Config.SetColorIndex;
+
+			color = colors[WaypointUtilSystem.Config.SetColorIndex];
 
 			SingleComposer = capi.Gui.CreateCompo("waypointfrontend", dialogBounds)
 				.AddDialogTitleBar("Waypoint Utils", VClose, CairoFont.WhiteSmallText())
 				.AddDialogBG(bgBounds)
-				.AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 86.5, -200, 155.8, 20), OnTextChanged, null, "textinput")
+				.AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 86.5, -200, 285, 20), OnTextChanged, null, "textinput")
+				.AddDropDown(colors, colors, WaypointUtilSystem.Config.SetColorIndex, (newval, on) => 
+				{
+					color = newval;
+					WaypointUtilSystem.Config.SetColorIndex = Array.BinarySearch(colors, newval);
+					capi.TriggerChatMessage(".wpcfg save");
+				}, 
+				ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 250, -170, 125, 25))
 				.AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints", "Toggle Block Waypoints" }, CairoFont.ButtonText().WithFontSize(10), i =>
 				{
 					capi.Event.RegisterCallback(j =>
@@ -269,10 +295,23 @@ namespace WaypointUtils
 				});
 		}
 
+		public string[] netcolors = new string[]
+		{
+
+		};
+
 		public void CreateWaypoint()
 		{
 			wpText = wpText != "" ? wpText : "Waypoint";
-			capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " " + wpText);
+			if (color == "Random")
+			{
+				capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " " + wpText);
+			}
+			else
+			{
+				capi.SendChatMessage("/waypoint add " + color + " " + wpText);
+			}
+			
 		}
 
 		public void OnTextChanged(string text)
@@ -414,7 +453,7 @@ namespace WaypointUtils
 
 	class ColorStuff : ColorUtil
 	{
-		public static int RandomColor(ICoreAPI api) => ColorUtil.HsvToRgb(
+		public static int RandomColor(ICoreAPI api) => HsvToRgb(
 			(int)(api.World.Rand.NextDouble() * 255),
 			(int)(api.World.Rand.NextDouble() * 255),
 			(int)(api.World.Rand.NextDouble() * 255)
@@ -425,7 +464,7 @@ namespace WaypointUtils
 
 		public static int ClampedRandomColorValue(ICoreAPI api, double min, double max)
 		{
-			return ColorUtil.HsvToRgb(
+			return HsvToRgb(
 			(int)(api.World.Rand.NextDouble() * 255),
 			(int)(api.World.Rand.NextDouble() * 255),
 			(int)(GameMath.Clamp(api.World.Rand.NextDouble(), min, max) * 255)
