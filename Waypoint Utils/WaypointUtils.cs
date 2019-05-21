@@ -21,6 +21,8 @@ namespace WaypointUtils
 		public double TitleRange { get; set; } = 500.0;
 		public bool PerBlockWaypoints { get; set; } = false;
 		public int SetColorIndex { get; set; } = 0;
+		public bool WaypointPrefix { get; set; } = true;
+		public bool WaypointID { get; set; } = true;
 	}
 
 	class WaypointUtilSystem : ModSystem
@@ -46,8 +48,9 @@ namespace WaypointUtils
 			capi.Input.SetHotKeyHandler("reloadwaypointconfig", a => { LoadConfig(); Repopulate(); return true; });
 			capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
 			capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
-			//WaypointFrontEnd
-			capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge]", new ClientChatCommandDelegate(CmdWaypointConfig));
+
+			capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid]", new ClientChatCommandDelegate(CmdWaypointConfig));
+			capi.RegisterCommand("measure", "Tape Measure", "[start|end|calc]", new ClientChatCommandDelegate(CmdMeasuringTape));
 
 			id = api.World.RegisterGameTickListener(dt =>
 			{
@@ -108,21 +111,26 @@ namespace WaypointUtils
 				case "open":
 					ViewWaypoints(new KeyCombination());
 					break;
+				case "waypointprefix":
+					bool? wp = args.PopBool();
+					Config.WaypointPrefix = wp != null ? (bool)wp : !Config.WaypointPrefix;
+					capi.ShowChatMessage("Waypoint Prefix Set To " + Config.WaypointPrefix + ".");
+					break;
+				case "waypointid":
+					bool? wi = args.PopBool();
+					Config.WaypointID = wi != null ? (bool)wi : !Config.WaypointID;
+					capi.ShowChatMessage("Waypoint ID Set To " + Config.WaypointID + ".");
+					break;
 				case "purge":
 					string s = args.PopWord();
-					if (s == "reallyreallyconfirm")
-					{
-						Purge();
-					}
-					else
-					{
-						capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
-					}
+
+					if (s == "reallyreallyconfirm")Purge();
+					else capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
 					break;
 				case "save":
 					break;
 				default:
-					capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge]"));
+					capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid]"));
 					break;
 			}
 			SaveConfig();
@@ -171,7 +179,9 @@ namespace WaypointUtils
 
 			for (int i = 0; i < layer.ownWaypoints.Count; i++)
 			{
-				string text = layer.ownWaypoints[i].Title != null ? "Waypoint: " + layer.ownWaypoints[i].Title : "Waypoint: ";
+				string wp = Config.WaypointPrefix ? "Waypoint: " : "";
+				wp = Config.WaypointID ? wp + "ID: " + i + " | " : wp;
+				string text = layer.ownWaypoints[i].Title != null ? wp + layer.ownWaypoints[i].Title : "Waypoint: ";
 				int color = layer.ownWaypoints[i].Color;
 				Vec3d wPos = Config.PerBlockWaypoints ? layer.ownWaypoints[i].Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : layer.ownWaypoints[i].Position;
 
@@ -216,6 +226,83 @@ namespace WaypointUtils
 			ViewWaypoints(new KeyCombination());
 			ViewWaypoints(new KeyCombination());
 		}
+		
+		#region TapeMeasture
+		BlockPos start = new BlockPos(0,0,0);
+		BlockPos end = new BlockPos(0, 0, 0);
+
+		public void CmdMeasuringTape(int groupId, CmdArgs args)
+		{
+			string arg = args.PopWord();
+			switch (arg)
+			{
+				case "start":
+					if (capi.World.Player.CurrentBlockSelection != null)
+					{
+						start = capi.World.Player.CurrentBlockSelection.Position;
+						//capi.ShowChatMessage("Okay, start set to: " + start);
+						MakeHighlights();
+					}
+					else capi.ShowChatMessage("Please look at a block.");
+					break;
+				case "end":
+					if (capi.World.Player.CurrentBlockSelection != null)
+					{
+						end = capi.World.Player.CurrentBlockSelection.Position;
+						//capi.ShowChatMessage("Okay, end set to: " + end);
+						MakeHighlights();
+					}
+					else capi.ShowChatMessage("Please look at a block.");
+					break;
+				case "calc":
+					string type = args.PopWord();
+					switch (type)
+					{
+						case "block":
+							capi.ShowChatMessage("Block Distance: " + Math.Round(start.DistanceTo(end) + 1));
+							break;
+						case "euclidian":
+							capi.ShowChatMessage("Euclidian Distance: " + start.DistanceTo(end));
+							break;
+						case "manhattan":
+							capi.ShowChatMessage("Manhattan Distance: " + start.ManhattenDistance(end));
+							break;
+						case "horizontal":
+							capi.ShowChatMessage("Horizontal Distance: " + Math.Sqrt(start.HorDistanceSqTo(end.X, end.Z)));
+							break;
+						case "horizontalmanhattan":
+							capi.ShowChatMessage("Horizontal Manhattan Distance: " + start.HorizontalManhattenDistance(end));
+							break;
+						default:
+							capi.ShowChatMessage("Syntax: .measure calc [block|euclidian|manhattan|horizontal|horizontalmanhattan]");
+							break;
+					}
+					break;
+				default:
+					capi.ShowChatMessage("Syntax: .measure [start|end|calc]");
+					break;
+			}
+		}
+
+		public void MakeHighlights()
+		{
+			List<BlockPos> startBlock = new List<BlockPos>() { start.AddCopy(0, 1, 0), start.AddCopy(1, 0, 1) };
+			List<BlockPos> endBlock = new List<BlockPos>() { end.AddCopy(0, 1, 0), end.AddCopy(1, 0, 1) };
+			List<int> startcolor = new List<int>() { ColorUtil.ToRgba((int)(0.5*255), 0, 255, 0)};
+			List<int> endcolor = new List<int>() { ColorUtil.ToRgba((int)(0.5 * 255), 0, 0, 255) };
+
+			capi.World.HighlightBlocks(capi.World.Player, 4, startBlock, startcolor, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+			capi.World.HighlightBlocks(capi.World.Player, 5, endBlock, endcolor, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+
+			capi.World.RegisterCallback(dt => ClearHighlights(), 1000);
+		}
+
+		public void ClearHighlights()
+		{
+			capi.World.HighlightBlocks(capi.World.Player, 4, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+			capi.World.HighlightBlocks(capi.World.Player, 5, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+		}
+		#endregion
 	}
 
 	public class WaypointFrontEnd : GuiDialog
@@ -260,7 +347,7 @@ namespace WaypointUtils
 					WaypointUtilSystem.Config.SetColorIndex = Array.BinarySearch(colors, newval);
 					capi.TriggerChatMessage(".wpcfg save");
 				}, 
-				ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 250, -170, 125, 25))
+				ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 250, -170, 125, 25), "dropdown")
 				.AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints", "Toggle Block Waypoints" }, CairoFont.ButtonText().WithFontSize(10), i =>
 				{
 					capi.Event.RegisterCallback(j =>
@@ -294,11 +381,6 @@ namespace WaypointUtils
 					ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 165, -170, 80, 35),
 				});
 		}
-
-		public string[] netcolors = new string[]
-		{
-
-		};
 
 		public void CreateWaypoint()
 		{
