@@ -1,0 +1,11 @@
+{
+	"type": "code",
+	"name": "Standalone Block Physics",
+	"modid": "blockphysicsmod",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	"game": "1.9.7-rc.1",
+	}
+}

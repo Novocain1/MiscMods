@@ -1,0 +1,12 @@
+[
+    {
+        "op": "add",
+        "path": "/behaviors",
+        "value": [
+            {
+                "name": "UnstableFalling"
+            }
+        ],
+        "file": "blocktypes/soil/soil.json"
+    }
+]
