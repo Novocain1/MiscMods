@@ -6,6 +6,6 @@
 	"authors": ["Novocain", "BunnyViking"],
 	"version": "1.0.1",
 	"dependencies": {
-	"game": "1.9.7-rc.1",
+	"game": "1.9.7",
 	}
 }

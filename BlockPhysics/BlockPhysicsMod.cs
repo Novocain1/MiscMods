@@ -8,6 +8,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace StandAloneBlockPhysics
 {
@@ -23,6 +24,7 @@ namespace StandAloneBlockPhysics
 	{
 		BlockPos[] offset;
 		BlockPos[] cardinal;
+		BlockPos[] supportarea;
 
 		public AlteredBlockPhysics(Block block) : base(block)
 		{
@@ -32,33 +34,35 @@ namespace StandAloneBlockPhysics
 		{
 			base.OnLoaded(api);
 			offset = AreaMethods.AreaBelowOffsetList().ToArray();
-			List<BlockPos> blocks = AreaMethods.CardinalOffsetList();
-			blocks.Add(new BlockPos(0, 1, 0));
-			blocks.Add(new BlockPos(0, -1, 0));
-			cardinal = blocks.ToArray();
+			cardinal = AreaMethods.CardinalOffsetList().ToArray();
+
+			supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
 		}
 
 		public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ref EnumHandling handled)
 		{
 			TryCollapse(world, pos);
+
 			base.OnBlockPlaced(world, pos, ref handled);
 		}
 
 		public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handling)
 		{
 			TryCollapse(world, pos);
+
 			base.OnNeighbourBlockChange(world, pos, neibpos, ref handling);
 		}
 
 		public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
 		{
 			world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
+
 			base.OnBlockRemoved(world, pos, ref handling);
 		}
 
 		public void TryCollapse(IWorldAccessor world, BlockPos pos)
 		{
-			if (world.Side.IsClient()) return;
+			if (world.Side.IsClient() || IsSupported(world, pos)) return;
 			world.RegisterCallbackUnique((vworld, vpos, dt) =>
 			{
 				BlockPos dPos = pos.AddCopy(0, -1, 0);
@@ -78,9 +82,11 @@ namespace StandAloneBlockPhysics
 					for (int i = 0; i < offset.Length; i++)
 					{
 						BlockPos offs = pos.AddCopy(offset[i].X, offset[i].Y, offset[i].Z);
+						Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
+
 						if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
 
-						if (world.BulkBlockAccessor.GetBlock(offs).IsReplacableBy(block))
+						if (oBlock.IsReplacableBy(block))
 						{
 							possiblePos.Add(offs);
 						}
@@ -123,6 +129,43 @@ namespace StandAloneBlockPhysics
 				world.BulkBlockAccessor.Commit();
 			}
 		}
+		
+		public bool IsSupported(IWorldAccessor world, BlockPos pos)
+		{
+			for (int i = 0; i < supportarea.Length; i++)
+			{
+				BlockPos iPos = pos.AddCopy(supportarea[i].X, supportarea[i].Y, supportarea[i].Z);
+				Block iBlock = world.BlockAccessor.GetBlock(iPos);
+				if (iBlock.HasBehavior<BehaviorSupportBeam>())
+				{
+					BlockPos dPos = pos.DownCopy();
+					Block dBlock = world.BlockAccessor.GetBlock(dPos);
+					if (!dBlock.IsReplacableBy(block))
+					{
+						return true;
+					}
+					else
+					{
+						for (int j = 0; j < cardinal.Length; j++)
+						{
+							BlockPos jPos = pos.AddCopy(cardinal[j].X, cardinal[j].Y, cardinal[j].Z);
+							Block jBlock = world.BlockAccessor.GetBlock(jPos);
+							if (!jBlock.IsReplacableBy(block))
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
 	}
 
+	public class BehaviorSupportBeam : BlockBehavior
+	{
+		public BehaviorSupportBeam(Block block) : base(block)
+		{
+		}
+	}
 }
