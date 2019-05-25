@@ -1,0 +1,25 @@
+{
+	"editor": {
+		"allAngles": false,
+		"singleTexture": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"vertical": "block/wood/fence/acacia/vertical"
+	},
+	"elements": [
+		{
+			"name": "Center",
+			"from": [ 6.5, 0.0, 6.5 ], 
+			"to": [ 9.5, 16.0, 9.5 ], 
+			"faces": {
+				"north": { "texture": "#vertical", "uv": [ 0.0, 0.0, 3.0, 16.0 ] },
+				"east": { "texture": "#vertical", "uv": [ 3.0, 0.0, 6.0, 16.0 ] },
+				"south": { "texture": "#vertical", "uv": [ 6.0, 0.0, 9.0, 16.0 ] },
+				"west": { "texture": "#vertical", "uv": [ 9.0, 0.0, 12.0, 16.0 ] },
+				"up": { "texture": "#vertical", "uv": [ 5.0, 0.0, 8.0, 3.0 ] },
+				"down": { "texture": "#vertical", "uv": [ 6.5, 0.0, 9.5, 3.0 ] }
+			}
+		}
+	]}

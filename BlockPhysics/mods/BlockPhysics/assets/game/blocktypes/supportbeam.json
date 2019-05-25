@@ -1,0 +1,118 @@
+{
+	code: "supportbeam",
+	class: "BlockFence",
+	behaviors: [{name: "SupportBeam"}],
+	attributes: {
+		handbook: {
+			groupBy: ["supportbeam-*"]
+		}
+	},
+	variantgroups: [
+		{ code: "wood", states: ["aged"], loadFromProperties: "block/wood" },
+		{ code: "type", states: ["empty", "n", "e", "s", "w", "ne", "ns", "nw", "es", "ew", "sw", "nes", "new", "nsw", "esw", "nesw"] }
+	],
+	creativeinventory: { "general": ["supportbeam-*-ew"], "decorative": ["supportbeam-*-ew"] },	
+	shapebytype: {
+		"*-empty": { base: "block/wood/supportbeam/empty" },
+		"*-n": { base: "block/wood/supportbeam/w", rotateY: 270 },
+		"*-e": { base: "block/wood/supportbeam/w", rotateY: 180 },
+		"*-s": { base: "block/wood/supportbeam/w", rotateY: 90 },
+		"*-w": { base: "block/wood/supportbeam/w", rotateY: 0 },
+
+		"*-ns": { base: "block/wood/supportbeam/ew", rotateY: 90 },
+		"*-ew": { base: "block/wood/supportbeam/ew", rotateY: 0 },
+		
+		"*-ne": { base: "block/wood/supportbeam/sw", rotateY: 180 },
+		"*-nw": { base: "block/wood/supportbeam/sw", rotateY: 270 },
+		"*-es": { base: "block/wood/supportbeam/sw", rotateY: 90 },
+		"*-sw": { base: "block/wood/supportbeam/sw", rotateY: 0 },
+		
+		"*-nes": { base: "block/wood/supportbeam/nsw", rotateY: 180 },
+		"*-new": { base: "block/wood/supportbeam/nsw", rotateY: 270 },
+		"*-nsw": { base: "block/wood/supportbeam/nsw", rotateY: 0 },
+		"*-esw": { base: "block/wood/supportbeam/nsw", rotateY: 90 },
+		
+		"*-nesw": { base: "block/wood/supportbeam/nesw", rotateY: 0 },
+	},
+	blockmaterial: "Wood",
+	textures: {
+		"horizontal": { base: "block/wood/fence/{wood}/horizontal" },
+		"vertical": { base: "block/wood/fence/{wood}/vertical" }
+	},
+	sidesolid: {
+		all: false,
+		up: true,
+		down: true
+	},
+	sideopaque: {
+		all: false
+	},
+	resistance: 3,
+	lightAbsorption: 0,
+	sounds: {
+		"place": "block/planks",
+		"hit": "block/planks",
+		"break": "block/planks",
+		"walk": "walk/wood"
+	},
+	selectionboxbytype: {
+		"*-empty": { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2: 0.625 },
+		"*-n": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2:  0.625, rotateY: 270},
+		"*-e": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2:  0.625, rotateY: 180},
+		"*-s": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2:  0.625, rotateY: 90},
+		"*-w": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2:  0.625},
+		
+		"*-ns": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625, rotateY: 90},
+		"*-gns": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625, rotateY: 90},
+		"*-ngs": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625, rotateY: 90},
+		"*-ew": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625},
+		"*-egw": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625},
+		"*-gew": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2:  0.625},
+	},
+	selectionboxesbytype: {
+		"*-sw": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2: 1 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 0 } ],
+		"*-ne": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 180 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 180 } ] ,
+		"*-nw": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 270 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 270 } ],
+		"*-es": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 90 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 90 } ],
+		
+		"*-nes": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 180 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 180 } ],
+		"*-new": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 270 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 270 } ],
+		"*-nsw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 0 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 0 } ],
+		"*-esw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.0625, z2: 1, rotateY: 90 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.0625, z2: 0.625, rotateY: 90 } ],
+		
+		"*-nesw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.0625, z2: 1 }, { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.0625, z2: 0.625 } ]
+	},
+	
+	collisionboxbytype: {
+		"*-empty": { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 0.625 },
+		"*-n": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 0.625, rotateY: 270},
+		"*-e": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 0.625, rotateY: 180},
+		"*-s": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 0.625, rotateY: 90},
+		"*-w": { x1: 0, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 0.625},
+		
+		"*-ns": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625, rotateY: 90},
+		"*-gns": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625, rotateY: 90},
+		"*-ngs": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625, rotateY: 90},
+		"*-ew": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625},
+		"*-egw": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625},
+		"*-gew": { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625},
+	},
+	collisionboxesbytype: {
+		"*-sw": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 1 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 0 } ],
+		"*-ne": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 180 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 180 } ] ,
+		"*-nw": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 270 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 270 } ],
+		"*-es": [ { x1: 0.375, y1: 0, z1: 0.375, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 90 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 90 } ],
+		
+		"*-nes": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 180 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 180 } ],
+		"*-new": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 270 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 270 } ],
+		"*-nsw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 0 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 0 } ],
+		"*-esw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.3125, z2: 1, rotateY: 90 }, { x1: 0, y1: 0, z1: 0.375, x2: 0.375, y2: 1.3125, z2: 0.625, rotateY: 90 } ],
+		
+		"*-nesw": [ { x1: 0.375, y1: 0, z1: 0, x2: 0.625, y2: 1.3125, z2: 1 }, { x1: 0, y1: 0, z1: 0.375, x2: 1, y2: 1.3125, z2: 0.625 } ]
+	},
+	combustibleProps: {
+		burnTemperature: 600,
+		burnDuration: 10,
+	},
+	materialDensity: 600
+}

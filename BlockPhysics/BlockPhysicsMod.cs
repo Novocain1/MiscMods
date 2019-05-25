@@ -1,30 +1,179 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Input;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace StandAloneBlockPhysics
 {
     public class BlockPhysicsMod : ModSystem
     {
+        ICoreServerAPI sapi;
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockBehaviorClass("UnstableFalling", typeof(AlteredBlockPhysics));
+            api.RegisterBlockBehaviorClass("SupportBeam", typeof(BehaviorSupportBeam));
+            api.RegisterBlockBehaviorClass("BreakIfFloating", typeof(BreakIfFloatingAndCollapse));
+        }
+
+        public override void StartServerSide(ICoreServerAPI api)
+        {
+            sapi = api;
+            api.World.RegisterGameTickListener(SuffocationAndStepWatch, 500);
+        }
+
+        public override void StartClientSide(ICoreClientAPI api)
+        {
+            AirBar airBar = new AirBar(api);
+            airBar.TryOpen();
+        }
+
+        public void SuffocationAndStepWatch(float dt)
+        {
+            foreach (var val in sapi.World.LoadedEntities)
+            {
+                if (val.Value.Class == "EntityItem") continue;
+                Entity entity = val.Value;
+
+                BlockPos pos = entity.ServerPos.AsBlockPos;
+
+                if (sapi.World.Rand.NextDouble() > 0.9)
+                {
+                    sapi.World.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                }
+
+                if (entity is EntityPlayer)
+                {
+                    EntityPlayer entityPlayer = entity as EntityPlayer;
+                    if (entityPlayer.Player.WorldData.CurrentGameMode != EnumGameMode.Survival) continue;
+                }
+
+                if (entity == null) continue;
+                if (entity.ServerPos == null || !entity.Alive) continue;
+
+                ITreeAttribute attribs = entity.WatchedAttributes.GetOrAddTreeAttribute("health");
+                float? maxair = attribs.TryGetFloat("maxair");
+                float? currentair = attribs.TryGetFloat("currentair");
+
+                if (maxair == null)
+                {
+                    attribs.SetFloat("maxair", 1.0f);
+                    entity.WatchedAttributes.MarkPathDirty("health");
+                    continue;
+                }
+                if (currentair == null)
+                {
+                    attribs.SetFloat("currentair", 1.0f);
+                    entity.WatchedAttributes.MarkPathDirty("health");
+                    continue;
+                }
+
+                if (InBlockBounds(entity.ServerPos.XYZ))
+                {
+                    if (currentair > 0)
+                    {
+                        attribs.SetFloat("currentair", (float)currentair - 0.01f);
+                        entity.WatchedAttributes.MarkPathDirty("health");
+                    }
+                    else
+                    {
+                        currentair = 0.0f;
+                        attribs.SetFloat("currentair", (float)currentair);
+
+                        DamageSource source = new DamageSource();
+                        source.Source = EnumDamageSource.Drown;
+                        entity.ReceiveDamage(source, (float)(sapi.World.Rand.NextDouble() * 2));
+                    }
+                }
+                else if (currentair < 1.0)
+                {
+                    attribs.SetFloat("currentair", (float)currentair + 0.25f);
+                    entity.WatchedAttributes.MarkPathDirty("health");
+                }
+                if (currentair > 1.0)
+                {
+                    currentair = 1.0f;
+                    attribs.SetFloat("currentair", (float)currentair);
+                }
+            }
+        }
+
+        public bool InBlockBounds(Vec3d vec)
+        {
+            vec.Sub(0.5, 0, 0.5).Add(0,1,0);
+            BlockPos pos = new BlockPos((int)Math.Round(vec.X), (int)Math.Round(vec.Y), (int)Math.Round(vec.Z));
+            Vec3d blockCenter = pos.ToVec3d().AddCopy(0.5, 0.5, 0.5);
+            Block block = sapi.World.BlockAccessor.GetBlock(pos);
+            double distance = Math.Sqrt(vec.SquareDistanceTo(blockCenter));
+
+            if (block.IsLiquid() && distance < 1.5) return true;
+            if (block.Id == 0 || block.CollisionBoxes == null) return false;
+
+            for (int i = 0; i < block.CollisionBoxes.Length; i++)
+            {
+                if ((block.CollisionBoxes[i].Length > 0.8 && block.CollisionBoxes[i].Height > 0.8 && block.CollisionBoxes[i].Width > 0.8) && distance < 1.11) return true;
+            }
+            
+            return false;
+        }
+    }
+
+    public class AirBar : HudElement
+    {
+        public AirBar(ICoreClientAPI capi) : base(capi)
+        {
+        }
+
+        public override void OnOwnPlayerDataReceived()
+        {
+            ElementBounds statbarbounds = ElementStdBounds.Statbar(EnumDialogArea.CenterBottom, 345).WithFixedAlignmentOffset(-250.0, -88.0);
+            statbarbounds.WithFixedHeight(8);
+
+            SingleComposer = capi.Gui.CreateCompo("airbar", statbarbounds)
+                .AddStatbar(statbarbounds, new double[] { 255.0 / 66.0, 255.0 / 134.0, 255.0 / 244.0, 0.5 }, "airbar")
+                .Compose();
+            SingleComposer
+                .GetStatbar("airbar").SetMinMax(0, 1.0f);
+
+            base.OnOwnPlayerDataReceived();
+        }
+
+        public override void OnRenderGUI(float deltaTime)
+        {
+            ITreeAttribute tree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
+
+            float? currentair = tree.TryGetFloat("currentair");
+            if (currentair != null)
+            {
+                GuiElementStatbar statbar = SingleComposer.GetStatbar("airbar");
+                float? barvalue = HAX.GetInstanceField(typeof(GuiElementStatbar), statbar, "value") as float?;
+
+                if (currentair != barvalue)
+                {
+                    SingleComposer.GetStatbar("airbar").SetValue((float)currentair);
+                }
+            }
+            
+            base.OnRenderGUI(deltaTime);
         }
     }
 
     public class AlteredBlockPhysics : BlockBehavior
     {
+        MiscUtilities misc = new MiscUtilities();
         BlockPos[] offset;
         BlockPos[] cardinal;
-        BlockPos[] supportarea;
+        double resistance = 0.0;
 
         public AlteredBlockPhysics(Block block) : base(block)
         {
@@ -33,10 +182,10 @@ namespace StandAloneBlockPhysics
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
+            resistance = block is BlockSoil ? 0.5 : block.FirstCodePart() == "gravel" ? 0.25 : 0.0;
+
             offset = AreaMethods.AreaBelowOffsetList().ToArray();
             cardinal = AreaMethods.CardinalOffsetList().ToArray();
-
-            supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
         }
 
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ref EnumHandling handled)
@@ -62,7 +211,11 @@ namespace StandAloneBlockPhysics
 
         public void TryCollapse(IWorldAccessor world, BlockPos pos)
         {
-            if (world.Side.IsClient() || IsSupported(world, pos)) return;
+            if (world.Side.IsClient()) return;
+
+            double currentresistance = Isolated(world, pos) ? -0.1 : resistance;
+            if (world.Rand.NextDouble() < currentresistance || misc.IsSupported(world, pos, block)) return;
+
             world.RegisterCallbackUnique((vworld, vpos, dt) =>
             {
                 BlockPos dPos = pos.AddCopy(0, -1, 0);
@@ -76,7 +229,8 @@ namespace StandAloneBlockPhysics
                 {
                     world.BlockAccessor.BreakBlock(pos, null);
                 }
-                else if (dBlock.CollisionBoxes == null || block.CollisionBoxes[0].Length >= dBlock.CollisionBoxes[0].Length)
+                else if (dBlock.CollisionBoxes == null || 
+                (block.CollisionBoxes != null && dBlock.CollisionBoxes != null && block.CollisionBoxes[0].Length >= dBlock.CollisionBoxes[0].Length))
                 {
                     List<BlockPos> possiblePos = new List<BlockPos>();
                     for (int i = 0; i < offset.Length; i++)
@@ -130,7 +284,80 @@ namespace StandAloneBlockPhysics
             }
         }
 
-        public bool IsSupported(IWorldAccessor world, BlockPos pos)
+        public bool Isolated(IWorldAccessor world, BlockPos pos)
+        {
+            for (int i = 0; i < cardinal.Length; i++)
+            {
+                BlockPos iPos = pos.AddCopy(cardinal[i].X, cardinal[i].Y, cardinal[i].Z);
+                Block iBlock = world.BlockAccessor.GetBlock(iPos);
+                if (!iBlock.IsReplacableBy(block))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    public class BehaviorSupportBeam : BlockBehavior
+    {
+        public BehaviorSupportBeam(Block block) : base(block)
+        {
+        }
+
+        public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
+        {
+            if (world.BlockAccessor.GetBlock(pos).HasBehavior<BehaviorSupportBeam>()) return;
+            world.BlockAccessor.WalkBlocks(pos.AddCopy(-8, -8, -8), pos.AddCopy(8, 8, 8), (vBlock, vPos) => 
+            {
+                if (vBlock.HasBehavior<BehaviorSupportBeam>() && vPos != pos) world.BlockAccessor.BreakBlock(vPos, null);
+                else if (vBlock.HasBehavior<AlteredBlockPhysics>()) world.BlockAccessor.TriggerNeighbourBlockUpdate(vPos);
+            });
+            base.OnBlockRemoved(world, pos, ref handling);
+        }
+    }
+
+    public class BreakIfFloatingAndCollapse : BlockBehaviorBreakIfFloating
+    {
+        MiscUtilities misc = new MiscUtilities();
+
+        public BreakIfFloatingAndCollapse(Block block) : base(block)
+        {
+        }
+        public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handled)
+        {
+            Block neighborblock = world.BlockAccessor.GetBlock(neibpos);
+            if (neighborblock.HasBehavior<BehaviorSupportBeam>())
+            {
+                base.OnNeighbourBlockChange(world, pos, neibpos, ref handled);
+                return;
+            }
+            if ((!world.Side.IsServer() || IsRock()) && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && world.BlockAccessor.GetBlock(neibpos).LiquidCode != "water") {
+                int layer = (int)(Math.Round(world.Rand.NextDouble() * 3));
+                layer = layer == 0 ? 1 : layer;
+                double rng = world.Rand.NextDouble();
+                Block placedblock = rng > 0.5 ? world.GetBlock(new AssetLocation("gravel-" + block.Variant["rock"] + "-" + layer)) 
+                    : world.GetBlock(new AssetLocation("loosestones-" + block.Variant["rock"]));
+
+                if (!misc.IsSupported(world, pos, block) && world.Rand.NextDouble() > 0.8)
+                {
+                    world.BlockAccessor.SetBlock(placedblock.BlockId, pos);
+                    world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                }
+            }
+
+            base.OnNeighbourBlockChange(world, pos, neibpos, ref handled);
+        }
+
+        public bool IsRock() => block.FirstCodePart() == "rock";
+    }
+
+    public class MiscUtilities
+    {
+        BlockPos[] cardinal = AreaMethods.CardinalOffsetList().ToArray();
+        BlockPos[] supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
+
+        public bool IsSupported(IWorldAccessor world, BlockPos pos, Block block)
         {
             for (int i = 0; i < supportarea.Length; i++)
             {
@@ -162,10 +389,14 @@ namespace StandAloneBlockPhysics
         }
     }
 
-    public class BehaviorSupportBeam : BlockBehavior
+    public class HAX
     {
-        public BehaviorSupportBeam(Block block) : base(block)
+        internal static object GetInstanceField(Type type, object instance, string fieldName)
         {
+            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Static;
+            FieldInfo field = type.GetField(fieldName, bindFlags);
+            return field.GetValue(instance);
         }
     }
 }

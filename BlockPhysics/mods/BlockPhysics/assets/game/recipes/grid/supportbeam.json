@@ -1,0 +1,10 @@
+{
+	ingredientPattern: "SP_	_P_",
+	ingredients: {
+		"P": { type: "block", code: "log-placed-*-ud", name: "wood", allowedVariants: ["birch", "oak", "maple", "pine", "acacia", "kapok", "aged"] },
+		"S": { type: "item", code: "saw-*", isTool: true }
+	},
+	width: 3,
+	height: 2,
+	output: { type: "block", code: "supportbeam-{wood}-ew", quantity: 16  }
+}
