@@ -110,7 +110,7 @@ namespace StandAloneBlockPhysics
 
         public bool InBlockBounds(Vec3d vec)
         {
-            vec.Sub(0.5, 0, 0.5).Add(0,1,0);
+            vec.Sub(0.5, 0, 0.5).Add(0, 1, 0);
             BlockPos pos = new BlockPos((int)Math.Round(vec.X), (int)Math.Round(vec.Y), (int)Math.Round(vec.Z));
             Vec3d blockCenter = pos.ToVec3d().AddCopy(0.5, 0.5, 0.5);
             Block block = sapi.World.BlockAccessor.GetBlock(pos);
@@ -123,7 +123,7 @@ namespace StandAloneBlockPhysics
             {
                 if ((block.CollisionBoxes[i].Length > 0.8 && block.CollisionBoxes[i].Height > 0.8 && block.CollisionBoxes[i].Width > 0.8) && distance < 1.11) return true;
             }
-            
+
             return false;
         }
     }
@@ -163,7 +163,7 @@ namespace StandAloneBlockPhysics
                     SingleComposer.GetStatbar("airbar").SetValue((float)currentair);
                 }
             }
-            
+
             base.OnRenderGUI(deltaTime);
         }
     }
@@ -319,7 +319,7 @@ namespace StandAloneBlockPhysics
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
             if (world.BlockAccessor.GetBlock(pos).HasBehavior<BehaviorSupportBeam>()) return;
-            world.BlockAccessor.WalkBlocks(pos.AddCopy(-8, -8, -8), pos.AddCopy(8, 8, 8), (vBlock, vPos) => 
+            world.BlockAccessor.WalkBlocks(pos.AddCopy(-8, -8, -8), pos.AddCopy(8, 8, 8), (vBlock, vPos) =>
             {
                 if (vBlock.HasBehavior<BehaviorSupportBeam>() && vPos != pos) world.BlockAccessor.BreakBlock(vPos, null);
                 else if (vBlock.HasBehavior<AlteredBlockPhysics>()) world.BlockAccessor.TriggerNeighbourBlockUpdate(vPos);
@@ -331,32 +331,36 @@ namespace StandAloneBlockPhysics
     public class BreakIfFloatingAndCollapse : BlockBehaviorBreakIfFloating
     {
         MiscUtilities misc = new MiscUtilities();
+        Block placedblock;
 
         public BreakIfFloatingAndCollapse(Block block) : base(block)
         {
         }
+
+        public override void OnLoaded(ICoreAPI api)
+        {
+            if (IsRock()) placedblock = api.World.GetBlock(new AssetLocation("gravel-" + block.Variant["rock"]));
+
+            base.OnLoaded(api);
+        }
+
         public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handled)
         {
-            Block neighborblock = world.BlockAccessor.GetBlock(neibpos);
-            if (neighborblock.HasBehavior<BehaviorSupportBeam>())
+            if (world.Side.IsServer())
             {
-                base.OnNeighbourBlockChange(world, pos, neibpos, ref handled);
-                return;
-            }
-            if ((!world.Side.IsServer() || IsRock()) && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && world.BlockAccessor.GetBlock(neibpos).LiquidCode != "water") {
-                int layer = (int)(Math.Round(world.Rand.NextDouble() * 3));
-                layer = layer == 0 ? 1 : layer;
-                double rng = world.Rand.NextDouble();
-                Block placedblock = rng > 0.5 ? world.GetBlock(new AssetLocation("gravel-" + block.Variant["rock"] + "-" + layer)) 
-                    : world.GetBlock(new AssetLocation("loosestones-" + block.Variant["rock"]));
-
-                if (!misc.IsSupported(world, pos, block) && world.Rand.NextDouble() > 0.8)
+                if (IsRock() && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && world.BlockAccessor.GetBlock(neibpos).LiquidCode != "water")
                 {
-                    world.BlockAccessor.SetBlock(placedblock.BlockId, pos);
-                    world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                    if ((!misc.IsSupported(world, pos, block) && world.Rand.NextDouble() > 0.9))
+                    {
+                        world.BlockAccessor.SetBlock(placedblock.BlockId, pos);
+                        int ns = world.Rand.Next(2, 8);
+                        world.BlockAccessor.WalkBlocks(pos.AddCopy(-ns, -ns, -ns), pos.AddCopy(ns, ns, ns), (b, bp) =>
+                        {
+                            world.BlockAccessor.TriggerNeighbourBlockUpdate(bp);
+                        });
+                    }
                 }
             }
-
             base.OnNeighbourBlockChange(world, pos, neibpos, ref handled);
         }
 
