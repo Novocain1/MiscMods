@@ -173,6 +173,7 @@ namespace StandAloneBlockPhysics
         MiscUtilities misc = new MiscUtilities();
         BlockPos[] offset;
         BlockPos[] cardinal;
+        ModSystemBlockReinforcement blockReinforcement;
         double resistance = 0.0;
 
         public AlteredBlockPhysics(Block block) : base(block)
@@ -182,6 +183,8 @@ namespace StandAloneBlockPhysics
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
+            blockReinforcement = api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
+
             resistance = block is BlockSoil ? 0.5 : block.FirstCodePart() == "gravel" ? 0.25 : 0.0;
 
             offset = AreaMethods.AreaBelowOffsetList().ToArray();
@@ -212,8 +215,8 @@ namespace StandAloneBlockPhysics
         public void TryCollapse(IWorldAccessor world, BlockPos pos)
         {
             if (world.Side.IsClient()) return;
-
-            double currentresistance = Isolated(world, pos) ? -0.1 : resistance;
+            BlockReinforcement r = blockReinforcement.GetReinforcment(pos);
+            double currentresistance = r != null && (r.Strength > 0 || r.Locked) ? 1.0 : Isolated(world, pos) ? -0.1 : resistance;
             if (world.Rand.NextDouble() < currentresistance || misc.IsSupported(world, pos, block)) return;
 
             world.RegisterCallbackUnique((vworld, vpos, dt) =>
@@ -225,34 +228,42 @@ namespace StandAloneBlockPhysics
                 {
                     MoveBlock(world, pos, pos.AddCopy(0, -1, 0));
                 }
-                else if (dBlock.CollisionBoxes != null && dBlock.CollisionBoxes[0].Height < 1)
+                else if (dBlock.CollisionBoxes == null || block.CollisionBoxes == null)
+                {
+                    BeginMove(world, pos);
+                }
+                else if (dBlock.CollisionBoxes[0].Height < 1)
                 {
                     world.BlockAccessor.BreakBlock(pos, null);
                 }
-                else if (dBlock.CollisionBoxes == null || 
-                (block.CollisionBoxes != null && dBlock.CollisionBoxes != null && block.CollisionBoxes[0].Length >= dBlock.CollisionBoxes[0].Length))
+                else if (block.CollisionBoxes[0].Length >= dBlock.CollisionBoxes[0].Length)
                 {
-                    List<BlockPos> possiblePos = new List<BlockPos>();
-                    for (int i = 0; i < offset.Length; i++)
-                    {
-                        BlockPos offs = pos.AddCopy(offset[i].X, offset[i].Y, offset[i].Z);
-                        Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
-
-                        if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
-
-                        if (oBlock.IsReplacableBy(block))
-                        {
-                            possiblePos.Add(offs);
-                        }
-                    }
-                    if (possiblePos.Count() > 0)
-                    {
-                        BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
-
-                        MoveBlock(world, pos, toPos);
-                    }
+                    BeginMove(world, pos);
                 }
             }, pos, 30);
+        }
+
+        public void BeginMove(IWorldAccessor world, BlockPos pos)
+        {
+            List<BlockPos> possiblePos = new List<BlockPos>();
+            for (int i = 0; i < offset.Length; i++)
+            {
+                BlockPos offs = pos.AddCopy(offset[i].X, offset[i].Y, offset[i].Z);
+                Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
+
+                if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
+
+                if (oBlock.IsReplacableBy(block))
+                {
+                    possiblePos.Add(offs);
+                }
+            }
+            if (possiblePos.Count() > 0)
+            {
+                BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
+
+                MoveBlock(world, pos, toPos);
+            }
         }
 
         public void MoveBlock(IWorldAccessor world, BlockPos fromPos, BlockPos toPos)
