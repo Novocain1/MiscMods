@@ -131,7 +131,7 @@ namespace StandAloneBlockPhysics
             for (int i = 0; i < block.CollisionBoxes.Length; i++)
             {
                 suffocation = 0.5f;
-                if ((block.CollisionBoxes[i].Length > 0.8 && block.CollisionBoxes[i].Height > 0.8 && block.CollisionBoxes[i].Width > 0.8) && distance < 1.11) return true;
+                if ((block.CollisionBoxes[i].Area() > 0.512) && distance < 1.11) return true;
             }
             return false;
         }
@@ -236,17 +236,28 @@ namespace StandAloneBlockPhysics
                 {
                     world.MoveBlock(pos, pos.AddCopy(0, -1, 0));
                 }
-                else if (dBlock.CollisionBoxes == null || block.CollisionBoxes == null)
+                else
                 {
-                    BeginMove(world, pos);
-                }
-                else if (dBlock.CollisionBoxes[0].Height < 1)
-                {
-                    world.BlockAccessor.BreakBlock(pos, null);
-                }
-                else if (block.CollisionBoxes[0].Length >= dBlock.CollisionBoxes[0].Length)
-                {
-                    BeginMove(world, pos);
+                    if (dBlock.CollisionBoxes != null && block.CollisionBoxes != null)
+                    {
+                        for (int i = 0; i < dBlock.CollisionBoxes.Length; i++)
+                        {
+                            if (dBlock.CollisionBoxes[i].Area() < 1)
+                            {
+                                world.BlockAccessor.BreakBlock(pos, null);
+                                break;
+                            }
+                            else if (block.CollisionBoxes[i].Area() >= dBlock.CollisionBoxes[i].Area())
+                            {
+                                BeginMove(world, pos);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        BeginMove(world, pos);
+                    }
                 }
             }, pos, 30);
         }
@@ -327,11 +338,15 @@ namespace StandAloneBlockPhysics
         {
             world.RegisterCallbackUnique((iworld, ipos, dt) => 
             {
-                int ns = world.Rand.Next(2, 8);
-                world.BlockAccessor.WalkBlocks(ipos.AddCopy(-ns, -ns, -ns), ipos.AddCopy(ns, ns, ns), (b, bp) =>
+                int range = world.Rand.Next(2, 8);
+                world.BlockAccessor.WalkBlocks(ipos.AddCopy(-range), ipos.AddCopy(range), (b, bp) =>
                 {
-                    world.BlockAccessor.TriggerNeighbourBlockUpdate(bp);
+                    if (world.Rand.NextDouble() > 0.5)
+                    {
+                        world.BulkBlockAccessor.TriggerNeighbourBlockUpdate(bp);
+                    }
                 });
+                world.BulkBlockAccessor.Commit();
             }, pos, 1000);
         }
 
@@ -341,23 +356,17 @@ namespace StandAloneBlockPhysics
             base.OnBlockBroken(world, pos, byPlayer, ref handling);
         }
 
-        public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
-        {
-            WalkUpdate(world, pos);
-            base.OnBlockRemoved(world, pos, ref handling);
-        }
-
         public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handled)
         {
             if (world.Side.IsServer())
             {
                 Block nBlock = world.BlockAccessor.GetBlock(neibpos);
-                if (IsRock && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && nBlock.LiquidCode != "water" && !nBlock.HasBehavior<BehaviorSupportBeam>())
+                if (IsRock && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && nBlock.Id == 0)
                 {
-                    if (placedblock != null && !world.BlockAccessor.IsSupported(pos, block) && world.Rand.NextDouble() > 0.9)
+                    if (placedblock != null && !world.BlockAccessor.IsSupported(pos, block) && world.Rand.NextDouble() > 0.95)
                     {
                         if (placedblock.Sounds.Break != null) world.PlaySoundAt(placedblock.Sounds.Break, pos.X, pos.Y, pos.Z);
-                        world.BlockAccessor.SetBlock(placedblock.BlockId, pos);
+                        world.BulkBlockAccessor.SetBlock(placedblock.BlockId, pos);
                         WalkUpdate(world, pos);
                     }
                 }
@@ -402,6 +411,11 @@ namespace StandAloneBlockPhysics
             return false;
         }
 
+        public static double Area(this Cuboidf cuboid)
+        {
+            return (cuboid.Length * cuboid.Width * cuboid.Height);
+        }
+
         public static void MoveBlock(this IWorldAccessor world, BlockPos fromPos, BlockPos toPos)
         {
             Block block = world.BulkBlockAccessor.GetBlock(fromPos);
@@ -416,9 +430,14 @@ namespace StandAloneBlockPhysics
                     attribs.SetInt("posy", toPos.Y);
                     attribs.SetInt("posz", toPos.Z);
 
-                    world.BulkBlockAccessor.SetBlock(0, fromPos);
-                    world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
-                    world.BulkBlockAccessor.Commit();
+                    try
+                    {
+                        world.BulkBlockAccessor.SetBlock(0, fromPos);
+                        world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
+                        world.BulkBlockAccessor.Commit();
+                    }
+                    catch (InvalidOperationException){}
+
                     BlockEntity be2 = world.BulkBlockAccessor.GetBlockEntity(toPos);
 
                     if (be2 != null) be2.FromTreeAtributes(attribs, world);
@@ -426,9 +445,13 @@ namespace StandAloneBlockPhysics
             }
             else
             {
-                world.BulkBlockAccessor.SetBlock(0, fromPos);
-                world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
-                world.BulkBlockAccessor.Commit();
+                try
+                {
+                    world.BulkBlockAccessor.SetBlock(0, fromPos);
+                    world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
+                    world.BulkBlockAccessor.Commit();
+                }
+                catch (InvalidOperationException){}
             }
         }
     }
