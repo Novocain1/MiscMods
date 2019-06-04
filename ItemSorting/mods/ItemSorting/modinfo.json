@@ -6,6 +6,6 @@
 	"authors": ["Novocain"],
 	"version": "1.0.14",
 	"dependencies": {
-	"game": "1.9.7",
+	"game": "1.9.10",
 	}
 }

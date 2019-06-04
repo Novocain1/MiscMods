@@ -42,45 +42,38 @@ namespace StandAloneBlockPhysics
         {
             foreach (var val in sapi.World.LoadedEntities)
             {
-                if (val.Value.Class == "EntityItem") continue;
-                bool isPlayer = false;
                 Entity entity = val.Value;
 
-                BlockPos pos = entity.ServerPos.AsBlockPos;
-
-                if (sapi.World.Rand.NextDouble() > 0.9)
-                {
-                    sapi.World.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
-                }
+                if (entity is EntityItem || entity == null || entity.ServerPos == null || !entity.Alive) continue;
 
                 if (entity is EntityPlayer)
                 {
-                    isPlayer = true;
                     EntityPlayer entityPlayer = entity as EntityPlayer;
                     if (entityPlayer.Player.WorldData.CurrentGameMode != EnumGameMode.Survival) continue;
                 }
 
-                if (entity == null) continue;
-                if (entity.ServerPos == null || !entity.Alive) continue;
+                float height = entity.CollisionBox.Height;
+                BlockPos pos = entity.ServerPos.AsBlockPos;
+                double entityArea = entity.CollisionBox.Area();
+
+                if (sapi.World.Rand.NextDouble() > 0.9 && entityArea > 0.6)
+                {
+                    sapi.World.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                }
 
                 ITreeAttribute attribs = entity.WatchedAttributes.GetOrAddTreeAttribute("health");
                 float? maxair = attribs.TryGetFloat("maxair");
                 float? currentair = attribs.TryGetFloat("currentair");
 
-                if (maxair == null)
+                if (maxair == null || currentair == null)
                 {
                     attribs.SetFloat("maxair", 1.0f);
-                    entity.WatchedAttributes.MarkPathDirty("health");
-                    continue;
-                }
-                if (currentair == null)
-                {
                     attribs.SetFloat("currentair", 1.0f);
                     entity.WatchedAttributes.MarkPathDirty("health");
                     continue;
                 }
 
-                if (InBlockBounds(entity.ServerPos.XYZ, isPlayer, out float suff))
+                if (InBlockBounds(entity.ServerPos.XYZ, height, out float suff))
                 {
                     if (currentair > 0)
                     {
@@ -110,12 +103,11 @@ namespace StandAloneBlockPhysics
             }
         }
 
-        public bool InBlockBounds(Vec3d vec, bool isPlayer, out float suffocation)
+        public bool InBlockBounds(Vec3d vec, float height, out float suffocation)
         {
             suffocation = 0.0f;
 
-            vec.Sub(0.5, 0, 0.5);
-            if (isPlayer) vec.Add(0, 1, 0);
+            vec.Sub(0.5, 0, 0.5).Add(0,height/2.0,0);
 
             BlockPos pos = new BlockPos((int)Math.Round(vec.X), (int)Math.Round(vec.Y), (int)Math.Round(vec.Z));
             Vec3d blockCenter = pos.ToVec3d().AddCopy(0.5, 0.5, 0.5);
@@ -165,9 +157,8 @@ namespace StandAloneBlockPhysics
             if (currentair != null)
             {
                 GuiElementStatbar statbar = SingleComposer.GetStatbar("airbar");
-                float? barvalue = HAX.GetInstanceField(typeof(GuiElementStatbar), statbar, "value") as float?;
 
-                if (currentair != barvalue)
+                if (currentair != statbar.GetValue())
                 {
                     SingleComposer.GetStatbar("airbar").SetValue((float)currentair);
                 }
@@ -179,6 +170,7 @@ namespace StandAloneBlockPhysics
 
     public class AlteredBlockPhysics : BlockBehavior
     {
+        Utilities util;
         BlockPos[] offset;
         BlockPos[] cardinal;
         ModSystemBlockReinforcement blockReinforcement;
@@ -190,13 +182,14 @@ namespace StandAloneBlockPhysics
 
         public override void OnLoaded(ICoreAPI api)
         {
+            util = new Utilities(api);
             base.OnLoaded(api);
             blockReinforcement = api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
 
-            resistance = block is BlockSoil ? 0.5 : block.FirstCodePart() == "gravel" ? 0.25 : 0.0;
+            resistance = block is BlockSoil ? 0.5 : block.FirstCodePart() == "gravel" ? 0.15 : 0.0;
 
             offset = AreaMethods.AreaBelowOffsetList().ToArray();
-            cardinal = AreaMethods.CardinalOffsetList().ToArray();
+            cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
         }
 
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ref EnumHandling handled)
@@ -215,17 +208,30 @@ namespace StandAloneBlockPhysics
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
-            world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
-
+            world.RegisterCallbackUnique((vworld, vpos, dt) => 
+            {
+                world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
+                if ((world.Rand.NextDouble() > resistance && world.Rand.NextDouble() > 0.5) || util.Isolated(pos) || util.OverHangAtLimit(pos, 8))
+                {
+                    world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                }
+            }, pos, 30);
             base.OnBlockRemoved(world, pos, ref handling);
         }
 
         public void TryCollapse(IWorldAccessor world, BlockPos pos)
         {
             if (world.Side.IsClient()) return;
-            BlockReinforcement r = blockReinforcement.GetReinforcment(pos);
-            double currentresistance = r != null && (r.Strength > 0 || r.Locked) ? 1.0 : Isolated(world, pos) ? -0.1 : resistance;
-            if (world.Rand.NextDouble() < currentresistance || world.BlockAccessor.IsSupported(pos, block)) return;
+            BlockReinforcement r = new BlockReinforcement();
+            r = blockReinforcement.GetReinforcment(pos);
+
+            bool isolated = util.Isolated(pos);
+            bool overhang = util.OverHangAtLimit(pos, 8);
+
+            double currentresistance = r != null && (r.Strength > 0 || r.Locked) ? 1.0 : isolated || overhang ? -0.1 : resistance;
+            double chance = world.Rand.NextDouble();
+
+            if (chance < currentresistance || util.IsSupported(pos, block)) return;
 
             world.RegisterCallbackUnique((vworld, vpos, dt) =>
             {
@@ -234,7 +240,7 @@ namespace StandAloneBlockPhysics
 
                 if (dBlock.IsReplacableBy(block))
                 {
-                    world.MoveBlock(pos, pos.AddCopy(0, -1, 0));
+                    util.MoveBlock(pos, pos.AddCopy(0, -1, 0));
                 }
                 else
                 {
@@ -281,22 +287,8 @@ namespace StandAloneBlockPhysics
             {
                 BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
                 Block toBlock = world.BulkBlockAccessor.GetBlock(toPos);
-                world.MoveBlock(pos, toPos);
+                util.MoveBlock(pos, toPos);
             }
-        }
-
-        public bool Isolated(IWorldAccessor world, BlockPos pos)
-        {
-            for (int i = 0; i < cardinal.Length; i++)
-            {
-                BlockPos iPos = pos.AddCopy(cardinal[i].X, cardinal[i].Y, cardinal[i].Z);
-                Block iBlock = world.BlockAccessor.GetBlock(iPos);
-                if (!iBlock.IsReplacableBy(block))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 
@@ -308,19 +300,51 @@ namespace StandAloneBlockPhysics
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
-            if (world.BlockAccessor.GetBlock(pos).HasBehavior<BehaviorSupportBeam>()) return;
-            world.BlockAccessor.WalkBlocks(pos.AddCopy(-8, -8, -8), pos.AddCopy(8, 8, 8), (vBlock, vPos) =>
+            world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+            if (world.BlockAccessor.GetBlock(pos).FirstCodePart() != block.FirstCodePart())
             {
-                if (vBlock.HasBehavior<BehaviorSupportBeam>() && vPos != pos) world.BlockAccessor.BreakBlock(vPos, null);
-                else if (vBlock.HasBehavior<AlteredBlockPhysics>()) world.BlockAccessor.TriggerNeighbourBlockUpdate(vPos);
-            });
+                world.BlockAccessor.WalkBlocks(pos.AddCopy(-8, -8, -8), pos.AddCopy(8, 8, 8), (vBlock, vPos) =>
+                {
+                    if (vBlock.HasBehavior<BehaviorSupportBeam>() && vPos != pos) world.BlockAccessor.BreakBlock(vPos, null);
+                });
+            }
             base.OnBlockRemoved(world, pos, ref handling);
+        }
+
+        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
+        {
+            if (blockSel == null) return;
+
+            handHandling = EnumHandHandling.PreventDefault;
+
+            var bA = byEntity.World.BlockAccessor;
+            BlockPos pos = blockSel.Position;
+            if (slot.Itemstack.StackSize > 2 && bA.GetBlock(pos.X, pos.Y + 3, pos.Z).IsReplacableBy(block) && blockSel.Face.Code == "up")
+            {
+                for (int i = 1; i <= 3 && bA.GetBlock(pos.X, pos.Y + i, pos.Z).IsReplacableBy(slot.Itemstack.Block); i++)
+                {
+                    slot.Itemstack.StackSize -= 1;
+                    bA.SetBlock(block.BlockId, new BlockPos(pos.X, pos.Y + i, pos.Z));
+                }
+                slot.MarkDirty();
+                if (byEntity.Api.Side == EnumAppSide.Client)
+                {
+                    byEntity.World.PlaySoundAt(block.Sounds.Place, pos.X, pos.Y, pos.Z);
+                }
+            }
+            else
+            {
+                handHandling = EnumHandHandling.NotHandled;
+                base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handHandling, ref handling);
+            }
+            
         }
     }
 
     public class BreakIfFloatingAndCollapse : BlockBehaviorBreakIfFloating
     {
         Block placedblock;
+        Utilities util;
         bool IsRock = false;
 
         public BreakIfFloatingAndCollapse(Block block) : base(block)
@@ -329,6 +353,7 @@ namespace StandAloneBlockPhysics
 
         public override void OnLoaded(ICoreAPI api)
         {
+            util = new Utilities(api);
             IsRock = block.FirstCodePart() == "rock";
             if (IsRock) placedblock = api.World.GetBlock(new AssetLocation("gravel-" + block.Variant["rock"]));
 
@@ -336,7 +361,7 @@ namespace StandAloneBlockPhysics
         }
         public void WalkUpdate(IWorldAccessor world, BlockPos pos)
         {
-            world.RegisterCallbackUnique((iworld, ipos, dt) => 
+            world.RegisterCallbackUnique((iworld, ipos, dt) =>
             {
                 int range = world.Rand.Next(2, 8);
                 world.BlockAccessor.WalkBlocks(ipos.AddCopy(-range), ipos.AddCopy(range), (b, bp) =>
@@ -363,7 +388,7 @@ namespace StandAloneBlockPhysics
                 Block nBlock = world.BlockAccessor.GetBlock(neibpos);
                 if (IsRock && !world.BlockAccessor.GetBlock(pos.UpCopy()).IsReplacableBy(block) && nBlock.Id == 0)
                 {
-                    if (placedblock != null && !world.BlockAccessor.IsSupported(pos, block) && world.Rand.NextDouble() > 0.95)
+                    if (placedblock != null && !util.IsSupported(pos, block) && world.Rand.NextDouble() > 0.95)
                     {
                         if (placedblock.Sounds.Break != null) world.PlaySoundAt(placedblock.Sounds.Break, pos.X, pos.Y, pos.Z);
                         world.BulkBlockAccessor.SetBlock(placedblock.BlockId, pos);
@@ -375,54 +400,80 @@ namespace StandAloneBlockPhysics
         }
     }
 
-    public static class MiscUtilities
+    public class Utilities
     {
-        public static bool IsSupported(this IBlockAccessor bA, BlockPos pos, Block block)
-        {
-            BlockPos[] cardinal = AreaMethods.CardinalOffsetList().ToArray();
-            BlockPos[] supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
+        IBlockAccessor bA;
+        IWorldAccessor world;
+        ICoreAPI api;
+        BlockPos[] cardinal;
+        BlockPos[] supportarea;
 
+        public Utilities(ICoreAPI api)
+        {
+            this.api = api;
+            world = api.World;
+            bA = api.World.BlockAccessor;
+            cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
+            supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
+        }
+
+        public bool IsSupported(BlockPos pos, Block block)
+        {
             for (int i = 0; i < supportarea.Length; i++)
             {
                 BlockPos iPos = pos.AddCopy(supportarea[i].X, supportarea[i].Y, supportarea[i].Z);
                 Block iBlock = bA.GetBlock(iPos);
-                if (iBlock.HasBehavior<BehaviorSupportBeam>())
-                {
-                    BlockPos dPos = pos.DownCopy();
-                    Block dBlock = bA.GetBlock(dPos);
-                    if (!dBlock.IsReplacableBy(block))
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        for (int j = 0; j < cardinal.Length; j++)
-                        {
-                            BlockPos jPos = pos.AddCopy(cardinal[j].X, cardinal[j].Y, cardinal[j].Z);
-                            Block jBlock = bA.GetBlock(jPos);
-                            if (!jBlock.IsReplacableBy(block))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
+
+                if (iBlock.HasBehavior<BehaviorSupportBeam>()) return !Isolated(pos);
             }
             return false;
         }
 
-        public static double Area(this Cuboidf cuboid)
+        public bool Isolated(BlockPos pos)
         {
-            return (cuboid.Length * cuboid.Width * cuboid.Height);
+            Block block = world.BlockAccessor.GetBlock(pos);
+            for (int i = 0; i < cardinal.Length; i++)
+            {
+                BlockPos iPos = pos.AddCopy(cardinal[i].X, cardinal[i].Y, cardinal[i].Z);
+                if (iPos == pos) continue;
+                Block iBlock = world.BlockAccessor.GetBlock(iPos);
+                if (!iBlock.IsReplacableBy(block))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
-        public static void MoveBlock(this IWorldAccessor world, BlockPos fromPos, BlockPos toPos)
+        public bool OverHangAtLimit(BlockPos pos, int limit = 8)
         {
-            Block block = world.BulkBlockAccessor.GetBlock(fromPos);
+            int j = 0;
+            int i = 0;
+            Block block = bA.GetBlock(pos);
+
+            bA.WalkBlocks(pos.AddCopy(-8,-1,-8), pos.AddCopy(8,-1,8), (vBlock, vPos) =>
+            {
+                BlockPos uPos = vPos.UpCopy();
+                Block uBlock = bA.GetBlock(uPos);
+
+                if (!uBlock.IsReplacableBy(block) && uBlock.HasBehavior<AlteredBlockPhysics>())
+                {
+                    j++;
+                    if (vBlock.IsReplacableBy(block)) i++;
+                }
+                
+            });
+
+            return i > limit || i >= j;
+        }
+
+        public void MoveBlock(BlockPos fromPos, BlockPos toPos)
+        {
+            Block block = bA.GetBlock(fromPos);
             if (block.EntityClass != null)
             {
                 TreeAttribute attribs = new TreeAttribute();
-                BlockEntity be = world.BulkBlockAccessor.GetBlockEntity(fromPos);
+                BlockEntity be = bA.GetBlockEntity(fromPos);
                 if (be != null)
                 {
                     be.ToTreeAttributes(attribs);
@@ -430,29 +481,28 @@ namespace StandAloneBlockPhysics
                     attribs.SetInt("posy", toPos.Y);
                     attribs.SetInt("posz", toPos.Z);
 
-                    try
-                    {
-                        world.BulkBlockAccessor.SetBlock(0, fromPos);
-                        world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
-                        world.BulkBlockAccessor.Commit();
-                    }
-                    catch (InvalidOperationException){}
+                    bA.SetBlock(0, fromPos);
+                    bA.SetBlock(block.BlockId, toPos);
 
-                    BlockEntity be2 = world.BulkBlockAccessor.GetBlockEntity(toPos);
+                    BlockEntity be2 = bA.GetBlockEntity(toPos);
 
-                    if (be2 != null) be2.FromTreeAtributes(attribs, world);
+                    if (be2 != null) be2.FromTreeAtributes(attribs, api.World);
                 }
             }
             else
             {
-                try
-                {
-                    world.BulkBlockAccessor.SetBlock(0, fromPos);
-                    world.BulkBlockAccessor.SetBlock(block.BlockId, toPos);
-                    world.BulkBlockAccessor.Commit();
-                }
-                catch (InvalidOperationException){}
+                bA.SetBlock(0, fromPos);
+                bA.SetBlock(block.BlockId, toPos);
+                api.World.SpawnCubeParticles(toPos, toPos.ToVec3d().Add(0.5), 4, 32);
             }
+        }
+    }
+
+    public static class MiscUtilities
+    {
+        public static double Area(this Cuboidf cuboid)
+        {
+            return (cuboid.Length * cuboid.Width * cuboid.Height);
         }
     }
 
