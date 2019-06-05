@@ -22,6 +22,7 @@ namespace StandAloneBlockPhysics
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockBehaviorClass("UnstableFalling", typeof(AlteredBlockPhysics));
+            api.RegisterBlockBehaviorClass("LegacyUnstableFalling", typeof(BlockBehaviorUnstableFalling));
             api.RegisterBlockBehaviorClass("SupportBeam", typeof(BehaviorSupportBeam));
             api.RegisterBlockBehaviorClass("BreakIfFloating", typeof(BreakIfFloatingAndCollapse));
         }
@@ -208,6 +209,8 @@ namespace StandAloneBlockPhysics
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
+            if (pos == null) return;
+
             world.RegisterCallbackUnique((vworld, vpos, dt) => 
             {
                 world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);

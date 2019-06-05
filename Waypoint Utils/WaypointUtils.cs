@@ -23,9 +23,12 @@ namespace WaypointUtils
         public int SetColorIndex { get; set; } = 0;
         public bool WaypointPrefix { get; set; } = true;
         public bool WaypointID { get; set; } = true;
+
         public bool LightLevels { get; set; } = false;
         public EnumLightLevelType LightLevelType { get; set; } = EnumLightLevelType.OnlyBlockLight;
         public int LightRadius { get; set; } = 8;
+        public int MinLLID { get; set; } = 128;
+        public float LightLevelAlpha { get; set; } = 0.8f;
     }
 
     class WaypointUtilSystem : ModSystem
@@ -54,7 +57,7 @@ namespace WaypointUtils
 
             capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid]", new ClientChatCommandDelegate(CmdWaypointConfig));
             capi.RegisterCommand("measure", "Tape Measure", "[start|end|calc]", new ClientChatCommandDelegate(CmdMeasuringTape));
-            capi.RegisterCommand("misc", "Miscellaneous Utils", "[lightlevel]", new ClientChatCommandDelegate(CmdMisc));
+            capi.RegisterCommand("lightutil", "Light Util", "[lightlevel|lightleveltype|lightlevelradius|lightlevelalpha]", new ClientChatCommandDelegate(CmdLightUtil));
 
             id = api.World.RegisterGameTickListener(dt =>
             {
@@ -296,7 +299,7 @@ namespace WaypointUtils
             }
         }
 
-        public void CmdMisc(int groupId, CmdArgs args)
+        public void CmdLightUtil(int groupId, CmdArgs args)
         {
             string arg = args.PopWord();
             switch (arg)
@@ -321,29 +324,35 @@ namespace WaypointUtils
                         Config.LightRadius = (int)rad;
                     }
                     break;
+                case "lightlevelalpha":
+                    float? alpha = args.PopFloat();
+                    Config.LightLevelAlpha = alpha != null ? (float)alpha : Config.LightLevelAlpha;
+                    break;
                 default:
-                    capi.ShowChatMessage("Syntax: .misc [lightlevel|lightleveltype|lightlevelradius]");
+                    capi.ShowChatMessage("Syntax: .lightutil [lightlevel|lightleveltype|lightlevelradius|lightlevelalpha]");
                     break;
             }
             SaveConfig();
         }
 
         List<BlockPos> highlightedBlocks = new List<BlockPos>();
+        Dictionary<BlockPos, int> prepared = new Dictionary<BlockPos, int>();
 
         public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
         {
             if (highlightedBlocks.Count != 0) ClearLightLevelHighlights();
-            pos = pos == null ? capi.World.Player.Entity.LocalPos.AsBlockPos : pos;
+
+            pos = pos == null ? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy() : pos;
             int rad = Config.LightRadius;
 
             for (int x = -rad; x <= rad; x++)
             {
-                for (int y = 0; y <= rad; y++)
+                for (int y = -rad; y <= rad; y++)
                 {
                     for (int z = -rad; z <= rad; z++)
                     {
                         BlockPos iPos = pos.AddCopy(x, y, z);
-                        Block block = capi.World.BlockAccessor.GetBlock(iPos.DownCopy());
+                        Block block = capi.World.BlockAccessor.GetBlock(iPos);
                         if (block.BlockId != 0 && (x * x + y * y + z * z) <= (rad * rad))
                         {
                             highlightedBlocks.Add(iPos);
@@ -359,22 +368,18 @@ namespace WaypointUtils
         {
             for (int i = 0; i < blocks.Length; i++)
             {
-                int level = capi.World.BlockAccessor.GetLightLevel(blocks[i].DownCopy(), type);
-                float fLevel = level / 32.0f;
-                List<BlockPos> highlight = new List<BlockPos>() { blocks[i].DownCopy().AddCopy(0, 1, 0), blocks[i].DownCopy().AddCopy(1, 0, 1) };
-                List<int> color = new List<int>();
-
-                if (level < 8)
+                int level = capi.World.BlockAccessor.GetLightLevel(blocks[i], type);
+                if (level != 0)
                 {
-                    color = new List<int>() { ColorUtil.ToRgba(255, 0, 0, (int)(fLevel * 255)) };
-                }
-                else
-                {
-                    color = new List<int>() { ColorUtil.ToRgba(255, 0, (int)(fLevel * 255), 0) };
-                }
+                    float fLevel = level / 32.0f;
+                    int alpha = (int)Math.Round(Config.LightLevelAlpha * 255);
+                    int c = level > 7 ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(fLevel * 255));
 
+                    List<BlockPos> highlight = new List<BlockPos>() { blocks[i].AddCopy(0, 1, 0), blocks[i].AddCopy(1, 0, 1) };
+                    List<int> color = new List<int>() { c };
 
-                capi.World.HighlightBlocks(capi.World.Player, 6 + i, highlight, color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+                    capi.World.HighlightBlocks(capi.World.Player, Config.MinLLID + i, highlight, color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+                }
             }
         }
 
@@ -382,7 +387,7 @@ namespace WaypointUtils
         {
             for (int i = 0; i < highlightedBlocks.Count; i++)
             {
-                capi.World.HighlightBlocks(capi.World.Player, 6 + i, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
+                capi.World.HighlightBlocks(capi.World.Player, Config.MinLLID + i, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
             }
             highlightedBlocks.Clear();
         }

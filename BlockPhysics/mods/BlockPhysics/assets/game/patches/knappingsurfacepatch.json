@@ -1,0 +1,12 @@
+[
+    {
+        "op": "replace",
+        "path": "/behaviors",
+        "value": [
+            {
+                "name": "LegacyUnstableFalling"
+            }
+        ],
+        "file": "blocktypes/stone/knappingsurface.json"
+    }
+]
