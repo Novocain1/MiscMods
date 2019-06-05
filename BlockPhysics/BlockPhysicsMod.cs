@@ -209,16 +209,17 @@ namespace StandAloneBlockPhysics
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
-            if (pos == null) return;
-
-            world.RegisterCallbackUnique((vworld, vpos, dt) => 
+            if (world.Side.IsServer())
             {
-                world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
-                if ((world.Rand.NextDouble() > resistance && world.Rand.NextDouble() > 0.5) || util.Isolated(pos) || util.OverHangAtLimit(pos, 8))
+                world.RegisterCallbackUnique((vworld, vpos, dt) =>
                 {
-                    world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
-                }
-            }, pos, 30);
+                    world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
+                    if ((world.Rand.NextDouble() > resistance && world.Rand.NextDouble() > 0.5) || util.Isolated(pos) || util.OverHangAtLimit(pos, 8))
+                    {
+                        world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
+                    }
+                }, pos, 30);
+            }
             base.OnBlockRemoved(world, pos, ref handling);
         }
 
