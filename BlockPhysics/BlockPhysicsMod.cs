@@ -226,8 +226,7 @@ namespace StandAloneBlockPhysics
         public void TryCollapse(IWorldAccessor world, BlockPos pos)
         {
             if (world.Side.IsClient()) return;
-            BlockReinforcement r = new BlockReinforcement();
-            r = blockReinforcement.GetReinforcment(pos);
+            BlockReinforcement r = blockReinforcement.GetReinforcment(pos);
 
             bool isolated = util.Isolated(pos);
             bool overhang = util.OverHangAtLimit(pos, 8);
