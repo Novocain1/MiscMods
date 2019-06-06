@@ -1,0 +1,32 @@
+[
+    {
+        "op": "replace",
+        "path": "/behaviors",
+        "value": [
+            {
+                "name": "LegacyUnstableFalling"
+            }
+        ],
+        "file": "blocktypes/stone/knappingsurface.json"
+    },
+		    {
+        "op": "replace",
+        "path": "/behaviors",
+        "value": [
+            {
+                "name": "LegacyUnstableFalling"
+            }
+        ],
+        "file": "blocktypes/wood/generic/bucket.json"
+    },
+		    {
+        "op": "replace",
+        "path": "/behaviors",
+        "value": [
+            {
+                "name": "LegacyUnstableFalling"
+            }
+        ],
+        "file": "blocktypes/metal/anvil.json"
+    }
+]

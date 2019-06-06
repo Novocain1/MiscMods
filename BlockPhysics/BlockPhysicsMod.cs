@@ -16,9 +16,90 @@ using Vintagestory.GameContent;
 
 namespace StandAloneBlockPhysics
 {
+    public class PhysicsBlock
+    {
+        private double friction;
+        private bool hasPhysics;
+        public PhysicsBlock()
+        {
+            friction = 0.0;
+            hasPhysics = false;
+        }
+
+        public PhysicsBlock(double frictionIn, bool hasPhysicsIn)
+        {
+            friction = frictionIn;
+            hasPhysics = hasPhysicsIn;
+        }
+
+        public PhysicsBlock(bool hasPhysicsIn)
+        {
+            friction = 1.0;
+            hasPhysics = hasPhysicsIn;
+        }
+
+        public PhysicsBlock(double frictionIn)
+        {
+            friction = frictionIn;
+            hasPhysics = true;
+        }
+
+        public double getFriction()
+        {
+            return friction;
+        }
+
+        public bool getHasPhysics()
+        {
+            return hasPhysics;
+        }
+    }
+
+    public class PhysicsModConfig
+    {
+        public Dictionary<EnumBlockMaterial, double> FrictionTable { get; set; } = new Dictionary<EnumBlockMaterial, double>
+        {
+            [EnumBlockMaterial.Air] = 0.0,
+            [EnumBlockMaterial.Brick] = 1.0,
+            [EnumBlockMaterial.Ceramic] = 0.0,
+            [EnumBlockMaterial.Cloth] = 0.0,
+            [EnumBlockMaterial.Fire] = 0.0,
+            [EnumBlockMaterial.Glass] = 0.45,
+            [EnumBlockMaterial.Gravel] = 0.05,
+            [EnumBlockMaterial.Ice] = 0.5,
+            [EnumBlockMaterial.Lava] = 0.0,
+            [EnumBlockMaterial.Leaves] = 0.0,
+            [EnumBlockMaterial.Liquid] = 0.0,
+            [EnumBlockMaterial.Mantle] = 0.0,
+            [EnumBlockMaterial.Meta] = 0.0,
+            [EnumBlockMaterial.Metal] = 0.0,
+            [EnumBlockMaterial.Ore] = 1.0,
+            [EnumBlockMaterial.Other] = 0.0,
+            [EnumBlockMaterial.Plant] = 0.7,
+            [EnumBlockMaterial.Sand] = 0.0,
+            [EnumBlockMaterial.Snow] = 0.0,
+            [EnumBlockMaterial.Soil] = 0.2,
+            [EnumBlockMaterial.Stone] = 0.95,
+            [EnumBlockMaterial.Wood] = 0.4
+        };
+    }
+
+
     public class BlockPhysicsMod : ModSystem
     {
         ICoreServerAPI sapi;
+        public PhysicsModConfig Config { get; private set; } = new PhysicsModConfig();
+
+        public void LoadConfig()
+        {
+            if (sapi.LoadModConfig<PhysicsModConfig>("blockphysicsmod.json") == null) { SaveConfig(); return; }
+
+            Config = sapi.LoadModConfig<PhysicsModConfig>("blockphysicsmod.json");
+            SaveConfig();
+        }
+
+        public void SaveConfig() => sapi.StoreModConfig(Config, "blockphysicsmod.json");
+
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockBehaviorClass("UnstableFalling", typeof(AlteredBlockPhysics));
@@ -30,6 +111,7 @@ namespace StandAloneBlockPhysics
         public override void StartServerSide(ICoreServerAPI api)
         {
             sapi = api;
+            LoadConfig();
             api.World.RegisterGameTickListener(SuffocationAndStepWatch, 500);
         }
 
@@ -108,7 +190,7 @@ namespace StandAloneBlockPhysics
         {
             suffocation = 0.0f;
 
-            vec.Sub(0.5, 0, 0.5).Add(0,height/2.0,0);
+            vec.Sub(0.5, 0, 0.5).Add(0, height / 2.0, 0);
 
             BlockPos pos = new BlockPos((int)Math.Round(vec.X), (int)Math.Round(vec.Y), (int)Math.Round(vec.Z));
             Vec3d blockCenter = pos.ToVec3d().AddCopy(0.5, 0.5, 0.5);
@@ -181,6 +263,7 @@ namespace StandAloneBlockPhysics
         {
         }
 
+
         public override void OnLoaded(ICoreAPI api)
         {
             util = new Utilities(api);
@@ -207,17 +290,67 @@ namespace StandAloneBlockPhysics
             base.OnNeighbourBlockChange(world, pos, neibpos, ref handling);
         }
 
+        public PhysicsBlock getFrictionTableElement(ICoreAPI api, EnumBlockMaterial material)
+        {
+            PhysicsModConfig config = api.ModLoader.GetModSystem<BlockPhysicsMod>().Config;
+            if (config.FrictionTable.TryGetValue(material, out double friction))
+            {
+                return new PhysicsBlock(friction);
+            }
+
+            return new PhysicsBlock(0.0);
+        }
+
+        public double FindTotalFriction(IWorldAccessor world, BlockPos pos)
+        {
+            util = new Utilities(world.Api);
+            if (block is BlockAnvil)
+            {
+
+            }
+            double totalfriction = getFrictionTableElement(world.Api, block.BlockMaterial).getFriction();
+            BlockReinforcement r = null;
+            if (blockReinforcement != null)
+            {
+                r = blockReinforcement.GetReinforcment(pos);
+            }
+            bool isolated = util.Isolated(pos);
+            bool overhang = util.OverHangAtLimit(pos, 8);
+
+            if ((r != null && (r.Strength > 0 || r.Locked)) || util.IsSupported(pos, block))
+            {
+                totalfriction = 1.0;
+            }
+            else if (isolated || overhang)
+            {
+                totalfriction = -0.1;
+            }
+            else
+            {
+                //stickyness
+                for (int i = 0; i < cardinal.Length; i++)
+                {
+                    Block iBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X + cardinal[i].X, pos.Y + cardinal[i].Y, pos.Z + cardinal[i].Z));
+                    totalfriction += getFrictionTableElement(world.Api, iBlock.BlockMaterial).getFriction();
+                }
+                //subtract weight on block
+                for (int y = pos.Y; y < world.BlockAccessor.MapSizeY; y++)
+                {
+                    Block yBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X, pos.Y + y, pos.Z));
+                    if (!yBlock.HasBehavior<AlteredBlockPhysics>()) break;
+                    totalfriction -= getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                }
+            }
+            return totalfriction;
+        }
+
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
             if (world.Side.IsServer())
             {
                 world.RegisterCallbackUnique((vworld, vpos, dt) =>
                 {
-                    world.BlockAccessor.GetBlock(pos.UpCopy()).OnNeighourBlockChange(world, pos.UpCopy(), pos);
-                    if ((world.Rand.NextDouble() > resistance && world.Rand.NextDouble() > 0.5) || util.Isolated(pos) || util.OverHangAtLimit(pos, 8))
-                    {
-                        world.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
-                    }
+                    vworld.BlockAccessor.TriggerNeighbourBlockUpdate(vpos);
                 }, pos, 30);
             }
             base.OnBlockRemoved(world, pos, ref handling);
@@ -226,24 +359,17 @@ namespace StandAloneBlockPhysics
         public void TryCollapse(IWorldAccessor world, BlockPos pos)
         {
             if (world.Side.IsClient()) return;
-            BlockReinforcement r = blockReinforcement.GetReinforcment(pos);
 
-            bool isolated = util.Isolated(pos);
-            bool overhang = util.OverHangAtLimit(pos, 8);
-
-            double currentresistance = r != null && (r.Strength > 0 || r.Locked) ? 1.0 : isolated || overhang ? -0.1 : resistance;
-            double chance = world.Rand.NextDouble();
-
-            if (chance < currentresistance || util.IsSupported(pos, block)) return;
+            if (FindTotalFriction(world, pos) >= 1.0) return;
 
             world.RegisterCallbackUnique((vworld, vpos, dt) =>
             {
-                BlockPos dPos = pos.AddCopy(0, -1, 0);
+                BlockPos dPos = new BlockPos(pos.X, pos.Y - 1, pos.Z);
                 Block dBlock = world.BlockAccessor.GetBlock(dPos);
 
                 if (dBlock.IsReplacableBy(block))
                 {
-                    util.MoveBlock(pos, pos.AddCopy(0, -1, 0));
+                    util.MoveBlock(pos, dPos);
                 }
                 else
                 {
@@ -276,7 +402,7 @@ namespace StandAloneBlockPhysics
             List<BlockPos> possiblePos = new List<BlockPos>();
             for (int i = 0; i < offset.Length; i++)
             {
-                BlockPos offs = pos.AddCopy(offset[i].X, offset[i].Y, offset[i].Z);
+                BlockPos offs = new BlockPos(pos.X + offset[i].X, pos.Y + offset[i].Y, pos.Z + offset[i].Z);
                 Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
 
                 if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
@@ -340,7 +466,7 @@ namespace StandAloneBlockPhysics
                 handHandling = EnumHandHandling.NotHandled;
                 base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handHandling, ref handling);
             }
-            
+
         }
     }
 
@@ -424,7 +550,7 @@ namespace StandAloneBlockPhysics
         {
             for (int i = 0; i < supportarea.Length; i++)
             {
-                BlockPos iPos = pos.AddCopy(supportarea[i].X, supportarea[i].Y, supportarea[i].Z);
+                BlockPos iPos = new BlockPos(pos.X + supportarea[i].X, pos.Y + supportarea[i].Y, pos.Z + supportarea[i].Z);
                 Block iBlock = bA.GetBlock(iPos);
 
                 if (iBlock.HasBehavior<BehaviorSupportBeam>()) return !Isolated(pos);
@@ -437,7 +563,7 @@ namespace StandAloneBlockPhysics
             Block block = world.BlockAccessor.GetBlock(pos);
             for (int i = 0; i < cardinal.Length; i++)
             {
-                BlockPos iPos = pos.AddCopy(cardinal[i].X, cardinal[i].Y, cardinal[i].Z);
+                BlockPos iPos = new BlockPos(pos.X + cardinal[i].X, pos.Y + cardinal[i].Y, pos.Z + cardinal[i].Z); ;
                 if (iPos == pos) continue;
                 Block iBlock = world.BlockAccessor.GetBlock(iPos);
                 if (!iBlock.IsReplacableBy(block))
@@ -454,18 +580,18 @@ namespace StandAloneBlockPhysics
             int i = 0;
             Block block = bA.GetBlock(pos);
 
-            bA.WalkBlocks(pos.AddCopy(-8,-1,-8), pos.AddCopy(8,-1,8), (vBlock, vPos) =>
-            {
-                BlockPos uPos = vPos.UpCopy();
-                Block uBlock = bA.GetBlock(uPos);
-
-                if (!uBlock.IsReplacableBy(block) && uBlock.HasBehavior<AlteredBlockPhysics>())
+            bA.WalkBlocks(pos.AddCopy(-8, -1, -8), pos.AddCopy(8, -1, 8), (vBlock, vPos) =>
                 {
-                    j++;
-                    if (vBlock.IsReplacableBy(block)) i++;
-                }
-                
-            });
+                    BlockPos uPos = vPos.UpCopy();
+                    Block uBlock = bA.GetBlock(uPos);
+
+                    if (!uBlock.IsReplacableBy(block) && uBlock.HasBehavior<AlteredBlockPhysics>())
+                    {
+                        j++;
+                        if (vBlock.IsReplacableBy(block)) i++;
+                    }
+
+                });
 
             return i > limit || i >= j;
         }
