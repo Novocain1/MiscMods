@@ -303,45 +303,48 @@ namespace StandAloneBlockPhysics
 
         public double FindTotalFriction(IWorldAccessor world, BlockPos pos)
         {
-            util = new Utilities(world.Api);
-            if (block is BlockAnvil)
+            try
             {
-
-            }
-            double totalfriction = getFrictionTableElement(world.Api, block.BlockMaterial).getFriction();
-            BlockReinforcement r = null;
-            if (blockReinforcement != null)
-            {
-                r = blockReinforcement.GetReinforcment(pos);
-            }
-            bool isolated = util.Isolated(pos);
-            bool overhang = util.OverHangAtLimit(pos, 8);
-
-            if ((r != null && (r.Strength > 0 || r.Locked)) || util.IsSupported(pos, block))
-            {
-                totalfriction = 1.0;
-            }
-            else if (isolated || overhang)
-            {
-                totalfriction = -0.1;
-            }
-            else
-            {
-                //stickyness
-                for (int i = 0; i < cardinal.Length; i++)
+                util = new Utilities(world.Api);
+                double totalfriction = getFrictionTableElement(world.Api, block.BlockMaterial).getFriction();
+                BlockReinforcement r = null;
+                if (blockReinforcement != null)
                 {
-                    Block iBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X + cardinal[i].X, pos.Y + cardinal[i].Y, pos.Z + cardinal[i].Z));
-                    totalfriction += getFrictionTableElement(world.Api, iBlock.BlockMaterial).getFriction();
+                    r = blockReinforcement.GetReinforcment(pos);
                 }
-                //subtract weight on block
-                for (int y = pos.Y; y < world.BlockAccessor.MapSizeY; y++)
+                bool isolated = util.Isolated(pos);
+                bool overhang = util.OverHangAtLimit(pos, 8);
+
+                if ((r != null && (r.Strength > 0 || r.Locked)) || util.IsSupported(pos, block))
                 {
-                    Block yBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X, pos.Y + y, pos.Z));
-                    if (!yBlock.HasBehavior<AlteredBlockPhysics>()) break;
-                    totalfriction -= getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                    totalfriction = 1.0;
                 }
+                else if (isolated || overhang)
+                {
+                    totalfriction = -0.1;
+                }
+                else
+                {
+                    //stickyness
+                    for (int i = 0; i < util.cardinal.Length; i++)
+                    {
+                        Block iBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X + util.cardinal[i].X, pos.Y + util.cardinal[i].Y, pos.Z + util.cardinal[i].Z));
+                        totalfriction += getFrictionTableElement(world.Api, iBlock.BlockMaterial).getFriction();
+                    }
+                    //subtract weight on block
+                    for (int y = pos.Y; y < world.BlockAccessor.MapSizeY; y++)
+                    {
+                        Block yBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X, pos.Y + y, pos.Z));
+                        if (!yBlock.HasBehavior<AlteredBlockPhysics>()) break;
+                        totalfriction -= getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                    }
+                }
+                return totalfriction;
             }
-            return totalfriction;
+            catch (NullReferenceException)
+            {
+            }
+            return 0;
         }
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
@@ -534,8 +537,8 @@ namespace StandAloneBlockPhysics
         IBlockAccessor bA;
         IWorldAccessor world;
         ICoreAPI api;
-        BlockPos[] cardinal;
-        BlockPos[] supportarea;
+        public BlockPos[] cardinal;
+        public BlockPos[] supportarea;
 
         public Utilities(ICoreAPI api)
         {
