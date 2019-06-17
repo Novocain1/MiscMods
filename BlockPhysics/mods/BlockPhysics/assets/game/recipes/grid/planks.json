@@ -1,0 +1,11 @@
+{
+	ingredientPattern: "SL",
+	ingredients: {
+		"S": { type: "item", code: "saw-*", isTool: true  },
+		"L": { type: "block", code: "log-placed-*-ud", name: "wood" }
+	},
+	width: 2,
+	height: 1,
+	shapeless: false,
+	output: { type: "block", code: "planks-{wood}", quantity: 4  }
+}

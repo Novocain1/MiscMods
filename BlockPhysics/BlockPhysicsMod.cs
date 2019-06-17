@@ -68,7 +68,7 @@ namespace StandAloneBlockPhysics
             [EnumBlockMaterial.Gravel] = 0.05,
             [EnumBlockMaterial.Ice] = 0.5,
             [EnumBlockMaterial.Lava] = 0.0,
-            [EnumBlockMaterial.Leaves] = 0.0,
+            [EnumBlockMaterial.Leaves] = 0.7,
             [EnumBlockMaterial.Liquid] = 0.0,
             [EnumBlockMaterial.Mantle] = 0.0,
             [EnumBlockMaterial.Meta] = 0.0,
@@ -80,14 +80,18 @@ namespace StandAloneBlockPhysics
             [EnumBlockMaterial.Snow] = 0.0,
             [EnumBlockMaterial.Soil] = 0.2,
             [EnumBlockMaterial.Stone] = 0.95,
-            [EnumBlockMaterial.Wood] = 0.4
+            [EnumBlockMaterial.Wood] = 0.7
         };
+
+        public bool AddToAllBlocks { get; set; } = false;
     }
 
 
     public class BlockPhysicsMod : ModSystem
     {
         ICoreServerAPI sapi;
+        ICoreAPI api;
+
         public PhysicsModConfig Config { get; private set; } = new PhysicsModConfig();
 
         public void LoadConfig()
@@ -102,6 +106,8 @@ namespace StandAloneBlockPhysics
 
         public override void Start(ICoreAPI api)
         {
+            this.api = api;
+
             api.RegisterBlockBehaviorClass("UnstableFalling", typeof(AlteredBlockPhysics));
             api.RegisterBlockBehaviorClass("LegacyUnstableFalling", typeof(BlockBehaviorUnstableFalling));
             api.RegisterBlockBehaviorClass("SupportBeam", typeof(BehaviorSupportBeam));
@@ -112,6 +118,11 @@ namespace StandAloneBlockPhysics
         {
             sapi = api;
             LoadConfig();
+            if (Config.AddToAllBlocks)
+            {
+                api.Event.SaveGameLoaded += AddBehaviorToAll;
+            }
+
             api.World.RegisterGameTickListener(SuffocationAndStepWatch, 500);
         }
 
@@ -119,6 +130,38 @@ namespace StandAloneBlockPhysics
         {
             AirBar airBar = new AirBar(api);
             airBar.TryOpen();
+        }
+
+        public void AddBehaviorToAll()
+        {
+            try
+            {
+                if (api.World.Blocks != null)
+                {
+                    for (int i = 0; i < api.World.Blocks.Length; i++)
+                    {
+                        Block block = api.World.Blocks[i];
+                        if (block != null && (block.Code != null && block.CollisionBoxes != null && block.Id != 0 && block.Id != 1 && block.FirstCodePart() != "rock" || block.BlockMaterial == EnumBlockMaterial.Leaves))
+                        {
+                            List<BlockBehavior> behaviors = api.World.Blocks[i].BlockBehaviors.ToList();
+                            AlteredBlockPhysics phys = new AlteredBlockPhysics(api.World.Blocks[i]);
+                            if (!api.World.Blocks[i].BlockBehaviors.Contains(phys))
+                            {
+                                behaviors.Add(phys);
+                                api.World.Blocks[i].BlockBehaviors = behaviors.ToArray();
+                            }
+                            for (int j = 0; j < api.World.Blocks[i].BlockBehaviors.Length; j++)
+                            {
+                                api.World.Blocks[i].BlockBehaviors[j].OnLoaded(api);
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception)
+            {
+            }
         }
 
         public void SuffocationAndStepWatch(float dt)
@@ -314,7 +357,6 @@ namespace StandAloneBlockPhysics
                 }
                 bool isolated = util.Isolated(pos);
                 bool overhang = util.OverHangAtLimit(pos, 8);
-
                 if ((r != null && (r.Strength > 0 || r.Locked)) || util.IsSupported(pos, block))
                 {
                     totalfriction = 1.0;
@@ -332,11 +374,12 @@ namespace StandAloneBlockPhysics
                         totalfriction += getFrictionTableElement(world.Api, iBlock.BlockMaterial).getFriction();
                     }
                     //subtract weight on block
-                    for (int y = pos.Y; y < world.BlockAccessor.MapSizeY; y++)
+                    for (int y = 0; y < world.BlockAccessor.MapSizeY - pos.Y; y++)
                     {
                         Block yBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X, pos.Y + y, pos.Z));
-                        if (!yBlock.HasBehavior<AlteredBlockPhysics>()) break;
-                        totalfriction -= getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                        if (yBlock.IsReplacableBy(block)) break;
+                        double friction = getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                        totalfriction -= 0.001;
                     }
                 }
                 return totalfriction;
@@ -378,18 +421,18 @@ namespace StandAloneBlockPhysics
                 {
                     if (dBlock.CollisionBoxes != null && block.CollisionBoxes != null)
                     {
-                        for (int i = 0; i < dBlock.CollisionBoxes.Length; i++)
+                        double area = 0;
+                        double dArea = 0;
+                        for (int i = 0; i < dBlock.CollisionBoxes.Length; i++) dArea += dBlock.CollisionBoxes[i].Area();
+                        for (int i = 0; i < block.CollisionBoxes.Length; i++) area += block.CollisionBoxes[i].Area();
+
+                        if (dArea < 0.8)
                         {
-                            if (dBlock.CollisionBoxes[i].Area() < 1)
-                            {
-                                world.BlockAccessor.BreakBlock(pos, null);
-                                break;
-                            }
-                            else if (block.CollisionBoxes[i].Area() >= dBlock.CollisionBoxes[i].Area())
-                            {
-                                BeginMove(world, pos);
-                                break;
-                            }
+                            world.BlockAccessor.BreakBlock(pos, null);
+                        }
+                        else if (area >= dArea)
+                        {
+                            BeginMove(world, pos);
                         }
                     }
                     else
@@ -402,25 +445,32 @@ namespace StandAloneBlockPhysics
 
         public void BeginMove(IWorldAccessor world, BlockPos pos)
         {
-            List<BlockPos> possiblePos = new List<BlockPos>();
-            for (int i = 0; i < offset.Length; i++)
+            try
             {
-                BlockPos offs = new BlockPos(pos.X + offset[i].X, pos.Y + offset[i].Y, pos.Z + offset[i].Z);
-                Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
-
-                if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
-
-                if (oBlock.IsReplacableBy(block))
+                List<BlockPos> possiblePos = new List<BlockPos>();
+                for (int i = 0; i < offset.Length; i++)
                 {
-                    possiblePos.Add(offs);
+                    BlockPos offs = new BlockPos(pos.X + offset[i].X, pos.Y + offset[i].Y, pos.Z + offset[i].Z);
+                    Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
+
+                    if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
+
+                    if (oBlock.IsReplacableBy(block))
+                    {
+                        possiblePos.Add(offs);
+                    }
+                }
+                if (possiblePos.Count() > 0)
+                {
+                    BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
+                    Block toBlock = world.BulkBlockAccessor.GetBlock(toPos);
+                    util.MoveBlock(pos, toPos);
                 }
             }
-            if (possiblePos.Count() > 0)
+            catch (Exception)
             {
-                BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
-                Block toBlock = world.BulkBlockAccessor.GetBlock(toPos);
-                util.MoveBlock(pos, toPos);
             }
+
         }
     }
 
@@ -566,7 +616,7 @@ namespace StandAloneBlockPhysics
             Block block = world.BlockAccessor.GetBlock(pos);
             for (int i = 0; i < cardinal.Length; i++)
             {
-                BlockPos iPos = new BlockPos(pos.X + cardinal[i].X, pos.Y + cardinal[i].Y, pos.Z + cardinal[i].Z); ;
+                BlockPos iPos = new BlockPos(pos.X + cardinal[i].X, pos.Y + cardinal[i].Y, pos.Z + cardinal[i].Z);
                 if (iPos == pos) continue;
                 Block iBlock = world.BlockAccessor.GetBlock(iPos);
                 if (!iBlock.IsReplacableBy(block))

@@ -105,10 +105,9 @@
   <ItemGroup>
     <None Include="mods\BlockPhysics\assets\game\blocktypes\supportbeam.json" />
     <None Include="mods\BlockPhysics\assets\game\patches\soilpatch.json" />
+    <None Include="mods\BlockPhysics\assets\game\recipes\grid\planks.json" />
     <None Include="mods\BlockPhysics\modinfo.json" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="mods\BlockPhysics\assets\game\recipes\grid\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
