@@ -322,6 +322,7 @@ namespace WaypointUtils
                         EnumLightLevelType leveltype = (EnumLightLevelType)type;
                         Config.LightLevelType = (EnumLightLevelType)type;
                     }
+                    capi.ShowChatMessage("Light Util Type Set To " + Enum.GetName(typeof(EnumLightLevelType), Config.LightLevelType));
                     break;
                 case "radius":
                     int? rad = args.PopInt();
@@ -329,10 +330,12 @@ namespace WaypointUtils
                     {
                         Config.LightRadius = (int)rad;
                     }
+                    capi.ShowChatMessage("Light Util Radius Set To " + Config.LightRadius);
                     break;
                 case "alpha":
                     float? alpha = args.PopFloat();
                     Config.LightLevelAlpha = alpha != null ? (float)alpha : Config.LightLevelAlpha;
+                    capi.ShowChatMessage("Light Util Opacity Set To " + Config.LightLevelAlpha);
                     break;
                 case "red":
                     int? red = args.PopInt();
@@ -340,11 +343,13 @@ namespace WaypointUtils
                     {
                         Config.LightLevelRed = (int)red;
                     }
+                    capi.ShowChatMessage("Red Level Set To " + Config.LightLevelRed);
                     break;
                 case "above":
                     bool? ab = args.PopBool();
                     if (ab != null) Config.LightLevels = (bool)ab;
                     else { Config.LUShowAbove = !Config.LUShowAbove; }
+                    capi.ShowChatMessage("Show Above Set To " + Config.LUShowAbove);
                     break;
                 default:
                     capi.ShowChatMessage("Syntax: .lightutil [lightlevel|type|radius|alpha|red|above]");
