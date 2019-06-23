@@ -16,6 +16,7 @@ namespace WaypointUtils
         string wpText = "";
         string color;
         int intColor;
+        WaypointUtilConfig config;
 
         public override string ToggleKeyCombinationCode => "waypointfrontend";
         public void VClose() => TryClose();
@@ -24,7 +25,7 @@ namespace WaypointUtils
         public override void OnOwnPlayerDataReceived()
         {
             base.OnOwnPlayerDataReceived();
-            WaypointUtilConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
+            config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
 
             ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 465, 500);
             ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -200, 465, 100);
@@ -41,6 +42,7 @@ namespace WaypointUtils
             config.SetColorIndex = config.SetColorIndex < 0 ? 0 : config.SetColorIndex;
 
             color = colors[config.SetColorIndex];
+            UpdateDropDown(colors, color);
 
             SingleComposer = capi.Gui.CreateCompo("waypointfrontend", dialogBounds)
                 .AddDialogTitleBar("Waypoint Utils", VClose, CairoFont.WhiteSmallText())
@@ -48,9 +50,7 @@ namespace WaypointUtils
                 .AddTextInput(ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 86.5, -200, 370, 20), OnTextChanged, null, "textinput")
                 .AddDropDown(colors, colors, config.SetColorIndex, (newval, on) =>
                 {
-                    color = newval;
-                    intColor = Color.FromName(newval).ToArgb();
-                    config.SetColorIndex = Array.BinarySearch(colors, newval);
+                    UpdateDropDown(colors, newval);
                     capi.TriggerChatMessage(".wpcfg save");
                 },
                 ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 250, -170, 125, 25), "dropdown")
@@ -61,6 +61,7 @@ namespace WaypointUtils
                         SingleComposer.Dispose();
                         OnOwnPlayerDataReceived();
                         SingleComposer.Compose();
+                        capi.TriggerChatMessage(".wpcfg save");
                         capi.ModLoader.GetModSystem<WaypointUtilSystem>().Repopulate();
                     }, 100);
                     switch (i)
@@ -78,14 +79,8 @@ namespace WaypointUtils
                             capi.TriggerChatMessage(".wpcfg perblockwaypoints");
                             break;
                         case 4:
-                            if (config.DisabledColors.Contains(intColor))
-                            {
-                                config.DisabledColors.Remove(intColor);
-                            }
-                            else
-                            {
-                                config.DisabledColors.Add(intColor);
-                            }
+                            if (config.DisabledColors.Contains(intColor)) config.DisabledColors.Remove(intColor);
+                            else config.DisabledColors.Add(intColor);
                             break;
                         default:
                             break;
@@ -98,6 +93,13 @@ namespace WaypointUtils
                     ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 165, -170, 80, 35),
                     ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 380, -170, 80, 35),
                 });
+        }
+
+        public void UpdateDropDown(string[] colors, string value)
+        {
+            color = value;
+            intColor = Color.FromName(value).ToArgb();
+            config.SetColorIndex = Array.BinarySearch(colors, value);
         }
 
         public void CreateWaypoint()

@@ -114,7 +114,6 @@ namespace WaypointUtils
                     break;
                 case "purge":
                     string s = args.PopWord();
-
                     if (s == "reallyreallyconfirm") Purge();
                     else capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
                     break;
