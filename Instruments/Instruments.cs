@@ -31,7 +31,7 @@ namespace ModProject
         public override void OnLoaded(ICoreAPI api)
         {
             if (api.Side.IsClient()) capi = (ICoreClientAPI)api;
-            instrument = Variant["instrument"];
+            instrument = (this as Block).Variant["instrument"];
             base.OnLoaded(api);
         }
 
