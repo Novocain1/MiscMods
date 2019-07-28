@@ -1,0 +1,11 @@
+{
+	"type": "code",
+	"name": "Orthographic Shader Loader",
+	"modid": "loadshaders",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	"game": "1.9.11",
+	}
+}

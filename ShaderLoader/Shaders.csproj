@@ -118,6 +118,7 @@
     <Folder Include="mods\ShaderLoader\assets\game\shaderincludes\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RedirectLogs.cs" />
     <Compile Include="ShaderTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />

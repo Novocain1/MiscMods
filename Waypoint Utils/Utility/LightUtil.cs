@@ -147,7 +147,7 @@ namespace WaypointUtils
 
                     List<BlockPos> highlight = new List<BlockPos>() { blocks[i].AddCopy(0, 1, 0), blocks[i].AddCopy(1, 0, 1) };
                     List<int> color = new List<int>() { c };
-
+                    
                     capi.World.HighlightBlocks(capi.World.Player, config.MinLLID + i, highlight, color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
                 }
             }

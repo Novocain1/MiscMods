@@ -58,7 +58,7 @@ vec2 Rotate(float speedx, float speedy, float radius){
 	return vec2(sin(iTime*speedx)*radius, cos(iTime*speedy)*radius);
 }
 
-float near = 0.001; 
+float near = 0.01; 
 float far  = 1500.0;
 
 float Depth() 
@@ -87,6 +87,16 @@ vec3 camNrm = normalize(camVec);
 float rng = fract(sin(dot(vec2(uv.x, uv.y), vec2(12.9898, 78.233)))*43758.5453123);
 const vec3 nrmavg = vec3(128.0/255.0, 128.0/255.0, 1);
 
+float Rng(vec2 i) 
+{
+	return fract(sin(dot(i, vec2(12.9898, 78.233)))*43758.5453123);
+}
+
+float RngTime(vec2 i, float speed) 
+{
+	return fract(sin(dot(i*mix(0.9,1.0, sin(iTime*speed)), vec2(12.9898, 78.233)))*43758.5453123);
+}
+
 vec3 test()
 {
 	vec4 pos = vec4((uv.xy * 0.5) / (depth), uv.x, 1.0) * uv.y;
@@ -95,12 +105,47 @@ vec3 test()
 }
 vec3 Nrm = test();
 
+vec3 ChannelMix(vec3 Input, vec3 rmix, vec3 gmix, vec3 bmix)
+{
+	float r = (Input.r*rmix.r+Input.g*rmix.g+Input.b*rmix.b);
+	float g = (Input.r*gmix.r+Input.g*gmix.g+Input.b*gmix.b);
+	float b = (Input.r*bmix.r+Input.g*bmix.g+Input.b*bmix.b);
+	return vec3(r,g,b);
+}
+
+vec3 ChannelMix(vec3 Input, vec3[3] arr)
+{
+	 return ChannelMix(Input, arr[0], arr[1], arr[2]);
+}
+
+vec3 Deuteranopia(vec3 c) 
+{
+	vec3[] arr = vec3[] ( vec3(0.43, 0.72, -0.15), vec3(0.34, 0.57, 0.09), vec3(-0.02, 0.03, 1.0) );
+	return ChannelMix(c, arr);
+}
+
+vec3 Protanopia(vec3 c) 
+{
+	vec3[] arr = vec3[] ( vec3(0.20, 0.99, -0.19), vec3(0.16, 0.79, 0.04), vec3(0.01, -0.01, 1.0) );
+	return ChannelMix(c, arr);
+}
+
+vec3 Tritanopia(vec3 c)
+{
+	vec3[] arr = vec3[] ( vec3(0.97, 0.11, -0.08), vec3(0.02, 0.82, 0.16), vec3(-0.06, 0.88, 0.18) );
+	return ChannelMix(c, arr);
+}
+
+vec3 FakeInfrared(vec3 c)
+{
+	vec3 fI = vec3(-0.70, 2.0, -0.30);
+	vec3[] arr = vec3[] ( fI, fI, fI );
+	return 1.0 - ChannelMix(c, arr);
+}
+
 void main () 
 {
-	vec2 uv2 = uv - 0.5;
-	uv2.x *= iResolution.x / iResolution.y;
-
-	//outColor = vec4(clamp(Color.xyz / Nrm.y, 0, 1), 1.0);
+	outColor = vec4(Tritanopia(Color.rgb), 1.0);
 }
 
 

@@ -134,14 +134,16 @@ namespace StandAloneBlockPhysics
 
         public void AddBehaviorToAll()
         {
-            try
+            if (api.World.Blocks != null)
             {
-                if (api.World.Blocks != null)
+                for (int i = 0; i < api.World.Blocks.Count; i++)
                 {
-                    for (int i = 0; i < api.World.Blocks.Length; i++)
+                    try
                     {
                         Block block = api.World.Blocks[i];
-                        if (block != null && (block.Code != null && block.CollisionBoxes != null && block.Id != 0 && block.Id != 1 && block.FirstCodePart() != "rock" || block.BlockMaterial == EnumBlockMaterial.Leaves))
+                        if (block == null || block.Code == null) continue;
+
+                        if (block.BlockMaterial != EnumBlockMaterial.Leaves || block.CollisionBoxes != null && block.Id != 0 && block.Id != 1 && block.FirstCodePart() != "rock")
                         {
                             List<BlockBehavior> behaviors = api.World.Blocks[i].BlockBehaviors.ToList();
                             AlteredBlockPhysics phys = new AlteredBlockPhysics(api.World.Blocks[i]);
@@ -156,11 +158,11 @@ namespace StandAloneBlockPhysics
                             }
                         }
                     }
-                }
+                    catch (Exception)
+                    {
+                    }
 
-            }
-            catch (Exception)
-            {
+                }
             }
         }
 
@@ -326,13 +328,6 @@ namespace StandAloneBlockPhysics
             base.OnBlockPlaced(world, pos, ref handled);
         }
 
-        public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handling)
-        {
-            TryCollapse(world, pos);
-
-            base.OnNeighbourBlockChange(world, pos, neibpos, ref handling);
-        }
-
         public PhysicsBlock getFrictionTableElement(ICoreAPI api, EnumBlockMaterial material)
         {
             PhysicsModConfig config = api.ModLoader.GetModSystem<BlockPhysicsMod>().Config;
@@ -394,10 +389,15 @@ namespace StandAloneBlockPhysics
         {
             if (world.Side.IsServer())
             {
-                world.RegisterCallbackUnique((vworld, vpos, dt) =>
+                for (int i = 0; i < cardinal.Length; i++)
                 {
-                    vworld.BlockAccessor.TriggerNeighbourBlockUpdate(vpos);
-                }, pos, 30);
+                    if (world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).Id != 0)
+                    {
+                        world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).GetBehavior<AlteredBlockPhysics>()?.TryCollapse(world, pos.AddCopy(cardinal[i]));
+                        world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).OnNeighourBlockChange(world, pos.AddCopy(cardinal[i]), pos);
+                    }
+                }
+                TryCollapse(world, pos);
             }
             base.OnBlockRemoved(world, pos, ref handling);
         }
@@ -675,7 +675,10 @@ namespace StandAloneBlockPhysics
             {
                 bA.SetBlock(0, fromPos);
                 bA.SetBlock(block.BlockId, toPos);
-                api.World.SpawnCubeParticles(toPos, toPos.ToVec3d().Add(0.5), 4, 32);
+                if (bA.GetBlock(toPos).Id != 0)
+                {
+                    api.World.SpawnCubeParticles(toPos, toPos.ToVec3d().Add(0.5), 4, 32);
+                }
             }
         }
     }
@@ -685,6 +688,11 @@ namespace StandAloneBlockPhysics
         public static double Area(this Cuboidf cuboid)
         {
             return (cuboid.Length * cuboid.Width * cuboid.Height);
+        }
+
+        public static BlockPos AddCopy(this BlockPos pos, BlockPos copy)
+        {
+            return pos.AddCopy(copy.X, copy.Y, copy.Z);
         }
     }
 

@@ -73,17 +73,19 @@ namespace ShaderTestMod
 
         public bool LoadShaders()
         {
-            string path = capi.DataBasePath + "\\ModConfigs\\ShadersMod\\";
-            string file = Path.Combine(path, "OrthoShaderList.txt");
-
-            if (!File.Exists(file))
-            {
-                Directory.CreateDirectory(path);
-                File.WriteAllText(file, "testshader");
-            }
-            orthoShaderKeys = File.ReadAllLines(file);
-
             List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
+            try
+            {
+                orthoShaderKeys = capi.LoadModConfig<string[]>("OrthoShaderList.json");
+            }
+            catch (Exception)
+            {
+            }
+            if (orthoShaderKeys == null)
+            {
+                orthoShaderKeys = new string[] { "testshader" };
+                capi.StoreModConfig(orthoShaderKeys, "OrthoShaderList.json");
+            }
 
             for (int i = 0; i < orthoShaderKeys.Length; i++)
             {
@@ -175,7 +177,7 @@ namespace ShaderTestMod
 
         public Matrixf ModelMat = new Matrixf();
 
-        public double RenderOrder => 1.1;
+        public double RenderOrder => 0;
 
         public int RenderRange => 1;
 
