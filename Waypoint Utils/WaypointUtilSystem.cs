@@ -122,6 +122,20 @@ namespace WaypointUtils
                     break;
                 case "save":
                     break;
+                case "debug":
+                    string jj = args.PopWord();
+                    switch (jj)
+                    {
+                        case "testpopulate":
+                            for (int i = 0; i < 121; i++)
+                            {
+                                capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " *Test*");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 default:
                     capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]"));
                     break;
