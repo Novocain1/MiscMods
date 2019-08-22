@@ -201,9 +201,14 @@ namespace WaypointUtils
             {
                 if (layer.ownWaypoints[i].Title.Contains("*Player Death Waypoint*"))
                 {
-                    BlockPos rel = layer.ownWaypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
-                    capi.Logger.Event(layer.ownWaypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + layer.ownWaypoints[i].Position.ToString());
                     capi.SendChatMessage("/waypoint remove " + i);
+                    BlockPos rel = layer.ownWaypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
+                    string str = layer.ownWaypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + layer.ownWaypoints[i].Position.ToString();
+                    StringBuilder builder = new StringBuilder(str).AppendLine();
+                    FileInfo info = new FileInfo(Path.Combine(GamePaths.Logs, "waypoints-log.txt"));
+                    GamePaths.EnsurePathExists(info.Directory.FullName);
+                    File.AppendAllText(info.FullName, builder.ToString());
+                    capi.Logger.Event(str);
                 }
             }
             Repopulate();
