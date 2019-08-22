@@ -90,9 +90,7 @@ namespace WaypointUtils
                 .AppendLine("Global Season: " + cal.Season)
                 .AppendLine("Average Temperature: " + Math.Round(climate.Temperature, 3))
                 .AppendLine("Average Rainfall: " + Math.Round(climate.Rainfall, 3))
-                .AppendLine("Average Fertility: " + Math.Round(climate.Fertility, 3))
-                .AppendLine("Forest Density: " + Math.Round(climate.ForestDensity, 3))
-                .AppendLine("Shrub Density: " + Math.Round(climate.ShrubDensity, 3));
+                .AppendLine("Average Fertility: " + Math.Round(climate.Fertility, 3));
 
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
         }

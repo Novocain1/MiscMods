@@ -201,6 +201,8 @@ namespace WaypointUtils
             {
                 if (layer.ownWaypoints[i].Title.Contains("*Player Death Waypoint*"))
                 {
+                    BlockPos rel = layer.ownWaypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
+                    capi.Logger.Event(layer.ownWaypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + layer.ownWaypoints[i].Position.ToString());
                     capi.SendChatMessage("/waypoint remove " + i);
                 }
             }
