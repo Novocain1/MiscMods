@@ -51,8 +51,7 @@ namespace WaypointUtils
 
         public void UpdateDialog()
         {
-            EntityPlayer entityPlayer = capi.World.Player.Entity;
-            distance = Math.Round(Math.Sqrt(entityPlayer.Pos.SquareDistanceTo(waypointPos)), 3);
+            distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
             dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
             order = 1.0 / distance;
         }
@@ -72,12 +71,16 @@ namespace WaypointUtils
 
             Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
-            ElementBounds bounds = ElementBounds.Empty;
 
             if (pos.Z < 0 || (distance > config.DotRange && !dialogText.Contains("*")))
             {
                 SingleComposer.GetDynamicText("text").SetNewText("");
+                SingleComposer.Dispose();
                 return;
+            }
+            else
+            {
+                SingleComposer.Compose();
             }
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;

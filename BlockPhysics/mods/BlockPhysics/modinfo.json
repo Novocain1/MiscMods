@@ -4,8 +4,8 @@
 	"modid": "blockphysicsmod",
 	"description" : "",
 	"authors": ["Novocain"],
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"dependencies": {
-	"game": "1.10-pre.1",
+	"game": "1.10.0-rc.4",
 	}
 }

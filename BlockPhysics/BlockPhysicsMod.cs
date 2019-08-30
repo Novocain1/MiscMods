@@ -387,6 +387,9 @@ namespace StandAloneBlockPhysics
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
+            cardinal = cardinal ?? AreaMethods.SphericalOffsetList(1).ToArray(); //if for whatever reason it's null
+            offset = offset ?? AreaMethods.AreaBelowOffsetList().ToArray();
+
             if (world.Side.IsServer())
             {
                 for (int i = 0; i < cardinal.Length; i++)

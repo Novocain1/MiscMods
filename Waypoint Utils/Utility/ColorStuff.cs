@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 
 namespace WaypointUtils
@@ -27,5 +28,15 @@ namespace WaypointUtils
             (int)(GameMath.Clamp(api.World.Rand.NextDouble(), min, max) * 255)
             );
         }
+    }
+
+    static class Extensions
+    {
+        public static double DistanceTo(this EntityPos aPos, Vec3d bPos)
+        {
+            return Math.Sqrt(aPos.SquareDistanceTo(bPos));
+        }
+
+        public static double RoundedDistanceTo(this EntityPos aPos, Vec3d bPos, int digits) => Math.Round(aPos.DistanceTo(bPos), digits);
     }
 }
