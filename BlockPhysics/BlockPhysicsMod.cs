@@ -82,8 +82,6 @@ namespace StandAloneBlockPhysics
             [EnumBlockMaterial.Stone] = 0.95,
             [EnumBlockMaterial.Wood] = 0.7
         };
-
-        public bool AddToAllBlocks { get; set; } = false;
     }
 
 
@@ -118,10 +116,6 @@ namespace StandAloneBlockPhysics
         {
             sapi = api;
             LoadConfig();
-            if (Config.AddToAllBlocks)
-            {
-                api.Event.SaveGameLoaded += AddBehaviorToAll;
-            }
 
             api.World.RegisterGameTickListener(SuffocationAndStepWatch, 500);
         }
@@ -302,7 +296,6 @@ namespace StandAloneBlockPhysics
         BlockPos[] offset;
         BlockPos[] cardinal;
         ModSystemBlockReinforcement blockReinforcement;
-        double resistance = 0.0;
 
         public AlteredBlockPhysics(Block block) : base(block)
         {
@@ -314,8 +307,6 @@ namespace StandAloneBlockPhysics
             util = new Utilities(api);
             base.OnLoaded(api);
             blockReinforcement = api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
-
-            resistance = block is BlockSoil ? 0.5 : block.FirstCodePart() == "gravel" ? 0.15 : 0.0;
 
             offset = AreaMethods.AreaBelowOffsetList().ToArray();
             cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
@@ -588,6 +579,7 @@ namespace StandAloneBlockPhysics
     public class Utilities
     {
         IBlockAccessor bA;
+        IBulkBlockAccessor bbA;
         IWorldAccessor world;
         ICoreAPI api;
         public BlockPos[] cardinal;
@@ -598,6 +590,7 @@ namespace StandAloneBlockPhysics
             this.api = api;
             world = api.World;
             bA = api.World.BlockAccessor;
+            bbA = api.World.BulkBlockAccessor;
             cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
             supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
         }
