@@ -251,45 +251,6 @@ namespace StandAloneBlockPhysics
         }
     }
 
-    public class AirBar : HudElement
-    {
-        public AirBar(ICoreClientAPI capi) : base(capi)
-        {
-        }
-
-        public override void OnOwnPlayerDataReceived()
-        {
-            ElementBounds statbarbounds = ElementStdBounds.Statbar(EnumDialogArea.CenterBottom, 345).WithFixedAlignmentOffset(-250.0, -88.0);
-            statbarbounds.WithFixedHeight(8);
-
-            SingleComposer = capi.Gui.CreateCompo("airbar", statbarbounds)
-                .AddStatbar(statbarbounds, new double[] { 255.0 / 66.0, 255.0 / 134.0, 255.0 / 244.0, 0.5 }, "airbar")
-                .Compose();
-            SingleComposer
-                .GetStatbar("airbar").SetMinMax(0, 1.0f);
-
-            base.OnOwnPlayerDataReceived();
-        }
-
-        public override void OnRenderGUI(float deltaTime)
-        {
-            ITreeAttribute tree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
-
-            float? currentair = tree.TryGetFloat("currentair");
-            if (currentair != null)
-            {
-                GuiElementStatbar statbar = SingleComposer.GetStatbar("airbar");
-
-                if (currentair != statbar.GetValue())
-                {
-                    SingleComposer.GetStatbar("airbar").SetValue((float)currentair);
-                }
-            }
-
-            base.OnRenderGUI(deltaTime);
-        }
-    }
-
     public class AlteredBlockPhysics : BlockBehavior
     {
         Utilities util;

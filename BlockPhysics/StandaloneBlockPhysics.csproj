@@ -97,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AirBar.cs" />
     <Compile Include="AreaMethods.cs" />
     <Compile Include="BlockPhysicsMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
