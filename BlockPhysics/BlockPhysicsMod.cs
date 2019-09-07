@@ -126,40 +126,6 @@ namespace StandAloneBlockPhysics
             airBar.TryOpen();
         }
 
-        public void AddBehaviorToAll()
-        {
-            if (api.World.Blocks != null)
-            {
-                for (int i = 0; i < api.World.Blocks.Count; i++)
-                {
-                    try
-                    {
-                        Block block = api.World.Blocks[i];
-                        if (block == null || block.Code == null) continue;
-
-                        if (block.BlockMaterial != EnumBlockMaterial.Leaves || block.CollisionBoxes != null && block.Id != 0 && block.Id != 1 && block.FirstCodePart() != "rock")
-                        {
-                            List<BlockBehavior> behaviors = api.World.Blocks[i].BlockBehaviors.ToList();
-                            AlteredBlockPhysics phys = new AlteredBlockPhysics(api.World.Blocks[i]);
-                            if (!api.World.Blocks[i].BlockBehaviors.Contains(phys))
-                            {
-                                behaviors.Add(phys);
-                                api.World.Blocks[i].BlockBehaviors = behaviors.ToArray();
-                            }
-                            for (int j = 0; j < api.World.Blocks[i].BlockBehaviors.Length; j++)
-                            {
-                                api.World.Blocks[i].BlockBehaviors[j].OnLoaded(api);
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                }
-            }
-        }
-
         public void SuffocationAndStepWatch(float dt)
         {
             foreach (var val in sapi.World.LoadedEntities)
