@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -33,7 +34,7 @@ namespace Collectible_Exchange
                         BlockPos pos = byPlayer?.CurrentBlockSelection?.Position;
                         if (pos != null)
                         {
-                            Vintagestory.GameContent.BlockEntityGenericTypedContainer be = (api.World.BlockAccessor.GetBlockEntity(pos) as Vintagestory.GameContent.BlockEntityGenericTypedContainer);
+                            BlockEntityGenericTypedContainer be = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityGenericTypedContainer);
                             if (be != null)
                             {
                                 List<Exchange> exchanges = new List<Exchange>();
@@ -79,7 +80,7 @@ namespace Collectible_Exchange
         }
     }
 
-    public class BlockEntityShop : BlockEntityGenericTypedContainer
+    public class BlockEntityShop : BlockEntityGenericTypedContainerModified
     {
         public override InventoryGeneric inventory { get; set; }
         public override InventoryBase Inventory => inventory;
@@ -166,6 +167,19 @@ namespace Collectible_Exchange
                 tree.SetItemstack(strO, Exchanges[i].Output);
             }
             base.ToTreeAttributes(tree);
+        }
+
+        public override string GetBlockInfo(IPlayer forPlayer)
+        {
+            string v = "";
+            try { v = base.GetBlockInfo(forPlayer); } catch(Exception) { }
+            StringBuilder builder = new StringBuilder(v).AppendLine().AppendLine("Exchanges:");
+            foreach (var val in Exchanges)
+            {
+                string ib = val.Input.Class == EnumItemClass.Block ? "block-" : "item-", ob = val.Output.Class == EnumItemClass.Block ? "block-" : "item-";
+                builder.AppendLine(val.Input.StackSize + "x " + Lang.Get(ib + val.Input.Collectible.Code.ToShortString()) + " For " + val.Output.StackSize + "x " + Lang.Get(ob + val.Output.Collectible.Code.ToShortString()));
+            }
+            return builder.ToString();
         }
     }
 

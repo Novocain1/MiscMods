@@ -13,7 +13,7 @@ using Vintagestory.GameContent;
 
 namespace Collectible_Exchange
 {
-    public abstract class BlockEntityGenericTypedContainer : BlockEntityOpenableContainer, IBlockShapeSupplier
+    public abstract class BlockEntityGenericTypedContainerModified : BlockEntityOpenableContainer, IBlockShapeSupplier
     {
         public abstract InventoryGeneric inventory { get; set; }
         public string type = "normal-generic";
@@ -42,7 +42,7 @@ namespace Collectible_Exchange
             get { return inventoryClassName; }
         }
 
-        public BlockEntityGenericTypedContainer() : base()
+        public BlockEntityGenericTypedContainerModified() : base()
         {
         }
 
