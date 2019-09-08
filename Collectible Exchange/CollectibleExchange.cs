@@ -133,19 +133,42 @@ namespace Collectible_Exchange
         public bool ExchangePossible(Exchange exchange, ItemSlot slot)
         {
             if (slot.Itemstack == null || exchange.Input == null || exchange.Output == null) return false;
-            return inventory.Any(a => a.CanTakeFrom(slot)) && inventory.Any(a => (a.Itemstack?.Collectible.Code.ToString() == exchange.Output.Collectible.Code.ToString() && a.Itemstack?.StackSize >= exchange.Output.StackSize));
+            return inventory.Any(a => a.CanTakeFrom(slot)) && inventory.Any(a => (a.Itemstack?.Collectible?.Code?.ToString() == exchange.Output?.Collectible?.Code?.ToString() && a.Itemstack?.StackSize >= exchange.Output?.StackSize));
         }
 
         public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
+            List <Exchange> e = new List<Exchange>();
+            int count = tree.GetInt("ExchangesCount", 0);
+
+            for (int i = 0; i < count; i++)
+            {
+                string strI = "Exchanges" + i + "Input", strO = "Exchanges" + i + "Output";
+                if (tree.GetItemstack(strI) != null && tree.GetItemstack(strO) != null)
+                {
+                    tree.GetItemstack(strI).ResolveBlockOrItem(worldForResolving); tree.GetItemstack(strO).ResolveBlockOrItem(worldForResolving);
+                    e.Add(new Exchange(tree.GetItemstack(strI), tree.GetItemstack(strO)));
+                }
+                else break;
+            }
+            Exchanges = e;
+
             base.FromTreeAtributes(tree, worldForResolving);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
+            tree.SetInt("ExchangesCount", Exchanges.Count);
+            for (int i = 0; i < Exchanges.Count; i++)
+            {
+                string strI = "Exchanges" + i + "Input", strO = "Exchanges" + i + "Output";
+                tree.SetItemstack(strI, Exchanges[i].Input);
+                tree.SetItemstack(strO, Exchanges[i].Output);
+            }
             base.ToTreeAttributes(tree);
         }
     }
+
     public class Exchange
     {
         public Exchange(ItemStack input = null, ItemStack output = null)
