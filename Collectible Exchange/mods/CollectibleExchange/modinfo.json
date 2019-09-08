@@ -1,0 +1,8 @@
+{
+	"type": "code",
+	"name": "Collectible Exchange",
+	"modid": "collectibleexchange",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0"
+}

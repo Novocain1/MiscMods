@@ -19,8 +19,8 @@ namespace StandAloneBlockPhysics
             ElementBounds parentBounds = statbarbounds.ForkBoundingParent();
 
             SingleComposer = capi.Gui.CreateCompo("airbar", parentBounds)
-                .AddStatbar(statbarbounds.ForkBoundingParent(), new double[] { 0.2, 0.2, 0.2, 0.5 }, "background")
-                .AddStatbar(statbarbounds.ForkBoundingParent(), new double[] { 255.0 / 66.0, 255.0 / 134.0, 255.0 / 244.0, 0.5 }, "airbar")
+                .AddStatbar(statbarbounds, new double[] { 0.2, 0.2, 0.2, 0.5 }, "background")
+                .AddStatbar(statbarbounds, new double[] { 255.0 / 66.0, 255.0 / 134.0, 255.0 / 244.0, 0.5 }, "airbar")
                 .Compose();
             SingleComposer.GetStatbar("background").SetMinMax(0, 1);
 

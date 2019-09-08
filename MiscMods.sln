@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.136
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waypoint Utils", "Waypoint Utils\Waypoint Utils.csproj", "{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Instruments", "Instruments\Instruments.csproj", "{2260889B-9B18-4A90-A8D0-81D5D80E1828}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StandaloneBlockPhysics", "BlockPhysics\StandaloneBlockPhysics.csproj", "{8A56D65C-11FF-4EBC-93BF-E746F19B2156}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collectible Exchange", "Collectible Exchange\Collectible Exchange.csproj", "{2DDA797A-113F-4220-839D-67EADA98778F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{8A56D65C-11FF-4EBC-93BF-E746F19B2156}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A56D65C-11FF-4EBC-93BF-E746F19B2156}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A56D65C-11FF-4EBC-93BF-E746F19B2156}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DDA797A-113F-4220-839D-67EADA98778F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DDA797A-113F-4220-839D-67EADA98778F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DDA797A-113F-4220-839D-67EADA98778F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DDA797A-113F-4220-839D-67EADA98778F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
