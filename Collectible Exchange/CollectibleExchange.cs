@@ -113,7 +113,6 @@ namespace Collectible_Exchange
             {
                 base.Initialize(api);
                 api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
-                api.World.BlockAccessor.MarkBlockDirty(pos);
             }, 30);
         }
 
