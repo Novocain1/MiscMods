@@ -18,6 +18,10 @@ namespace Collectible_Exchange
 {
     public class CollectibleExchange : ModSystem
     {
+        ICoreServerAPI api;
+        const string descriptionMsg = "Allows a player to create a collectible exchange from the chest you are looking at.";
+        const string syntaxMsg = "create|update|list";
+
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockEntityClass("Shop", typeof(BlockEntityShop));
@@ -25,58 +29,75 @@ namespace Collectible_Exchange
 
         public override void StartServerSide(ICoreServerAPI api)
         {
-            api.RegisterCommand("cec", "Allows you to create a collectible exchange from the chest you are looking at.", "", (byPlayer, id, args) =>
+            this.api = api;
+            api.RegisterCommand("collectibleexchange", descriptionMsg, syntaxMsg, (byPlayer, id, args)
+                => CmdCollectibleExchange(byPlayer, id, args));
+            api.RegisterCommand("ce", descriptionMsg, syntaxMsg, (byPlayer, id, args) 
+                => CmdCollectibleExchange(byPlayer, id, args));
+        }
+
+        public void CmdCollectibleExchange(IServerPlayer byPlayer, int id, CmdArgs args)
+        {
+            BlockPos pos = byPlayer?.CurrentBlockSelection?.Position;
+            string arg = args.PopWord();
+            switch (arg)
             {
-                string arg = args.PopWord();
-                switch (arg)
-                {
-                    case "create":
-                        BlockPos pos = byPlayer?.CurrentBlockSelection?.Position;
-                        if (pos != null)
+                case "create":
+                    if (pos != null)
+                    {
+                        if (!api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
+                        BlockEntityGenericTypedContainer be = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityGenericTypedContainer);
+                        if (be != null)
                         {
-                            BlockEntityGenericTypedContainer be = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityGenericTypedContainer);
-                            if (be != null)
-                            {
-                                List<Exchange> exchanges = new List<Exchange>();
-                                Exchange exchange = new Exchange();
-
-                                foreach (var val in be.Inventory)
-                                {
-                                    if (val.Itemstack != null)
-                                    {
-                                        if (exchange.Input == null)
-                                        {
-                                            exchange.Input = val.Itemstack;
-                                        }
-                                        else if (exchange.Output == null)
-                                        {
-                                            exchange.Output = val.Itemstack;
-                                            if (exchange.Output != null)
-                                            {
-                                                exchanges.Add(exchange);
-                                                exchange = new Exchange();
-                                            }
-                                        }
-                                    }
-                                }
-                                api.World.BlockAccessor.RemoveBlockEntity(pos);
-                                string a = api.World.BlockAccessor.GetBlock(pos).EntityClass;
-                                api.World.BlockAccessor.SpawnBlockEntity("Shop", pos);
-                                BlockEntityShop beShop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
-                                beShop.inventory = (InventoryGeneric)be.Inventory;
-                                beShop.Exchanges = exchanges;
-                            }
+                            List<Exchange> exchanges = GetExchanges(be.Inventory);
+                            api.World.BlockAccessor.RemoveBlockEntity(pos);
+                            api.World.BlockAccessor.SpawnBlockEntity("Shop", pos);
+                            BlockEntityShop beShop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
+                            beShop.inventory = (InventoryGeneric)be.Inventory;
+                            beShop.Exchanges = exchanges;
                         }
-                        break;
-                    case "reset":
-                        break;
-                    case "append":
-                        break;
-                    default:
-                        break;
-                }
+                    }
+                    break;
+                case "update":
+                    if (!api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
+                    BlockEntityShop shop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
+                    if (shop != null) shop.Exchanges = GetExchanges(shop.inventory);
+                    break;
+                case "list":
+                    if (api.World.BlockAccessor.GetBlockEntity(pos) is BlockEntityShop)
+                    {
+                        byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop).GetBlockInfo(byPlayer), EnumChatType.OwnMessage);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
-            });
+        public List<Exchange> GetExchanges(InventoryBase inv)
+        {
+            List<Exchange> exchanges = new List<Exchange>();
+            Exchange exchange = new Exchange();
+            foreach (var val in inv)
+            {
+                if (val.Itemstack != null)
+                {
+                    if (exchange.Input == null)
+                    {
+                        exchange.Input = val.Itemstack;
+                    }
+                    else if (exchange.Output == null)
+                    {
+                        exchange.Output = val.Itemstack;
+                        if (exchange.Output != null)
+                        {
+                            exchanges.Add(exchange);
+                            exchange = new Exchange();
+                        }
+                    }
+                }
+            }
+            return exchanges;
         }
     }
 
@@ -92,6 +113,7 @@ namespace Collectible_Exchange
             {
                 base.Initialize(api);
                 api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
+                api.World.BlockAccessor.MarkBlockDirty(pos);
             }, 30);
         }
 
@@ -102,39 +124,57 @@ namespace Collectible_Exchange
                 foreach (var val in Exchanges)
                 {
                     ItemSlot active = byPlayer.InventoryManager.ActiveHotbarSlot;
-                    if (ExchangePossible(val, active))
+                    if (ExchangePossible(val, active, out ItemSlot exchangeSlot, out ItemSlot emptySlot))
                     {
-                        foreach (var slot in inventory)
+                        if (active.TryPutInto(api.World, emptySlot, val.Input.StackSize) == val.Input.StackSize)
                         {
-                            if (active.TryPutInto(api.World, slot, val.Input.StackSize) == val.Input.StackSize)
+                            DummySlot dummy = new DummySlot();
+                            if (exchangeSlot.TryPutInto(api.World, dummy, val.Output.StackSize) == val.Output.StackSize)
                             {
-                                foreach (var invslot in inventory)
+                                if (!byPlayer.InventoryManager.TryGiveItemstack(dummy.Itemstack))
                                 {
-                                    if (invslot.Itemstack?.Collectible.Code.ToString() == val.Output.Collectible.Code.ToString())
-                                    {
-                                        DummySlot dummySlot = new DummySlot();
-                                        invslot.TryPutInto(api.World, dummySlot, val.Output.StackSize);
-                                        if (!byPlayer.InventoryManager.TryGiveItemstack(dummySlot.Itemstack))
-                                        {
-                                            byPlayer.Entity.World.SpawnItemEntity(dummySlot.Itemstack, pos.ToVec3d());
-                                        }
-                                        api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/cashregister"), pos.X, pos.Y, pos.Z);
-                                        break;
-                                    }
+                                    byPlayer.Entity.World.SpawnItemEntity(dummy.Itemstack, pos.ToVec3d());
                                 }
+                                api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/cashregister"), pos.X, pos.Y, pos.Z);
+                                inventory.Sort(api, EnumSortMode.ID);
+                                return true;
                             }
                         }
-                        return true;
                     }
                 }
             }
             return base.OnPlayerRightClick(byPlayer, blockSel);
         }
 
-        public bool ExchangePossible(Exchange exchange, ItemSlot slot)
+        public bool ExchangePossible(Exchange exchange, ItemSlot slot, out ItemSlot exchangeSlot, out ItemSlot emptySlot)
         {
+            exchangeSlot = null; emptySlot = null;
+            ItemSlot _exchangeSlot = new DummySlot();
+
             if (slot.Itemstack == null || exchange.Input == null || exchange.Output == null) return false;
-            return inventory.Any(a => a.CanTakeFrom(slot)) && inventory.Any(a => (a.Itemstack?.Collectible?.Code?.ToString() == exchange.Output?.Collectible?.Code?.ToString() && a.Itemstack?.StackSize >= exchange.Output?.StackSize));
+            foreach (var val in inventory)
+            {
+                if (val.Empty)
+                {
+                    emptySlot = val;
+                    break;
+                }
+            }
+
+            if (inventory.Any(a => a.CanTakeFrom(slot)) &&
+                inventory.Any(a =>
+                {
+                    if (a.Itemstack?.StackSize >= exchange.Output?.StackSize && (a.Itemstack?.Collectible?.Code?.ToString() == exchange.Output?.Collectible?.Code?.ToString() && a.Itemstack?.StackSize >= exchange.Output?.StackSize))
+                    {
+                        _exchangeSlot = a;
+                        return true;
+                    }
+                    return false;
+                }) && exchange?.Input?.StackSize <= slot?.Itemstack?.StackSize && exchange?.Input?.Collectible?.Code == slot?.Itemstack?.Collectible?.Code) {
+                    exchangeSlot = _exchangeSlot;
+                    return exchangeSlot != null && emptySlot != null;
+            }
+            return false;
         }
 
         public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
