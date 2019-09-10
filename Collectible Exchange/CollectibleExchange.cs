@@ -20,7 +20,7 @@ namespace Collectible_Exchange
     {
         ICoreServerAPI api;
         const string descriptionMsg = "Allows a player to create a collectible exchange from the chest you are looking at.";
-        const string syntaxMsg = "create|update|list";
+        const string syntaxMsg = "Syntax: /ce [create|update|list]";
 
         public override void Start(ICoreAPI api)
         {
@@ -72,6 +72,7 @@ namespace Collectible_Exchange
                     }
                     break;
                 default:
+                    byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, syntaxMsg, EnumChatType.OwnMessage);
                     break;
             }
         }
@@ -210,7 +211,7 @@ namespace Collectible_Exchange
         {
             string v = "";
             try { v = base.GetBlockInfo(forPlayer); } catch(Exception) { }
-            StringBuilder builder = new StringBuilder(v).AppendLine().AppendLine("Exchanges:");
+            StringBuilder builder = new StringBuilder(v).AppendLine().AppendLine("Can Exchange:");
             foreach (var val in Exchanges)
             {
                 string ib = val.Input.Class == EnumItemClass.Block ? "block-" : "item-", ob = val.Output.Class == EnumItemClass.Block ? "block-" : "item-";
