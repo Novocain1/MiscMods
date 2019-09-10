@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
@@ -26,6 +27,7 @@ namespace Collectible_Exchange
         {
             api.RegisterBlockEntityClass("Shop", typeof(BlockEntityShop));
             api.RegisterBlockBehaviorClass("Lockable", typeof(BlockBehaviorLockableModified));
+            api.RegisterItemClass("ItemPadlock", typeof(ItemPadlockModified));
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -238,6 +240,34 @@ namespace Collectible_Exchange
             }
             
             return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
+        }
+    }
+
+    public class ItemPadlockModified : ItemPadlock
+    {
+        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
+        {
+            if (blockSel != null && blockSel.Block(api).HasBehavior<BlockBehaviorLockableModified>(true))
+            {
+                ModSystemBlockReinforcement modSystem = byEntity.World.Api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
+                IPlayer player = (byEntity as EntityPlayer).Player;
+                BlockPos position = blockSel.Position;
+                IPlayer byPlayer = player;
+                string itemCode = Code.ToString();
+                if (!modSystem.TryLock(position, byPlayer, itemCode))
+                {
+                    (byEntity.World.Api as ICoreClientAPI)?.TriggerIngameError(this, "cannotlock", Lang.Get("ingameerror-cannotlock"));
+                }
+                else
+                {
+                    (byEntity.World.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("lockapplied"));
+                    slot.TakeOut(1);
+                    slot.MarkDirty();
+                }
+                handling = EnumHandHandling.PreventDefault;
+            }
+            else
+                base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handling);
         }
     }
 
