@@ -55,6 +55,7 @@ namespace Collectible_Exchange
                             BlockEntityShop beShop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
                             beShop.inventory = (InventoryGeneric)be.Inventory;
                             beShop.Exchanges = exchanges;
+                            api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
                         }
                     }
                     break;
@@ -62,6 +63,7 @@ namespace Collectible_Exchange
                     if (!api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
                     BlockEntityShop shop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
                     if (shop != null) shop.Exchanges = GetExchanges(shop.inventory);
+                    api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
                     break;
                 case "list":
                     if (api.World.BlockAccessor.GetBlockEntity(pos) is BlockEntityShop)
@@ -109,11 +111,7 @@ namespace Collectible_Exchange
 
         public override void Initialize(ICoreAPI api)
         {
-            api.World.RegisterCallback(dt => 
-            {
-                base.Initialize(api);
-                api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
-            }, 30);
+            base.Initialize(api);
         }
 
         public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
