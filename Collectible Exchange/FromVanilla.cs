@@ -85,10 +85,6 @@ namespace Collectible_Exchange
             base.OnBlockPlaced();
         }
 
-
-
-
-
         public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
             type = tree.GetString("type", defaultType);

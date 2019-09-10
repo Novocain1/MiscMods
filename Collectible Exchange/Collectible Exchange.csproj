@@ -102,6 +102,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayStuff.cs" />
     <Compile Include="CollectibleExchange.cs" />
     <Compile Include="FromVanilla.cs" />
     <Compile Include="ItemSorting.cs" />

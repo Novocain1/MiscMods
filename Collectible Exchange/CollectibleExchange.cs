@@ -25,6 +25,7 @@ namespace Collectible_Exchange
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockEntityClass("Shop", typeof(BlockEntityShop));
+            api.RegisterBlockBehaviorClass("Lockable", typeof(BlockBehaviorLockableModified));
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -115,7 +116,7 @@ namespace Collectible_Exchange
             base.Initialize(api);
         }
 
-        public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
+        public bool Exchange(IPlayer byPlayer)
         {
             if (api.Side.IsServer())
             {
@@ -141,7 +142,7 @@ namespace Collectible_Exchange
                     }
                 }
             }
-            return base.OnPlayerRightClick(byPlayer, blockSel);
+            return false;
         }
 
         public bool ExchangePossible(Exchange exchange, ItemSlot slot, out ItemSlot exchangeSlot, out ItemSlot emptySlot)
@@ -218,6 +219,25 @@ namespace Collectible_Exchange
                 builder.AppendLine(val.Input.StackSize + "x " + Lang.Get(ib + val.Input.Collectible.Code.ToShortString()) + " For " + val.Output.StackSize + "x " + Lang.Get(ob + val.Output.Collectible.Code.ToShortString()));
             }
             return builder.ToString();
+        }
+    }
+
+    public class BlockBehaviorLockableModified : BlockBehaviorLockable
+    {
+        public BlockBehaviorLockableModified(Block block) : base(block)
+        {
+        }
+
+        public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref EnumHandling handling)
+        {
+            BlockEntityShop be = (blockSel.BlockEntity(world) as BlockEntityShop);
+            if (be != null && be.Exchange(byPlayer))
+            {
+                handling = EnumHandling.PreventSubsequent;
+                return false;
+            }
+            
+            return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
         }
     }
 
