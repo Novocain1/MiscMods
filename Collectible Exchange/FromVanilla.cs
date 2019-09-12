@@ -267,12 +267,6 @@ namespace Collectible_Exchange
 
             mesher.AddMeshData(ownMesh);
 
-            /*string facing = ownBlock.LastCodePart();
-            if (facing == "north") { mesher.AddMeshData(ownMesh.Clone().Rotate(new API.MathTools.Vec3f(0.5f, 0.5f, 0.5f), 0, 1 * GameMath.PIHALF, 0)); }
-            if (facing == "east") { mesher.AddMeshData(ownMesh.Clone().Rotate(new API.MathTools.Vec3f(0.5f, 0.5f, 0.5f), 0, 0 * GameMath.PIHALF, 0)); }
-            if (facing == "south") { mesher.AddMeshData(ownMesh.Clone().Rotate(new API.MathTools.Vec3f(0.5f, 0.5f, 0.5f), 0, 3 * GameMath.PIHALF, 0)); }
-            if (facing == "west") { mesher.AddMeshData(ownMesh.Clone().Rotate(new API.MathTools.Vec3f(0.5f, 0.5f, 0.5f), 0, 2 * GameMath.PIHALF, 0)); }*/
-
             return true;
         }
     }

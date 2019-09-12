@@ -90,11 +90,11 @@ namespace Collectible_Exchange
                 {
                     if (exchange.Input == null)
                     {
-                        exchange.Input = val.Itemstack;
+                        exchange.Input = val.Itemstack.Clone();
                     }
                     else if (exchange.Output == null)
                     {
-                        exchange.Output = val.Itemstack;
+                        exchange.Output = val.Itemstack.Clone();
                         if (exchange.Output != null)
                         {
                             exchanges.Add(exchange);
@@ -144,6 +144,8 @@ namespace Collectible_Exchange
                     }
                 }
             }
+            else return true;
+
             return false;
         }
 
@@ -162,8 +164,7 @@ namespace Collectible_Exchange
                 }
             }
 
-            if (inventory.Any(a => a.CanTakeFrom(slot)) &&
-                inventory.Any(a =>
+            if (emptySlot != null && inventory.Any(a =>
                 {
                     if (a.Itemstack?.StackSize >= exchange.Output?.StackSize && (a.Itemstack?.Collectible?.Code?.ToString() == exchange.Output?.Collectible?.Code?.ToString() && a.Itemstack?.StackSize >= exchange.Output?.StackSize))
                     {
@@ -173,7 +174,7 @@ namespace Collectible_Exchange
                     return false;
                 }) && exchange?.Input?.StackSize <= slot?.Itemstack?.StackSize && exchange?.Input?.Collectible?.Code == slot?.Itemstack?.Collectible?.Code) {
                     exchangeSlot = _exchangeSlot;
-                    return exchangeSlot != null && emptySlot != null;
+                    return exchangeSlot != null;
             }
             return false;
         }
@@ -233,12 +234,27 @@ namespace Collectible_Exchange
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref EnumHandling handling)
         {
             BlockEntityShop be = (blockSel.BlockEntity(world) as BlockEntityShop);
-            if (be != null && be.Exchange(byPlayer))
+            if (!(be is BlockEntityContainer)) return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
+
+            ModSystemBlockReinforcement bre = world.Api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
+            if (bre.IsLocked(blockSel.Position, byPlayer))
             {
-                handling = EnumHandling.PreventSubsequent;
+                if (be != null) be.Exchange(byPlayer);
+
+                if (world.Side == EnumAppSide.Client)
+                {
+                    (world.Api as ICoreClientAPI).TriggerIngameError(this, "locked", Lang.Get("ingameerror-locked"));
+                }
+
+                if (world.Side.IsServer())
+                {
+                    handling = EnumHandling.PreventSubsequent;
+                }
+
                 return false;
             }
-            
+            else if (be != null) be.Exchange(byPlayer);
+
             return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
         }
     }
@@ -275,8 +291,8 @@ namespace Collectible_Exchange
     {
         public Exchange(ItemStack input = null, ItemStack output = null)
         {
-            Input = input;
-            Output = output;
+            Input = input?.Clone();
+            Output = output?.Clone();
         }
 
         public ItemStack Input { get; set; }
