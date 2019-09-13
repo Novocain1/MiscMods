@@ -19,24 +19,39 @@ namespace Collectible_Exchange
 {
     public class CollectibleExchange : ModSystem
     {
-        ICoreServerAPI api;
+        ICoreServerAPI sapi;
+        ICoreClientAPI capi;
         const string descriptionMsg = "Allows a player to create a collectible exchange from the chest you are looking at.";
         const string syntaxMsg = "Syntax: /ce [create|update|list]";
 
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockEntityClass("Shop", typeof(BlockEntityShop));
-            api.RegisterBlockBehaviorClass("Lockable", typeof(BlockBehaviorLockableModified));
-            api.RegisterItemClass("ItemPadlock", typeof(ItemPadlockModified));
+        }
+
+        public override void StartClientSide(ICoreClientAPI api)
+        {
+            capi = api;
+            api.Event.MouseDown += Interaction;
+        }
+
+        private void Interaction(MouseEvent e)
+        {
+            if (e.Button == EnumMouseButton.Right && capi?.World?.Player?.CurrentBlockSelection?.BlockEntity(capi) is BlockEntityContainer) capi.SendChatMessage("/ce trade");
         }
 
         public override void StartServerSide(ICoreServerAPI api)
         {
-            this.api = api;
+            sapi = api;
             api.RegisterCommand("collectibleexchange", descriptionMsg, syntaxMsg, (byPlayer, id, args)
                 => CmdCollectibleExchange(byPlayer, id, args));
             api.RegisterCommand("ce", descriptionMsg, syntaxMsg, (byPlayer, id, args) 
                 => CmdCollectibleExchange(byPlayer, id, args));
+        }
+
+        private void ExchangeEvent(IServerPlayer byPlayer, BlockSelection blockSel)
+        {
+            (blockSel?.BlockEntity(sapi) as BlockEntityShop)?.Exchange(byPlayer);
         }
 
         public void CmdCollectibleExchange(IServerPlayer byPlayer, int id, CmdArgs args)
@@ -48,31 +63,34 @@ namespace Collectible_Exchange
                 case "create":
                     if (pos != null)
                     {
-                        if (!api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
-                        BlockEntityGenericTypedContainer be = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityGenericTypedContainer);
+                        if (!sapi.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
+                        BlockEntityGenericTypedContainer be = (sapi.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityGenericTypedContainer);
                         if (be != null)
                         {
                             List<Exchange> exchanges = GetExchanges(be.Inventory);
-                            api.World.BlockAccessor.RemoveBlockEntity(pos);
-                            api.World.BlockAccessor.SpawnBlockEntity("Shop", pos);
-                            BlockEntityShop beShop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
+                            sapi.World.BlockAccessor.RemoveBlockEntity(pos);
+                            sapi.World.BlockAccessor.SpawnBlockEntity("Shop", pos);
+                            BlockEntityShop beShop = (sapi.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
                             beShop.inventory = (InventoryGeneric)be.Inventory;
                             beShop.Exchanges = exchanges;
-                            api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
+                            sapi.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
                         }
                     }
                     break;
                 case "update":
-                    if (!api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
-                    BlockEntityShop shop = (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
+                    if (!sapi.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use)) break;
+                    BlockEntityShop shop = (sapi.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop);
                     if (shop != null) shop.Exchanges = GetExchanges(shop.inventory);
-                    api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
+                    sapi.World.PlaySoundAt(AssetLocation.Create("sounds/effect/latch"), pos.X, pos.Y, pos.Z);
                     break;
                 case "list":
-                    if (api.World.BlockAccessor.GetBlockEntity(pos) is BlockEntityShop)
+                    if (sapi.World.BlockAccessor.GetBlockEntity(pos) is BlockEntityShop)
                     {
-                        byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, (api.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop).GetBlockInfo(byPlayer), EnumChatType.OwnMessage);
+                        byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, (sapi.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop).GetBlockInfo(byPlayer), EnumChatType.OwnMessage);
                     }
+                    break;
+                case "trade":
+                    ExchangeEvent(byPlayer, byPlayer.CurrentBlockSelection);
                     break;
                 default:
                     byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, syntaxMsg, EnumChatType.OwnMessage);
@@ -222,68 +240,6 @@ namespace Collectible_Exchange
                 builder.AppendLine(val.Input.StackSize + "x " + Lang.Get(ib + val.Input.Collectible.Code.ToShortString()) + " For " + val.Output.StackSize + "x " + Lang.Get(ob + val.Output.Collectible.Code.ToShortString()));
             }
             return builder.ToString();
-        }
-    }
-
-    public class BlockBehaviorLockableModified : BlockBehaviorLockable
-    {
-        public BlockBehaviorLockableModified(Block block) : base(block)
-        {
-        }
-
-        public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref EnumHandling handling)
-        {
-            BlockEntityShop be = (blockSel.BlockEntity(world) as BlockEntityShop);
-            if (!(be is BlockEntityContainer)) return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
-
-            ModSystemBlockReinforcement bre = world.Api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
-            if (bre.IsLocked(blockSel.Position, byPlayer))
-            {
-                if (be != null) be.Exchange(byPlayer);
-
-                if (world.Side == EnumAppSide.Client)
-                {
-                    (world.Api as ICoreClientAPI).TriggerIngameError(this, "locked", Lang.Get("ingameerror-locked"));
-                }
-
-                if (world.Side.IsServer())
-                {
-                    handling = EnumHandling.PreventSubsequent;
-                }
-
-                return false;
-            }
-            else if (be != null) be.Exchange(byPlayer);
-
-            return base.OnBlockInteractStart(world, byPlayer, blockSel, ref handling);
-        }
-    }
-
-    public class ItemPadlockModified : ItemPadlock
-    {
-        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
-        {
-            if (blockSel != null && blockSel.Block(api).HasBehavior<BlockBehaviorLockableModified>(true))
-            {
-                ModSystemBlockReinforcement modSystem = byEntity.World.Api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
-                IPlayer player = (byEntity as EntityPlayer).Player;
-                BlockPos position = blockSel.Position;
-                IPlayer byPlayer = player;
-                string itemCode = Code.ToString();
-                if (!modSystem.TryLock(position, byPlayer, itemCode))
-                {
-                    (byEntity.World.Api as ICoreClientAPI)?.TriggerIngameError(this, "cannotlock", Lang.Get("ingameerror-cannotlock"));
-                }
-                else
-                {
-                    (byEntity.World.Api as ICoreClientAPI)?.ShowChatMessage(Lang.Get("lockapplied"));
-                    slot.TakeOut(1);
-                    slot.MarkDirty();
-                }
-                handling = EnumHandHandling.PreventDefault;
-            }
-            else
-                base.OnHeldInteractStart(slot, byEntity, blockSel, entitySel, firstEvent, ref handling);
         }
     }
 
