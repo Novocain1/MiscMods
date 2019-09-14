@@ -100,7 +100,6 @@ namespace WaypointUtils
         }
 
         List<BlockPos> highlightedBlocks = new List<BlockPos>();
-        Dictionary<BlockPos, int> prepared = new Dictionary<BlockPos, int>();
 
         public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
         {

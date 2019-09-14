@@ -62,7 +62,7 @@ namespace WaypointUtils
                         OnOwnPlayerDataReceived();
                         SingleComposer.Compose();
                         capi.TriggerChatMessage(".wpcfg save");
-                        capi.ModLoader.GetModSystem<WaypointUtilSystem>().Repopulate();
+                        capi.ModLoader.GetModSystem<WaypointUtilSystem>().RepopulateDialogs();
                     }, 100);
                     switch (i)
                     {

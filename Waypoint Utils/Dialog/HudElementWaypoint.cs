@@ -6,23 +6,30 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace WaypointUtils
 {
     class HudElementWaypoint : HudElement
     {
-        Vec3d waypointPos;
-        string DialogTitle;
-        int color;
-        string dialogText = "";
-        double distance = 0;
-        long id;
+        public Vec3d waypointPos;
+        public string DialogTitle;
+        public int color;
+        public string dialogText = "";
+        public double distance = 0;
+        public int waypointID;
+        public long id;
+        WaypointUtilConfig config;
+        Waypoint waypoint;
 
-        public HudElementWaypoint(string DialogTitle, ICoreClientAPI capi, Vec3d waypointPos, int color) : base(capi)
+        public HudElementWaypoint(ICoreClientAPI capi, Waypoint waypoint, int waypointID) : base(capi)
         {
-            this.DialogTitle = DialogTitle;
-            this.waypointPos = waypointPos;
-            this.color = color;
+            this.waypoint = waypoint;
+            this.DialogTitle = waypoint.Title;
+            this.waypointPos = waypoint.Position;
+            this.color = waypoint.Color;
+            this.waypointID = waypointID;
+            config = capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
         }
 
         public override void OnOwnPlayerDataReceived()
@@ -43,17 +50,24 @@ namespace WaypointUtils
                 .Compose()
             ;
 
-            if (capi.Settings.Bool["floatywaypoints"]) TryOpen();
-
             UpdateDialog();
             id = capi.World.RegisterGameTickListener(dt => UpdateDialog(), 500 + capi.World.Rand.Next(0, 64));
         }
 
         public void UpdateDialog()
         {
+            UpdateTitle();
+            waypointPos = config.PerBlockWaypoints ? waypointPos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : waypointPos;
             distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
             dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
             order = 1.0 / distance;
+        }
+
+        public void UpdateTitle()
+        {
+            string wp = config.WaypointPrefix ? "Waypoint: " : "";
+            wp = config.WaypointID ? wp + "ID: " + waypointID + " | " : wp;
+            DialogTitle = waypoint.Title != null ? wp + waypoint.Title : "Waypoint: ";
         }
 
         protected virtual double FloatyDialogPosition => 0.75;
@@ -65,8 +79,6 @@ namespace WaypointUtils
 
         public override void OnRenderGUI(float deltaTime)
         {
-            if (!capi.Settings.Bool["floatywaypoints"]) return;
-
             WaypointUtilConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
 
             Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
@@ -106,14 +118,12 @@ namespace WaypointUtils
         {
             base.OnGuiClosed();
             capi.World.UnregisterGameTickListener(id);
-            capi.Settings.Bool["floatywaypoints"] = false;
             Dispose();
         }
 
         public override void OnGuiOpened()
         {
             base.OnGuiOpened();
-            capi.Settings.Bool["floatywaypoints"] = true;
         }
     }
 }

@@ -21,9 +21,32 @@ namespace WaypointUtils
     {
         long id;
         ICoreClientAPI capi;
-        HudElementWaypoint floatyPoints;
         public ConfigLoader cL;
         public WaypointUtilConfig Config;
+
+        public List<Waypoint> Waypoints { get => (capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.Single(a => a is WaypointMapLayer) as WaypointMapLayer).ownWaypoints;  }
+        public List<WaypointRelative> WaypointsRel {
+            get
+            {
+                List<WaypointRelative> rel = new List<WaypointRelative>();
+                foreach (var val in Waypoints)
+                {
+                    WaypointRelative relative = new WaypointRelative(capi)
+                    {
+                        Color = val.Color,
+                        OwningPlayerGroupId = val.OwningPlayerGroupId,
+                        OwningPlayerUid = val.OwningPlayerUid,
+                        Position = val.Position,
+                        Text = val.Text,
+                        Title = val.Title
+                    };
+                    rel.Add(relative);
+                }
+                return rel;
+            }
+        }
+
+        List<HudElementWaypoint> WaypointElements { get; set; } = new List<HudElementWaypoint>();
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -60,14 +83,9 @@ namespace WaypointUtils
                         }
                     });
 
-                    api.World.RegisterCallback(d =>
-                    {
-                        if (Layer().ownWaypoints.Count > 0 && capi.Settings.Bool["floatywaypoints"]) OpenWaypoints();
-                    }, 500);
-
                     api.World.RegisterGameTickListener(d =>
                     {
-                        if (Layer().ownWaypoints.Count != guiDialogs.Count && guiDialogs.Count > 0) Repopulate();
+                        Update();
                     }, 500);
 
                     api.World.UnregisterGameTickListener(id);
@@ -122,18 +140,11 @@ namespace WaypointUtils
                     break;
                 case "save":
                     break;
-                case "debug":
-                    string jj = args.PopWord();
-                    switch (jj)
+                case "export":
+                    using (TextWriter tw = new StreamWriter("waypoints.json"))
                     {
-                        case "testpopulate":
-                            for (int i = 0; i < 121; i++)
-                            {
-                                capi.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(capi, 0.50, 0.80) + " *Test*");
-                            }
-                            break;
-                        default:
-                            break;
+                        tw.Write(JsonConvert.SerializeObject(WaypointsRel, Formatting.Indented));
+                        tw.Close();
                     }
                     break;
                 default:
@@ -141,69 +152,73 @@ namespace WaypointUtils
                     break;
             }
             cL.SaveConfig();
-            Repopulate();
+            RepopulateDialogs();
         }
 
-        WaypointMapLayer Layer()
-        {
-            WorldMapManager modMapManager = capi.ModLoader.GetModSystem("Vintagestory.GameContent.WorldMapManager") as WorldMapManager;
-            return modMapManager.MapLayers.Single(l => l is WaypointMapLayer) as WaypointMapLayer;
-        }
-
-        List<HudElementWaypoint> guiDialogs = new List<HudElementWaypoint>();
+        
         private bool ViewWaypoints(KeyCombination t1)
         {
-            if (guiDialogs.Count != 0) CloseAndClear();
-            else OpenWaypoints();
+            capi.Settings.Bool["floatywaypoints"] = !capi.Settings.Bool["floatywaypoints"];
+            Update();
             return true;
         }
 
-        public void CloseAndClear()
+        public void Update()
         {
-            for (int i = 0; i < guiDialogs.Count; i++)
+            if (Waypoints.Count > 0 && capi.Settings.Bool["floatywaypoints"]) RepopulateDialogs();
+            if (WaypointElements.Count > 0)
             {
-                guiDialogs[i].TryClose();
+                if (Waypoints.Count != WaypointElements.Count)
+                {
+                    RepopulateDialogs();
+                }
+                if (capi.Settings.Bool["floatywaypoints"])
+                {
+                    foreach (var val in WaypointElements)
+                    {
+                        if (val.IsOpened() && val.distance > Config.DotRange) val.TryClose();
+                        else if (!val.IsOpened()) val.TryOpen();
+                    }
+                }
+                else
+                {
+                    foreach (var val in WaypointElements)
+                    {
+                        if (val.IsOpened()) val.TryClose();
+                    }
+                }
             }
-            guiDialogs.Clear();
         }
 
-        public void OpenWaypoints()
+        public void RepopulateDialogs()
         {
-            WaypointMapLayer layer = Layer();
-
-            guiDialogs = new List<HudElementWaypoint>();
-
-            for (int i = 0; i < layer.ownWaypoints.Count; i++)
+            foreach (var val in WaypointElements)
             {
-                string wp = Config.WaypointPrefix ? "Waypoint: " : "";
-                wp = Config.WaypointID ? wp + "ID: " + i + " | " : wp;
-                string text = layer.ownWaypoints[i].Title != null ? wp + layer.ownWaypoints[i].Title : "Waypoint: ";
-                int color = layer.ownWaypoints[i].Color;
-                Vec3d wPos = Config.PerBlockWaypoints ? layer.ownWaypoints[i].Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : layer.ownWaypoints[i].Position;
+                val.TryClose();
+                val.Dispose();
+            }
+            WaypointElements.Clear();
 
-                if (Config.DisabledColors.Contains(color)) continue;
+            int i = 0;
+            foreach (var val in Waypoints)
+            {
+                HudElementWaypoint waypoint = new HudElementWaypoint(capi, val, i);
+                waypoint.OnOwnPlayerDataReceived();
 
-                floatyPoints = new HudElementWaypoint(text, capi, wPos, color);
-
-                floatyPoints.OnOwnPlayerDataReceived();
-                if (floatyPoints.TryOpen())
-                {
-                    guiDialogs.Add(floatyPoints);
-                }
+                WaypointElements.Add(waypoint);
+                i++;
             }
         }
 
         public bool CullDeathWaypoints(KeyCombination t1)
         {
-            WaypointMapLayer layer = Layer();
-
-            for (int i = layer.ownWaypoints.Count; i-- > 0;)
+            for (int i = Waypoints.Count; i-- > 0;)
             {
-                if (layer.ownWaypoints[i].Title.Contains("*Player Death Waypoint*"))
+                if (Waypoints[i].Title.Contains("*Player Death Waypoint*"))
                 {
                     capi.SendChatMessage("/waypoint remove " + i);
-                    BlockPos rel = layer.ownWaypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
-                    string str = layer.ownWaypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + layer.ownWaypoints[i].Position.ToString();
+                    BlockPos rel = Waypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
+                    string str = Waypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + Waypoints[i].Position.ToString();
                     StringBuilder builder = new StringBuilder(str).AppendLine();
                     FileInfo info = new FileInfo(Path.Combine(GamePaths.Logs, "waypoints-log.txt"));
                     GamePaths.EnsurePathExists(info.Directory.FullName);
@@ -211,25 +226,28 @@ namespace WaypointUtils
                     capi.Logger.Event(str);
                 }
             }
-            Repopulate();
+            RepopulateDialogs();
             return true;
         }
 
-        public void Purge()
+        private void Purge()
         {
-            WaypointMapLayer layer = Layer();
-
-            for (int i = layer.ownWaypoints.Count; i-- > 0;)
+            for (int i = Waypoints.Count; i-- > 0;)
             {
                 capi.SendChatMessage("/waypoint remove " + 0);
             }
-            Repopulate();
+            RepopulateDialogs();
+        }
+    }
+
+    public class WaypointRelative : Waypoint
+    {
+        ICoreAPI api;
+        public WaypointRelative(ICoreAPI api)
+        {
+            this.api = api;
         }
 
-        public void Repopulate()
-        {
-            ViewWaypoints(new KeyCombination());
-            ViewWaypoints(new KeyCombination());
-        }
+        public Vec3d RelativeToSpawn { get => Position.SubCopy(api.World.DefaultSpawnPosition.XYZ); }
     }
 }
