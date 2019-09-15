@@ -118,8 +118,8 @@ namespace WaypointUtils
         public override void OnGuiClosed()
         {
             base.OnGuiClosed();
-            capi.World.UnregisterGameTickListener(id);
-            Dispose();
+            //capi.World.UnregisterGameTickListener(id);
+            //Dispose();
         }
 
         public override void OnGuiOpened()

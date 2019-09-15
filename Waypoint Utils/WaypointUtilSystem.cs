@@ -154,6 +154,7 @@ namespace WaypointUtils
                     break;
             }
             cL.SaveConfig();
+            RepopulateDialogs();
         }
 
         
@@ -165,6 +166,7 @@ namespace WaypointUtils
 
         public void Update()
         {
+            if (WaypointElements.Count == 0) RepopulateDialogs();
             if (WaypointElements.Count > 0)
             {
                 if (Waypoints.Count != WaypointElements.Count)
@@ -175,8 +177,8 @@ namespace WaypointUtils
                 {
                     foreach (var val in WaypointElements)
                     {
-                        if (val.IsOpened() && val.distance > Config.DotRange) val.TryClose();
-                        else if (!val.IsOpened()) val.TryOpen();
+                        if (val.IsOpened() && val.distance > Config.DotRange && !val.DialogTitle.Contains("*")) val.TryClose();
+                        else if (!val.IsOpened() && val.distance < Config.DotRange || val.DialogTitle.Contains("*")) val.TryOpen();
                     }
                 }
                 else
