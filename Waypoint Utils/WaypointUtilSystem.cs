@@ -98,6 +98,7 @@ namespace WaypointUtils
 
         private void CmdWaypointConfig(int groupId, CmdArgs args)
         {
+            bool repop = true;
             string arg = args.PopWord();
             switch (arg)
             {
@@ -143,6 +144,7 @@ namespace WaypointUtils
                 case "save":
                     break;
                 case "export":
+                    repop = false;
                     using (TextWriter tw = new StreamWriter("waypoints.json"))
                     {
                         tw.Write(JsonConvert.SerializeObject(WaypointsRel, Formatting.Indented));
@@ -154,7 +156,7 @@ namespace WaypointUtils
                     break;
             }
             cL.SaveConfig();
-            RepopulateDialogs();
+            if (repop) RepopulateDialogs();
         }
 
         
