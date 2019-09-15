@@ -12,7 +12,9 @@ namespace WaypointUtils
 {
     class HudElementWaypoint : HudElement
     {
-        public Vec3d waypointPos;
+        public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : absolutePos; }
+        public Vec3d absolutePos;
+
         public string DialogTitle;
         public int color;
         public string dialogText = "";
@@ -26,7 +28,7 @@ namespace WaypointUtils
         {
             this.waypoint = waypoint;
             this.DialogTitle = waypoint.Title;
-            this.waypointPos = waypoint.Position;
+            this.absolutePos = waypoint.Position.Clone();
             this.color = waypoint.Color;
             this.waypointID = waypointID;
             config = capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
@@ -57,7 +59,6 @@ namespace WaypointUtils
         public void UpdateDialog()
         {
             UpdateTitle();
-            waypointPos = config.PerBlockWaypoints ? waypointPos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : waypointPos;
             distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
             dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
             order = 1.0 / distance;

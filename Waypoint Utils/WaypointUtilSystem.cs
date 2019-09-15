@@ -24,7 +24,7 @@ namespace WaypointUtils
         public ConfigLoader cL;
         public WaypointUtilConfig Config;
 
-        public List<Waypoint> Waypoints { get => (capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.Single(a => a is WaypointMapLayer) as WaypointMapLayer).ownWaypoints;  }
+        public List<Waypoint> Waypoints { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single().ownWaypoints; }
         public List<WaypointRelative> WaypointsRel {
             get
             {
@@ -82,6 +82,8 @@ namespace WaypointUtils
                             api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " *Player Death Waypoint*");
                         }
                     });
+
+                    api.World.RegisterCallback(d => RepopulateDialogs(), 100);
 
                     api.World.RegisterGameTickListener(d =>
                     {
@@ -152,20 +154,17 @@ namespace WaypointUtils
                     break;
             }
             cL.SaveConfig();
-            RepopulateDialogs();
         }
 
         
         private bool ViewWaypoints(KeyCombination t1)
         {
             capi.Settings.Bool["floatywaypoints"] = !capi.Settings.Bool["floatywaypoints"];
-            Update();
             return true;
         }
 
         public void Update()
         {
-            if (Waypoints.Count > 0 && capi.Settings.Bool["floatywaypoints"]) RepopulateDialogs();
             if (WaypointElements.Count > 0)
             {
                 if (Waypoints.Count != WaypointElements.Count)
