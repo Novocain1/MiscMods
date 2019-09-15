@@ -151,6 +151,12 @@ namespace WaypointUtils
                         tw.Close();
                     }
                     break;
+                case "testlimits":
+                    for (int i = 0; i < 130; i++)
+                    {
+                        capi.SendChatMessage("/waypoint add blue test");
+                    }
+                    break;
                 default:
                     capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]"));
                     break;

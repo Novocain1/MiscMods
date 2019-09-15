@@ -61,7 +61,7 @@ namespace WaypointUtils
             UpdateTitle();
             distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
             dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
-            order = 1.0 / distance;
+            order = (1.0 / distance) * 0.0001;
         }
 
         public void UpdateTitle()
@@ -115,11 +115,10 @@ namespace WaypointUtils
             base.OnRenderGUI(deltaTime);
         }
 
-        public override void OnGuiClosed()
+        public override void Dispose()
         {
-            base.OnGuiClosed();
-            //capi.World.UnregisterGameTickListener(id);
-            //Dispose();
+            base.Dispose();
+            capi.World.UnregisterGameTickListener(id);
         }
 
         public override void OnGuiOpened()
