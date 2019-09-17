@@ -39,7 +39,7 @@ namespace WaypointUtils
                         {
                             ClearLightLevelHighlights();
                         }
-                    }, 500);
+                    }, 100);
 
                     api.World.UnregisterGameTickListener(id);
                 }
@@ -99,14 +99,13 @@ namespace WaypointUtils
             configLoader.SaveConfig();
         }
 
-        List<BlockPos> highlightedBlocks = new List<BlockPos>();
-
         public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
         {
-            if (highlightedBlocks.Count != 0) ClearLightLevelHighlights();
-
             pos = pos == null ? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy() : pos;
             int rad = config.LightRadius;
+            //Dictionary<BlockPos, int> blocks = new Dictionary<BlockPos, int>();
+            List<BlockPos> blocks = new List<BlockPos>();
+            List<int> colors = new List<int>() { 0 };
 
             for (int x = -rad; x <= rad; x++)
             {
@@ -116,49 +115,31 @@ namespace WaypointUtils
                     {
                         BlockPos iPos = pos.AddCopy(x, y, z);
                         Block block = capi.World.BlockAccessor.GetBlock(iPos);
+                        BlockPos cPos = config.LUShowAbove ? iPos.UpCopy() : iPos;
+                        int level = capi.World.BlockAccessor.GetLightLevel(cPos, type);
 
                         bool rep = config.LUSpawning ? capi.World.BlockAccessor.GetBlock(iPos.UpCopy()).IsReplacableBy(block) : true;
                         bool opq = config.LUOpaque ? block.AllSidesOpaque : true;
 
                         if (block.BlockId != 0 && rep && opq && (x * x + y * y + z * z) <= (rad * rad))
                         {
-                            highlightedBlocks.Add(iPos);
+                            float fLevel = level / 32.0f;
+                            int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
+                            int c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
+
+                            blocks.Add(iPos);
+                            colors.Add(c);
                         }
                     }
                 }
             }
-            BlockPos[] blocks = highlightedBlocks.ToArray();
-            LightLevelHighlight(blocks, type);
-        }
-
-        public void LightLevelHighlight(BlockPos[] blocks, EnumLightLevelType type)
-        {
-            for (int i = 0; i < blocks.Length; i++)
-            {
-                BlockPos iPos = config.LUShowAbove ? blocks[i].UpCopy() : blocks[i];
-                int level = capi.World.BlockAccessor.GetLightLevel(iPos, type);
-
-                if (level != 0)
-                {
-                    float fLevel = level / 32.0f;
-                    int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
-                    int c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(fLevel * 255));
-
-                    List<BlockPos> highlight = new List<BlockPos>() { blocks[i].AddCopy(0, 1, 0), blocks[i].AddCopy(1, 0, 1) };
-                    List<int> color = new List<int>() { c };
-                    
-                    capi.World.HighlightBlocks(capi.World.Player, config.MinLLID + i, highlight, color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
-                }
-            }
+            
+            capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, blocks, colors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
         }
 
         public void ClearLightLevelHighlights()
         {
-            for (int i = 0; i < highlightedBlocks.Count; i++)
-            {
-                capi.World.HighlightBlocks(capi.World.Player, config.MinLLID + i, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
-            }
-            highlightedBlocks.Clear();
+            capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
         }
     }
 }
