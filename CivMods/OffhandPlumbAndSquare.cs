@@ -9,32 +9,28 @@ namespace CivMods
     {
         public override void StartServerSide(ICoreServerAPI api)
         {
-            api.Event.DidPlaceBlock += TriggerOffhand;
-            api.Event.DidBreakBlock += TriggerRemoveReinforcement;
+            api.Event.DidPlaceBlock += AddReinforcement;
+            api.Event.DidBreakBlock += RemoveReinforcement;
         }
 
-        private void TriggerRemoveReinforcement(IServerPlayer byPlayer, int oldblockId, BlockSelection blockSel)
+        private void RemoveReinforcement(IServerPlayer byPlayer, int oldblockId, BlockSelection blockSel)
         {
             ItemSlot offhand = byPlayer?.InventoryManager?.GetHotbarInventory()?[10];
-            if (offhand?.Itemstack?.Item is ItemPlumbAndSquare)
+            var handling = EnumHandHandling.Handled;
+
+            (offhand?.Itemstack?.Item as ItemPlumbAndSquare)?.OnHeldAttackStart(offhand, byPlayer.Entity, blockSel, null, ref handling);
+            if (handling != EnumHandHandling.Handled)
             {
-                var handling = EnumHandHandling.Handled;
-                (offhand.Itemstack.Item as ItemPlumbAndSquare).OnHeldAttackStart(offhand, byPlayer.Entity, blockSel, null, ref handling);
-                if (handling != EnumHandHandling.Handled)
-                {
-                    byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer);
-                }
+                byPlayer.Entity.World.BlockAccessor.BreakBlock(blockSel.Position, byPlayer);
             }
         }
 
-        private void TriggerOffhand(IServerPlayer byPlayer, int oldblockId, BlockSelection blockSel, ItemStack withItemStack)
+        private void AddReinforcement(IServerPlayer byPlayer, int oldblockId, BlockSelection blockSel, ItemStack withItemStack)
         {
             ItemSlot offhand = byPlayer?.InventoryManager?.GetHotbarInventory()?[10];
-            if (offhand?.Itemstack?.Item is ItemPlumbAndSquare)
-            {
-                var handling = EnumHandHandling.Handled;
-                (offhand.Itemstack.Item as ItemPlumbAndSquare).OnHeldInteractStart(offhand, byPlayer.Entity, blockSel, null, true, ref handling);
-            }
+            var handling = EnumHandHandling.Handled;
+
+            (offhand?.Itemstack?.Item as ItemPlumbAndSquare)?.OnHeldInteractStart(offhand, byPlayer.Entity, blockSel, null, true, ref handling);
         }
     }
 
