@@ -58,7 +58,7 @@ vec2 Rotate(float speedx, float speedy, float radius){
 	return vec2(sin(iTime*speedx)*radius, cos(iTime*speedy)*radius);
 }
 
-float near = 0.01; 
+float near = 0.001; 
 float far  = 1500.0;
 
 float Depth() 
@@ -145,7 +145,7 @@ vec3 FakeInfrared(vec3 c)
 
 void main () 
 {
-	outColor = vec4(Tritanopia(Color.rgb), 1.0);
+	outColor = vec4(Color.xyz, 1.0);
 }
 
 

@@ -15,41 +15,33 @@ namespace ShaderTestMod
 {
     public class ShaderTest : ModSystem
     {
-        public static ICoreClientAPI capi;
+        public ICoreClientAPI capi;
         OrthoRenderer[] orthoRenderers;
-        public static float[] controls;
-        public static Vec3f[] vec3s;
-        public static float[] floats;
+        public float[] controls;
+        public Vec3f[] vec3s;
+        public float[] floats;
         ITreeAttribute healthTree;
-
-        readonly string[] uniforms = new string[]
-        {
-            "iTime", "iResolution",
-            "iMouse", "iCamera",
-            "iSunPos", "iMoonPos",
-            "iMoonPhase", "iPlayerPosition",
-            "iTemperature", "iRainfall",
-            "iControls1", "iControls2",
-            "iControls3", "iControls4",
-            "iCurrentHealth", "iMaxHealth",
-            "iActiveItem", "iLookingAtBlock",
-            "iLookingAtEntity", "iLookBlockPos",
-            "iLookEntityPos", "iActiveTool", "iDepthBuffer", "iTempScalar", "iColor", "iLight",
-            "iCameraPos",
-        };
+        long id;
 
         public string[] orthoShaderKeys;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             capi = api;
-            
-            api.Event.PlayerJoin += StartShade;
+
+            id = api.Event.RegisterGameTickListener(dt =>
+            {
+                if (capi.World.Player?.Entity != null)
+                {
+                    StartShade(capi.World.Player);
+                    api.Event.UnregisterGameTickListener(id);
+                }
+            }, 500);
         }
 
         public void StartShade(IPlayer player)
         {
-            healthTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
+            healthTree = player.Entity.WatchedAttributes.GetTreeAttribute("health");
 
             controls = GetControls();
             vec3s = GetVec3s();
@@ -64,6 +56,7 @@ namespace ShaderTestMod
 
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
+            if (orthoRenderers == null) return;
 
             for (int i = 0; i < orthoRenderers.Length; i++)
             {
@@ -74,25 +67,14 @@ namespace ShaderTestMod
         public bool LoadShaders()
         {
             List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
-            try
-            {
-                orthoShaderKeys = capi.LoadModConfig<string[]>("OrthoShaderList.json");
-            }
-            catch (Exception)
-            {
-            }
-            if (orthoShaderKeys == null)
-            {
-                orthoShaderKeys = new string[] { "testshader" };
-                capi.StoreModConfig(orthoShaderKeys, "OrthoShaderList.json");
-            }
+            orthoShaderKeys = capi.Assets.TryGet("config/orthoshaderlist.json")?.ToObject<string[]>();
+            if (orthoShaderKeys == null) return false;
 
             for (int i = 0; i < orthoShaderKeys.Length; i++)
             {
                 IShaderProgram shader = capi.Shader.NewShaderProgram();
                 int program = capi.Shader.RegisterFileShaderProgram(orthoShaderKeys[i], shader);
                 shader = capi.Render.GetShader(program);
-                shader.PrepareUniformLocations(uniforms);
                 shader.Compile();
 
                 OrthoRenderer renderer = new OrthoRenderer(capi, shader);
@@ -173,7 +155,6 @@ namespace ShaderTestMod
         MeshRef quadRef;
         ICoreClientAPI capi;
         public IShaderProgram prog;
-        ITreeAttribute healthTree;
 
         public Matrixf ModelMat = new Matrixf();
 
@@ -185,26 +166,22 @@ namespace ShaderTestMod
         {
             this.prog = prog;
             capi = api;
-
-            MeshData quadMesh = QuadMeshUtil.GetCustomQuadModelData(-1, -1, 0, 2, 2);
+            MeshData quadMesh = QuadMeshUtil.GetQuad();
+            
             quadMesh.Rgba = null;
 
             quadRef = capi.Render.UploadMesh(quadMesh);
-            healthTree = capi.World.Player.Entity.WatchedAttributes.GetTreeAttribute("health");
         }
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (prog.Disposed) return;
-
-            BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
             curShader.Stop();
 
             prog.Use();
-
             capi.Render.GlToggleBlend(true);
-            prog.SetDefaultUniforms();
+            prog.SetDefaultUniforms(capi);
             prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
             prog.BindTexture2D("iColor", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[0], 1);
             prog.BindTexture2D("iLight", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[1], 2);
@@ -221,12 +198,12 @@ namespace ShaderTestMod
 
     public static class DefaultUniforms
     {
-        public static void SetDefaultUniforms(this IShaderProgram prog)
+        public static void SetDefaultUniforms(this IShaderProgram prog, ICoreClientAPI capi)
         {
-            ICoreClientAPI capi = ShaderTest.capi;
-            float[] controls = ShaderTest.controls;
-            Vec3f[] vec3s = ShaderTest.vec3s;
-            float[] floats = ShaderTest.floats;
+            ShaderTest shaderTest = capi.ModLoader.GetModSystem<ShaderTest>();
+            float[] controls = shaderTest.controls;
+            Vec3f[] vec3s = shaderTest.vec3s;
+            float[] floats = shaderTest.floats;
 
             prog.Uniform("iTime", capi.World.ElapsedMilliseconds / 500f);
             prog.Uniform("iResolution", new Vec2f(capi.Render.FrameWidth, capi.Render.FrameHeight));
@@ -244,7 +221,6 @@ namespace ShaderTestMod
             prog.Uniform("iPlayerPosition", vec3s[2]);
             prog.Uniform("iLookBlockPos", vec3s[3]);
             prog.Uniform("iLookEntityPos", vec3s[4]);
-            
 
             prog.Uniform("iMoonPhase", floats[0]);
             prog.Uniform("iTemperature", floats[1]);
