@@ -10,11 +10,31 @@ namespace CivMods
 {
     class CivModSystem : ModSystem
     {
+        public override void Start(ICoreAPI api)
+        {
+            api.RegisterBlockEntityClass("Snitch", typeof(BlockEntitySnitch));
+        }
+
         public override void StartServerSide(ICoreServerAPI api)
         {
             api.Event.DidPlaceBlock += PlaceBlockEvent;
             api.Event.DidBreakBlock += BreakBlockEvent;
             api.Event.DidUseBlock += UseBlockEvent;
+            api.RegisterCommand("createsnitch", "Creates a snitch block entity.", "", (byPlayer, id, args) =>
+            {
+                BlockPos pos = byPlayer.CurrentBlockSelection?.Position;
+                if (api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use))
+                {
+                    if (!api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch))
+                    {
+                        api.World.BlockAccessor.SpawnBlockEntity("Snitch", pos);
+                    }
+                    else
+                    {
+                        api.SendMessage(byPlayer, 0, "Already exists a snitch within 11 blocks!", EnumChatType.OwnMessage);
+                    }
+                }
+            });
         }
 
         private void UseBlockEvent(IServerPlayer byPlayer, BlockSelection blockSel)
@@ -38,10 +58,10 @@ namespace CivMods
                 byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, byPlayer);
             }
 
-            List<BlockEntity> list = byPlayer.Entity.World.GetBlockEntities(pos, new Vec2i(11, 11));
-            list.All(e =>
+            List<BlockEntity> list = byPlayer.Entity.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11));
+            list.Any(e =>
             {
-                (e as BlockEntitySnitch)?.NotifyOfBreak(byPlayer, pos);
+                (e as BlockEntitySnitch)?.NotifyOfBreak(byPlayer, oldblockId, pos);
                 return e is BlockEntitySnitch;
             });
         }
@@ -59,15 +79,20 @@ namespace CivMods
     {
         public List<string> Breakins = new List<string>();
         public bool cooldown = true;
+        public int limit = 512;
 
         public string OwnerUID {
             get
             {
-                foreach (var val in api.World.Claims.Get(pos))
+                if (api.World.Claims != null && api.World.Claims.Get(pos) != null)
                 {
-                    return val.OwnedByPlayerUid;
+                    foreach (var val in api.World.Claims.Get(pos))
+                    {
+                        return val?.OwnedByPlayerUid;
+                    }
                 }
-                return api.ModLoader.GetModSystem<ModSystemBlockReinforcement>().GetReinforcment(pos).PlayerUID;
+
+                return api.ModLoader.GetModSystem<ModSystemBlockReinforcement>()?.GetReinforcment(pos)?.PlayerUID;
             }
         }
 
@@ -78,38 +103,38 @@ namespace CivMods
             {   
                 List<IPlayer> intruders = new List<IPlayer>();
 
-                if (api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).All(e => {
+                if (cooldown && api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).Any(e => {
                     if (e.PlayerUID == OwnerUID) return false;
 
                     intruders.Add(e);
                     return true;
-                }) && cooldown)
+                }))
                 {
                     LimitCheck();
                     cooldown = false;
                     foreach (var val in intruders)
                     {
-                        Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World) + " at " + val.Entity.LocalPos);
+                        Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
                     }
                     RegisterDelayedCallback(dt2 => cooldown = true, 5000);
                 }
             }, 30);
         }
 
-        public void NotifyOfBreak(IServerPlayer byPlayer, BlockPos pos)
+        public void NotifyOfBreak(IServerPlayer byPlayer, int oldblockId, BlockPos pos)
         {
             LimitCheck();
-            Breakins.Add(byPlayer.PlayerName + " broke a block at " + pos.RelativeToSpawn(byPlayer.Entity.World));
+            Breakins.Add(byPlayer.PlayerName + " broke or tried to break a block at " + pos.RelativeToSpawn(byPlayer.Entity.World) + " with the name of " + api.World.GetBlock(oldblockId).Code);
         }
 
         public void LimitCheck()
         {
-            if (Breakins.Count > 31) Breakins.RemoveAt(0);
+            if (Breakins.Count >= limit) Breakins.RemoveAt(0);
         }
 
         public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
         {
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < limit; i++)
             {
                 string str = tree.GetString("breakins" + i);
                 if (str != null) Breakins.Add(str);
@@ -119,9 +144,9 @@ namespace CivMods
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < limit; i++)
             {
-                if (i > Breakins.Count) continue;
+                if (i >= Breakins.Count) continue;
 
                 tree.SetString("breakins" + i, Breakins[i]);
             }

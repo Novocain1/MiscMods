@@ -240,14 +240,15 @@ namespace CivMods
                     {
                         BlockPos p = new BlockPos(x, y, z);
                         BlockEntity be = p.BlockEntity(world);
-                        if (be != null) blockEntities.Add(be);
+                        if (be != null)
+                            blockEntities.Add(be);
                     }
                 }
             }
             return blockEntities;
         }
 
-        public static List<BlockEntity> GetBlockEntities(this IWorldAccessor world, BlockPos pos, Vec2i range) => GetBlockEntities(world, pos, new Vec3i(range.X, range.Y, range.X));
+        public static List<BlockEntity> GetBlockEntitiesAround(this IWorldAccessor world, BlockPos pos, Vec2i range) => GetBlockEntities(world, pos, new Vec3i(range.X, range.Y, range.X));
 
         public static BlockPos RelativeToSpawn(this BlockPos pos, IWorldAccessor world)
         {
