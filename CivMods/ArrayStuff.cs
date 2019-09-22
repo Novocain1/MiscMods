@@ -254,5 +254,63 @@ namespace CivMods
         {
             return pos.SubCopy(world.DefaultSpawnPosition.AsBlockPos);
         }
+
+        public static SimpleParticleProperties TemporalEffect {
+            get
+            {
+                var p = new SimpleParticleProperties(
+                    0.5f, 1,
+                    ColorUtil.ToRgba(150, 34, 47, 44),
+                    new Vec3d(),
+                    new Vec3d(),
+                    new Vec3f(-0.1f, -0.1f, -0.1f),
+                    new Vec3f(0.1f, 0.1f, 0.1f),
+                    1.5f,
+                    0,
+                    0.5f,
+                    0.75f,
+                    EnumParticleModel.Quad
+                );
+
+                p.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -0.6f);
+                p.addPos.Set(1, 2, 1);
+                p.addLifeLength = 0.5f;
+                p.RedEvolve = new EvolvingNatFloat(EnumTransformFunction.LINEAR, 80);
+                return p;
+            }
+        }
+
+        static readonly NatFloat rndPos = NatFloat.create(EnumDistribution.INVERSEGAUSSIAN, 0, 0.5f);
+
+        public static SimpleParticleProperties TemporalEffectAtPos(this BlockPos pos, ICoreAPI api)
+        {
+            SimpleParticleProperties p = TemporalEffect;
+            Vec3d posvec = pos.DownCopy().MidPoint();
+            int r = 53;
+            int g = 221;
+            int b = 172;
+            p.color = (r << 16) | (g << 8) | (b << 0) | (50 << 24);
+
+            p.addPos.Set(0, 0, 0);
+            p.BlueEvolve = null;
+            p.RedEvolve = null;
+            p.GreenEvolve = null;
+            p.minSize = 0.1f;
+            p.maxSize = 0.2f;
+            p.SizeEvolve = null;
+            p.OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.LINEAR, 100f);
+
+            double xpos = rndPos.nextFloat();
+            double ypos = 1.9 + api.World.Rand.NextDouble() * 0.2;
+            double zpos = rndPos.nextFloat();
+
+            p.lifeLength = GameMath.Sqrt(xpos * xpos + zpos * zpos) / 10;
+            p.minPos.Set(posvec.X + xpos, posvec.Y + ypos, posvec.Z + zpos);
+            p.minVelocity.Set(-(float)xpos, -1 - (float)api.World.Rand.NextDouble() / 2, -(float)zpos);
+            p.minQuantity = 0.25f;
+            p.addQuantity = 0;
+
+            return p;
+        }
     }
 }

@@ -20,20 +20,42 @@ namespace CivMods
             api.Event.DidPlaceBlock += PlaceBlockEvent;
             api.Event.DidBreakBlock += BreakBlockEvent;
             api.Event.DidUseBlock += UseBlockEvent;
-            api.RegisterCommand("createsnitch", "Creates a snitch block entity.", "", (byPlayer, id, args) =>
+            api.RegisterCommand("snitch", "Creates a snitch block entity.", "", (byPlayer, id, args) =>
             {
                 BlockPos pos = byPlayer.CurrentBlockSelection?.Position;
                 if (api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use))
                 {
-                    if (!api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch))
+                    string arg = args.PopWord();
+                    switch (arg)
                     {
-                        api.World.BlockAccessor.SpawnBlockEntity("Snitch", pos);
-                    }
-                    else
-                    {
-                        api.SendMessage(byPlayer, 0, "Already exists a snitch within 11 blocks!", EnumChatType.OwnMessage);
+                        case "create":
+                            if (pos.BlockEntity(api) == null)
+                            {
+                                if (!api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch))
+                                {
+                                    api.World.BlockAccessor.SpawnBlockEntity("Snitch", pos);
+                                }
+                                else
+                                {
+                                    api.SendMessage(byPlayer, 0, "Already exists a snitch within 11 blocks!", EnumChatType.OwnMessage);
+                                }
+                            }
+                            else
+                            {
+                                api.SendMessage(byPlayer, 0, "Cannot create a snitch where there already exists a Block Entity!", EnumChatType.OwnMessage);
+                            }
+                            break;
+                        case "remove":
+                            if (pos.BlockEntity(api.World) is BlockEntitySnitch)
+                            {
+                                api.World.BlockAccessor.RemoveBlockEntity(pos);
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
+
             });
         }
 
@@ -99,26 +121,31 @@ namespace CivMods
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
-            RegisterGameTickListener(dt =>
-            {   
-                List<IPlayer> intruders = new List<IPlayer>();
 
-                if (cooldown && api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).Any(e => {
-                    if (e.PlayerUID == OwnerUID) return false;
-
-                    intruders.Add(e);
-                    return true;
-                }))
+            if (api.Side.IsServer())
+            {
+                RegisterGameTickListener(dt =>
                 {
-                    LimitCheck();
-                    cooldown = false;
-                    foreach (var val in intruders)
+                    api.World.SpawnParticles(pos.TemporalEffectAtPos(api));
+                    List<IPlayer> intruders = new List<IPlayer>();
+
+                    if (cooldown && api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).Any(e => {
+                        if (e.PlayerUID == OwnerUID) return false;
+
+                        intruders.Add(e);
+                        return true;
+                    }))
                     {
-                        Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
+                        LimitCheck();
+                        cooldown = false;
+                        foreach (var val in intruders)
+                        {
+                            Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
+                        }
+                        RegisterDelayedCallback(dt2 => cooldown = true, 5000);
                     }
-                    RegisterDelayedCallback(dt2 => cooldown = true, 5000);
-                }
-            }, 30);
+                }, 30);
+            }
         }
 
         public void NotifyOfBreak(IServerPlayer byPlayer, int oldblockId, BlockPos pos)
