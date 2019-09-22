@@ -34,6 +34,7 @@ namespace CivMods
                                 if (!api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch))
                                 {
                                     api.World.BlockAccessor.SpawnBlockEntity("Snitch", pos);
+                                    ((BlockEntitySnitch)pos.BlockEntity(byPlayer.Entity.World)).OwnerUID = byPlayer.PlayerUID;
                                 }
                                 else
                                 {
@@ -49,6 +50,39 @@ namespace CivMods
                             if (pos.BlockEntity(api.World) is BlockEntitySnitch)
                             {
                                 api.World.BlockAccessor.RemoveBlockEntity(pos);
+                            }
+                            break;
+                        case "info":
+                            BlockEntitySnitch bes = (pos.BlockEntity(api.World) as BlockEntitySnitch);
+                            if (bes != null && bes.OwnerUID == byPlayer.PlayerUID)
+                            {
+                                api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
+                                for (int i = bes.Breakins.Count; bes.Breakins.Count - i < 5; i--)
+                                {
+                                    try { var x = bes.Breakins[i-1]; } catch { break; }
+                                    api.SendMessage(byPlayer, 0, bes.Breakins[i-1], EnumChatType.OwnMessage);
+                                }
+                            }
+                            else if (api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch && (be as BlockEntitySnitch)?.OwnerUID == byPlayer.PlayerUID))
+                            {
+                                foreach (var val in api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)))
+                                {
+                                    var be = (val as BlockEntitySnitch);
+                                    if (val is BlockEntitySnitch && be != null && be.OwnerUID == byPlayer.PlayerUID)
+                                    {
+                                        api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
+                                        for (int i = be.Breakins.Count; be.Breakins.Count - i < 5; i--)
+                                        {
+                                            try { var x = be.Breakins[i-1]; } catch { break; }
+                                            api.SendMessage(byPlayer, 0, be.Breakins[i-1], EnumChatType.OwnMessage);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                api.SendMessage(byPlayer, 0, "Must look or be in radius of a snitch, or you don't own this one!", EnumChatType.OwnMessage);
                             }
                             break;
                         default:
@@ -80,6 +114,11 @@ namespace CivMods
                 byPlayer.Entity.World.BlockAccessor.BreakBlock(pos, byPlayer);
             }
 
+            if (pos.BlockEntity(byPlayer.Entity.World) is BlockEntitySnitch)
+            {
+                byPlayer.Entity.World.BlockAccessor.RemoveBlockEntity(pos);
+            }
+
             List<BlockEntity> list = byPlayer.Entity.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11));
             list.Any(e =>
             {
@@ -103,20 +142,7 @@ namespace CivMods
         public bool cooldown = true;
         public int limit = 512;
 
-        public string OwnerUID {
-            get
-            {
-                if (api.World.Claims != null && api.World.Claims.Get(pos) != null)
-                {
-                    foreach (var val in api.World.Claims.Get(pos))
-                    {
-                        return val?.OwnedByPlayerUid;
-                    }
-                }
-
-                return api.ModLoader.GetModSystem<ModSystemBlockReinforcement>()?.GetReinforcment(pos)?.PlayerUID;
-            }
-        }
+        public string OwnerUID { get; set; }
 
         public override void Initialize(ICoreAPI api)
         {
@@ -161,6 +187,7 @@ namespace CivMods
 
         public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
         {
+            OwnerUID = tree.GetString("owner");
             for (int i = 0; i < limit; i++)
             {
                 string str = tree.GetString("breakins" + i);
@@ -171,6 +198,7 @@ namespace CivMods
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
+            tree.SetString("owner", OwnerUID);
             for (int i = 0; i < limit; i++)
             {
                 if (i >= Breakins.Count) continue;
