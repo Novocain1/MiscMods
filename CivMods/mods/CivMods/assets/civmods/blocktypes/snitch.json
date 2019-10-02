@@ -1,0 +1,91 @@
+{
+	"code": "snitch",
+	"class": "BlockSnitch",
+	"entityClass": "Snitch",
+	"variantgroups": [
+		{ "code": "wood", "states": ["aged"], "loadFromProperties": "block/wood" },
+		{ "code": "rot", "loadFromProperties": "abstract/horizontalorientation" }
+	],
+	"behaviors": [
+		{ "name": "HorizontalOrientable", "properties": { "dropBlockFace": "east" } }
+	],
+    "attributes": {
+        "fenceConnect": {
+            "north": false,
+            "east": false,
+            "west": false,
+            "south": false
+        }
+    },
+    "shapeByType": {
+		"*-north": { "base": "block/apcsnitch", "rotateY": 0 },
+		"*-east": { "base": "block/apcsnitch", "rotateY": 270 },
+		"*-west": { "base": "block/apcsnitch", "rotateY": 90 },
+		"*-south": { "base": "block/apcsnitch", "rotateY": 180 }
+    },
+    "creativeinventory": {
+        "general": [
+            "*-east"
+        ],
+        "decorative": [
+            "*-east"
+        ]
+    },
+    "blockmaterial": "Wood",
+    "replaceable": 900,
+    "resistance": 1.5,
+    "lightAbsorption": 1,
+    "texturesByType": {
+        "*": {
+            "apcsnitch": {
+                "base": "block/apcsnitch"
+			},
+			"pine": {
+                "base": "game:block/wood/debarked/{wood}"
+			},
+			"oak": {
+                "base": "game:block/wood/debarked/{wood}"
+			},
+			"longstitches": {
+                "base": "game:block/cloth/leather/longstiches"
+            }
+        }
+    },
+    "sidesolidByType": {
+        "*": {
+            "all": false
+        }
+    },
+    "sideopaqueByType": {
+        "*": {
+            "all": false
+        }
+    },
+    "combustibleProps": {
+        "burnTemperature": 600,
+        "burnDuration": 30
+    },
+    "sounds": {
+        "place": "game:block/planks",
+        "hit": "game:block/planks",
+        "break": "game:block/planks",
+        "walk": "game:walk/wood"
+    },
+    "materialDensity": 600,
+    "heldTpIdleAnimation": "holdbothhandslarge",
+	"heldTpUseAnimation": "twohandplaceblock",
+	"collisionSelectionBox": { "x1": 0.071, "y1": 0, "z1": 0.077, "x2": 0.9484, "y2": 0.7284, "z2": 0.9196 },
+    "tpHandTransform": {
+        "translation": {
+            "x": -1.2,
+            "y": -1.1,
+            "z": -0.8
+        },
+        "rotation": {
+            "x": -2,
+            "y": 25,
+            "z": -78
+        },
+        "scale": 0.37
+    }
+}

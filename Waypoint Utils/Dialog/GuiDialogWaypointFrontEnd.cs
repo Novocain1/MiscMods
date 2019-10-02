@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     public class GuiDialogWaypointFrontEnd : GuiDialog
     {

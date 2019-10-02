@@ -7,8 +7,8 @@
     <ProjectGuid>{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WaypointUtils</RootNamespace>
-    <AssemblyName>Waypoint Utils</AssemblyName>
+    <RootNamespace>VSHUD</RootNamespace>
+    <AssemblyName>VSHUD</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

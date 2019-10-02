@@ -7,7 +7,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class LightUtil : ModSystem
     {
@@ -60,7 +60,6 @@ namespace WaypointUtils
                     int? type = args.PopInt();
                     if (type != null)
                     {
-                        EnumLightLevelType leveltype = (EnumLightLevelType)type;
                         config.LightLevelType = (EnumLightLevelType)type;
                     }
                     capi.ShowChatMessage("Light Util Type Set To " + Enum.GetName(typeof(EnumLightLevelType), config.LightLevelType));
@@ -101,9 +100,8 @@ namespace WaypointUtils
 
         public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
         {
-            pos = pos == null ? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy() : pos;
+            pos = pos ?? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy();
             int rad = config.LightRadius;
-            //Dictionary<BlockPos, int> blocks = new Dictionary<BlockPos, int>();
             List<BlockPos> blocks = new List<BlockPos>();
             List<int> colors = new List<int>() { 0 };
 

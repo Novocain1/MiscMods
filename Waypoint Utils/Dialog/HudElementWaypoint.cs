@@ -8,7 +8,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class HudElementWaypoint : HudElement
     {

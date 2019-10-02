@@ -1,0 +1,40 @@
+{
+    "code": "swingingdoor",
+    "class": "BlockSwingingDoor",
+    "entityClass": "SwingingDoor",
+    "attributes": {
+        "animKey": "swing",
+        "animLength": 30
+    },
+    "variantgroups": [
+        { "code": "wood", "loadFromProperties": "block/wood" },
+        { "code": "state", "states": [ "closed", "open" ]},
+        { "code": "rot", "loadFromProperties": "abstract/horizontalorientation" }
+    ],
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "shapeByType": { 
+        "*-north": { "base": "block/swingingdoor-{state}", "rotateY": 0 },
+        "*-east": { "base": "block/swingingdoor-{state}", "rotateY": 270 },
+        "*-south": { "base": "block/swingingdoor-{state}", "rotateY": 180 },
+        "*-west": { "base": "block/swingingdoor-{state}", "rotateY": 90 }
+    },
+    "textures": {
+        "all": { "base": "block/wood/planks/{wood}*" }
+    },
+    "resistance": 1,
+    "lightAbsorption": 0,
+    "creativeinventory": { "general": [ "*" ] },
+    "behaviors": [
+        { "name": "Lockable" },
+        {
+            "name": "OmniRotatable",
+            "properties": {
+                "rotateH": true,
+                "rotateV": false,
+                "rotateV4": false,
+                "facing": "block"
+            }
+        }
+    ]
+}

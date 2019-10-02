@@ -15,7 +15,7 @@ using Vintagestory.GameContent;
 using Newtonsoft.Json;
 using System.IO;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class WaypointUtilSystem : ModSystem
     {

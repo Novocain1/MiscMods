@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -12,6 +15,7 @@ namespace CivMods
     {
         public override void Start(ICoreAPI api)
         {
+            api.RegisterBlockClass("BlockSnitch", typeof(BlockSnitch));
             api.RegisterBlockEntityClass("Snitch", typeof(BlockEntitySnitch));
         }
 
@@ -20,7 +24,47 @@ namespace CivMods
             api.Event.DidPlaceBlock += PlaceBlockEvent;
             api.Event.DidBreakBlock += BreakBlockEvent;
             api.Event.DidUseBlock += UseBlockEvent;
-            api.RegisterCommand("snitch", "Creates a snitch block entity.", "", (byPlayer, id, args) =>
+            api.RegisterCommand("snitchinfo", "Get snitch info", "", (byPlayer, id, args) =>
+            {
+                BlockPos pos = byPlayer.CurrentBlockSelection?.Position;
+                if (api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use))
+                {
+                    BlockEntitySnitch bes = (pos.BlockEntity(api.World) as BlockEntitySnitch);
+                    if (bes != null && bes.OwnerUID == byPlayer.PlayerUID)
+                    {
+                        api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
+                        for (int i = bes.Breakins.Count; bes.Breakins.Count - i < 5; i--)
+                        {
+                            try { var x = bes.Breakins[i - 1]; } catch { break; }
+                            api.SendMessage(byPlayer, 0, bes.Breakins[i - 1], EnumChatType.OwnMessage);
+                        }
+                    }
+                    else if (api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch && (be as BlockEntitySnitch)?.OwnerUID == byPlayer.PlayerUID))
+                    {
+                        foreach (var val in api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)))
+                        {
+                            var be = (val as BlockEntitySnitch);
+                            if (val is BlockEntitySnitch && be != null && be.OwnerUID == byPlayer.PlayerUID)
+                            {
+                                api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
+                                for (int i = be.Breakins.Count; be.Breakins.Count - i < 5; i--)
+                                {
+                                    try { var x = be.Breakins[i - 1]; } catch { break; }
+                                    api.SendMessage(byPlayer, 0, be.Breakins[i - 1], EnumChatType.OwnMessage);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        api.SendMessage(byPlayer, 0, "Must look at or be in radius of a snitch, or you don't own this one!", EnumChatType.OwnMessage);
+                    }
+                }
+
+            });
+
+            api.RegisterCommand("snitchroot", "Create and remove snitch block entities", "", (byPlayer, id, args) =>
             {
                 BlockPos pos = byPlayer.CurrentBlockSelection?.Position;
                 if (api.World.Claims.TryAccess(byPlayer, pos, EnumBlockAccessFlags.Use))
@@ -52,44 +96,33 @@ namespace CivMods
                                 api.World.BlockAccessor.RemoveBlockEntity(pos);
                             }
                             break;
-                        case "info":
-                            BlockEntitySnitch bes = (pos.BlockEntity(api.World) as BlockEntitySnitch);
-                            if (bes != null && bes.OwnerUID == byPlayer.PlayerUID)
-                            {
-                                api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
-                                for (int i = bes.Breakins.Count; bes.Breakins.Count - i < 5; i--)
-                                {
-                                    try { var x = bes.Breakins[i-1]; } catch { break; }
-                                    api.SendMessage(byPlayer, 0, bes.Breakins[i-1], EnumChatType.OwnMessage);
-                                }
-                            }
-                            else if (api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(be => be is BlockEntitySnitch && (be as BlockEntitySnitch)?.OwnerUID == byPlayer.PlayerUID))
-                            {
-                                foreach (var val in api.World.GetBlockEntitiesAround(pos, new Vec2i(11, 11)))
-                                {
-                                    var be = (val as BlockEntitySnitch);
-                                    if (val is BlockEntitySnitch && be != null && be.OwnerUID == byPlayer.PlayerUID)
-                                    {
-                                        api.SendMessage(byPlayer, 0, "Last 5 breakins:", EnumChatType.OwnMessage);
-                                        for (int i = be.Breakins.Count; be.Breakins.Count - i < 5; i--)
-                                        {
-                                            try { var x = be.Breakins[i-1]; } catch { break; }
-                                            api.SendMessage(byPlayer, 0, be.Breakins[i-1], EnumChatType.OwnMessage);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                api.SendMessage(byPlayer, 0, "Must look or be in radius of a snitch, or you don't own this one!", EnumChatType.OwnMessage);
-                            }
-                            break;
                         default:
                             break;
                     }
                 }
 
+            }, Privilege.root);
+        }
+
+        public override void StartClientSide(ICoreClientAPI api)
+        {
+            api.RegisterCommand("snitchexport", "Export All Breakins To A File", "", (id, args) =>
+            {
+                BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position;
+                if (pos != null)
+                {
+                    List<string> breakins = (pos.BlockEntity(api) as BlockEntitySnitch)?.Breakins ?? new List<string>();
+                    StringBuilder builder = new StringBuilder();
+                    foreach (var val in breakins)
+                    {
+                        builder.AppendLine(val);
+                    }
+                    using (TextWriter tw = new StreamWriter("breakins.txt"))
+                    {
+                        tw.Write(builder);
+                        tw.Close();
+                    }
+                }
             });
         }
 
@@ -136,6 +169,31 @@ namespace CivMods
         }
     }
 
+    class BlockSnitch : Block
+    {
+        public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
+        {
+            if (world.GetBlockEntitiesAround(pos, new Vec2i(11, 11)).Any(e => (e is BlockEntitySnitch)))
+            {
+                world.RegisterCallback(dt => world.BlockAccessor.BreakBlock(pos, null), 500);
+            }
+            base.OnBlockPlaced(world, pos, byItemStack);
+        }
+
+        public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            BlockEntitySnitch be = (blockSel?.Position?.BlockEntity(world) as BlockEntitySnitch);
+            if (be != null && (be.OwnerUID == null || be.OwnerUID == "") && world.Side.IsServer())
+            {
+                be.OwnerUID = byPlayer.PlayerUID;
+                ((ICoreServerAPI)world.Api).SendMessage(byPlayer, 0, "You now own this snitch.", EnumChatType.OwnMessage);
+                be.MarkDirty();
+            }
+            else (world.Api as ICoreClientAPI)?.SendChatMessage("/snitchinfo");
+            return true;
+        }
+    }
+
     class BlockEntitySnitch : BlockEntity
     {
         public List<string> Breakins = new List<string>();
@@ -152,11 +210,13 @@ namespace CivMods
             {
                 RegisterGameTickListener(dt =>
                 {
-                    api.World.SpawnParticles(pos.TemporalEffectAtPos(api));
+                    SimpleParticleProperties props = pos.DownCopy().TemporalEffectAtPos(api);
+                    props.minPos.Add(0, 0.5, 0);
+                    api.World.SpawnParticles(props);
                     List<IPlayer> intruders = new List<IPlayer>();
 
                     if (cooldown && api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).Any(e => {
-                        if (e.PlayerUID == OwnerUID) return false;
+                        if (e.PlayerUID == OwnerUID || OwnerUID == null || OwnerUID == "") return false;
 
                         intruders.Add(e);
                         return true;
@@ -167,6 +227,7 @@ namespace CivMods
                         foreach (var val in intruders)
                         {
                             Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
+                            MarkDirty();
                         }
                         RegisterDelayedCallback(dt2 => cooldown = true, 5000);
                     }
@@ -176,8 +237,10 @@ namespace CivMods
 
         public void NotifyOfBreak(IServerPlayer byPlayer, int oldblockId, BlockPos pos)
         {
+            if (byPlayer.PlayerUID == OwnerUID) return;
             LimitCheck();
             Breakins.Add(byPlayer.PlayerName + " broke or tried to break a block at " + pos.RelativeToSpawn(byPlayer.Entity.World) + " with the name of " + api.World.GetBlock(oldblockId).Code);
+            MarkDirty();
         }
 
         public void LimitCheck()

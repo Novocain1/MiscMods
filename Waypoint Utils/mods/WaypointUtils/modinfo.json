@@ -1,10 +1,10 @@
 {
 	"type": "code",
-	"name": "WaypointUtils",
-	"modid": "waypointutils",
-	"description" : "Automatically creates waypoints on player death, floaty waypoints, and other things",
+	"name": "VSHUD",
+	"modid": "vshud",
+	"description" : "Automatically creates waypoints on player death, floaty waypoints, and other misc client side things",
 	"authors": ["Novocain"],
-	"version": "1.2.4",
+	"version": "1.2.6",
 	"dependencies": {
 	}
 }

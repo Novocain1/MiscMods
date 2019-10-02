@@ -10,7 +10,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class TapeMeasure : ModSystem
     {
@@ -33,6 +33,7 @@ namespace WaypointUtils
             int radius = (int)args.PopInt(4);
             int thickness = (int)args.PopInt(1);
             int attach = (bool)args.PopBool(false) ? radius + 1 : 0;
+            
             switch (arg)
             {
                 case "sphere":
@@ -131,6 +132,18 @@ namespace WaypointUtils
                     highlighted = new HashSet<BlockPos>(highlighted.Concat(tmp).ToList());
                     MakeHighlights(highlighted);
                     break;
+                case "toflatten":
+                    HashSet<BlockPos> temp = new HashSet<BlockPos>(highlighted);
+                    foreach (var val in highlighted)
+                    {
+                        if (capi.World.BlockAccessor.GetBlock(val).Id == 0)
+                        {
+                            temp.Remove(val);
+                        }
+                    }
+                    highlighted = temp;
+                    MakeHighlights(highlighted);
+                    break;
                 case "save":
                     using (TextWriter tw = new StreamWriter("shape" + radius + ".json"))
                     {
@@ -210,7 +223,6 @@ namespace WaypointUtils
 
         public void MakeHighlights(HashSet<BlockPos> highlighted)
         {
-            int p = highlighted.Count;
             List<int> color = new List<int>() { ColorUtil.ToRgba((int)(0.25 * 255), (int)(0.25 * 255), (int)(0.5 * 255), (int)(0.5 * 255)) };
             capi.World.HighlightBlocks(capi.World.Player, 514, highlighted.ToList(), color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
         }

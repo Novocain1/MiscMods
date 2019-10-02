@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waypoint Utils", "Waypoint Utils\Waypoint Utils.csproj", "{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSHUD", "Waypoint Utils\VSHUD.csproj", "{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItemSorting", "ItemSorting\ItemSorting.csproj", "{E159209D-8DCD-4FC7-9300-F93FE17FEB34}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collectible Exchange", "Collectible Exchange\Collectible Exchange.csproj", "{2DDA797A-113F-4220-839D-67EADA98778F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CivMods", "CivMods\CivMods.csproj", "{51B9A11F-8D6E-40A2-8A7D-1194B804A50C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwingingDoorMod", "SwingingDoorMod\SwingingDoorMod.csproj", "{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{51B9A11F-8D6E-40A2-8A7D-1194B804A50C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51B9A11F-8D6E-40A2-8A7D-1194B804A50C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51B9A11F-8D6E-40A2-8A7D-1194B804A50C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

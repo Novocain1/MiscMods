@@ -1,0 +1,11 @@
+{
+    "ingredientPattern": "IPI,PTP,IPI",
+    "ingredients": {
+        "I": { "type": "item", "code": "game:ingot-copper" },
+        "P": { "type": "block", "code": "game:planks-*", "name": "wood" },
+        "T": { "type": "item", "code": "game:gear-temporal" }
+    },
+    "width": 3,
+    "height": 3,
+    "output": { "type": "block", "code": "snitch-{wood}-east", "quantity": 1  }
+}

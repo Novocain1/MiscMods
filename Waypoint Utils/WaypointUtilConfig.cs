@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class WaypointUtilConfig
     {

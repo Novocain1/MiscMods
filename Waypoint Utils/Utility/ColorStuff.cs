@@ -7,7 +7,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 
-namespace WaypointUtils
+namespace VSHUD
 {
     class ColorStuff : ColorUtil
     {
