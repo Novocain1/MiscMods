@@ -1,30 +1,40 @@
 {
     "code": "swingingdoor",
     "class": "BlockSwingingDoor",
-    "entityClass": "SwingingDoor",
+    "entityClassByType":{
+        "*-bottom-*": "SwingingDoor"
+    },
     "attributes": {
         "animKey": "swing",
-        "animLength": 30
+        "animLength": 30,
+        "openSound": "block/creak/woodcreak_2",
+        "closeSound": "block/planks"
     },
     "variantgroups": [
+        { "code": "ud", "states": [ "top", "bottom" ]},
         { "code": "wood", "loadFromProperties": "block/wood" },
-        { "code": "state", "states": [ "closed", "open" ]},
+        { "code": "state", "states": [ "closed", "open", "between" ]},
         { "code": "rot", "loadFromProperties": "abstract/horizontalorientation" }
     ],
     "sidesolid": { "all": false },
     "sideopaque": { "all": false },
     "shapeByType": { 
-        "*-north": { "base": "block/swingingdoor-{state}", "rotateY": 0 },
-        "*-east": { "base": "block/swingingdoor-{state}", "rotateY": 270 },
-        "*-south": { "base": "block/swingingdoor-{state}", "rotateY": 180 },
-        "*-west": { "base": "block/swingingdoor-{state}", "rotateY": 90 }
+        "*-bottom-*-north": { "base": "block/swingingdoor-{state}", "rotateY": 0 },
+        "*-bottom-*-east": { "base": "block/swingingdoor-{state}", "rotateY": 270 },
+        "*-bottom-*-south": { "base": "block/swingingdoor-{state}", "rotateY": 180 },
+        "*-bottom-*-west": { "base": "block/swingingdoor-{state}", "rotateY": 90 }
     },
-    "textures": {
-        "all": { "base": "block/wood/planks/{wood}*" }
+    "texturesByType": {
+        "*-bottom-*": {
+            "all": { "base": "block/wood/planks/{wood}*" }
+        },
+        "*": {
+            "all": { "base": "block/transparent" }
+        }
     },
     "resistance": 1,
     "lightAbsorption": 0,
-    "creativeinventory": { "general": [ "*" ] },
+    "creativeinventory": { "general": [ "*-bottom-*-closed-north" ] },
     "behaviors": [
         { "name": "Lockable" },
         {
@@ -36,5 +46,16 @@
                 "facing": "block"
             }
         }
-    ]
+    ],
+    "collisionSelectionBoxByType": {
+        "*-closed-south": { "x1": 0, "y1": 0, "z1": 0.925, "x2": 1, "y2": 1, "z2": 0.9875 },
+        "*-closed-north": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 0.0625 },
+        "*-closed-west":  { "x1": 0, "y1": 0, "z1": 0, "x2": 0.0625, "y2": 1, "z2": 1 },
+        "*-closed-east":  { "x1": 0.9375, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 1 },
+        "*-open-south": { "x1": 0.9375, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 1 },
+        "*-open-north": { "x1": 0, "y1": 0, "z1": 0, "x2": 0.0625, "y2": 1, "z2": 1 },
+        "*-open-west": { "x1": 0, "y1": 0, "z1": 0.9375, "x2": 1, "y2": 1, "z2": 1 },
+        "*-open-east": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 0.0625 },
+        "*-between-*": { "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0 }
+    }
 }
