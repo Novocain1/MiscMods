@@ -58,7 +58,6 @@ namespace SwingingDoor
                     world.BlockAccessor.SetBlock(TopBlock.Id, blockPos.UpCopy());
                 }
             }
-
         }
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos)
