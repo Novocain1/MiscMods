@@ -37,13 +37,16 @@ namespace SwingingDoor
         }
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+
             if (Code.ToString() == BottomBlock.Code.ToString())
             {
                 (world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntitySwingingDoor)?.OnBlockInteract(world, byPlayer);
+                return true;
             }
             else if (Code.ToString() == TopBlock.Code.ToString())
             {
                 (world.BlockAccessor.GetBlockEntity(blockSel.Position.DownCopy()) as BlockEntitySwingingDoor)?.OnBlockInteract(world, byPlayer);
+                return true;
             }
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
@@ -104,6 +107,7 @@ namespace SwingingDoor
 
         public void OnBlockInteract(IWorldAccessor world, IPlayer byPlayer)
         {
+            float speed = OwnBlock.Attributes["animSpeed"].AsFloat(1);
             RegisterDelayedCallback(dt =>
             {
                 if (IsClosed)
@@ -117,16 +121,19 @@ namespace SwingingDoor
                     world.BlockAccessor.ExchangeBlock(ClosedTop.BlockId, pos.UpCopy());
                 }
 
-                world.PlaySoundAt(new AssetLocation("sounds/" + OwnBlock.Attributes["closeSound"].AsString()), byPlayer);
+                if (world.Side.IsServer()) world.PlaySoundAt(new AssetLocation("sounds/" + OwnBlock.Attributes["closeSound"].AsString()), byPlayer);
                 Util?.StopAnimation(AnimKey);
                 Initialize(api);
-            }, OwnBlock.Attributes["animLength"].AsInt(30) * 31);
+            }, (int)Math.Round((OwnBlock.Attributes["animLength"].AsInt(30) * 31) / speed));
 
             if (world.Side.IsClient())
             {
-                AnimationMetaData data = new AnimationMetaData { Animation = AnimKey, Code = AnimKey };
+                AnimationMetaData data = new AnimationMetaData { Animation = AnimKey, Code = AnimKey, AnimationSpeed = speed };
                 Util.StartAnimation(data);
-                world.PlaySoundAt(new AssetLocation("sounds/" + OwnBlock.Attributes["openSound"].AsString()), byPlayer);
+            }
+            else
+            {
+                world.PlaySoundAt(new AssetLocation("sounds/" + OwnBlock.Attributes["openSound"].AsString()), pos.X, pos.Y, pos.Z);
             }
 
             world.BlockAccessor.ExchangeBlock(BetweenState.BlockId, pos);

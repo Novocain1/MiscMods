@@ -7,6 +7,7 @@
     "attributes": {
         "animKey": "swing",
         "animLength": 30,
+        "animSpeed": 5.0,
         "openSound": "",
         "closeSound": ""
     },

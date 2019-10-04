@@ -7,6 +7,7 @@
     "attributes": {
         "animKey": "swing",
         "animLength": 30,
+        "animSpeed": 4.0,
         "openSound": "block/creak/woodcreak_2",
         "closeSound": "block/planks"
     },
