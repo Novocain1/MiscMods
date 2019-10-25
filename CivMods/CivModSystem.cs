@@ -210,12 +210,12 @@ namespace CivMods
             {
                 RegisterGameTickListener(dt =>
                 {
-                    SimpleParticleProperties props = pos.DownCopy().TemporalEffectAtPos(api);
+                    SimpleParticleProperties props = Pos.DownCopy().TemporalEffectAtPos(api);
                     props.minPos.Add(0, 0.5, 0);
                     api.World.SpawnParticles(props);
                     List<IPlayer> intruders = new List<IPlayer>();
 
-                    if (cooldown && api.World.GetPlayersAround(pos.ToVec3d(), 13, 13).Any(e => {
+                    if (cooldown && api.World.GetPlayersAround(Pos.ToVec3d(), 13, 13).Any(e => {
                         if (e.PlayerUID == OwnerUID || OwnerUID == null || OwnerUID == "") return false;
 
                         intruders.Add(e);
@@ -226,7 +226,7 @@ namespace CivMods
                         cooldown = false;
                         foreach (var val in intruders)
                         {
-                            Breakins.Add(val.PlayerName + " is inside the radius of " + pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
+                            Breakins.Add(val.PlayerName + " is inside the radius of " + Pos.RelativeToSpawn(api.World).ToVec3i() + " at " + val.Entity.LocalPos.XYZInt.ToBlockPos().RelativeToSpawn(api.World));
                             MarkDirty();
                         }
                         RegisterDelayedCallback(dt2 => cooldown = true, 5000);
@@ -239,7 +239,7 @@ namespace CivMods
         {
             if (byPlayer.PlayerUID == OwnerUID) return;
             LimitCheck();
-            Breakins.Add(byPlayer.PlayerName + " broke or tried to break a block at " + pos.RelativeToSpawn(byPlayer.Entity.World) + " with the name of " + api.World.GetBlock(oldblockId).Code);
+            Breakins.Add(byPlayer.PlayerName + " broke or tried to break a block at " + pos.RelativeToSpawn(byPlayer.Entity.World) + " with the name of " + Api.World.GetBlock(oldblockId).Code);
             MarkDirty();
         }
 

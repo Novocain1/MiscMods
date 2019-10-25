@@ -13,7 +13,7 @@ using Vintagestory.GameContent;
 
 namespace Collectible_Exchange
 {
-    public abstract class BlockEntityGenericTypedContainerModified : BlockEntityOpenableContainer, IBlockShapeSupplier
+    public abstract class BlockEntityGenericTypedContainerModified : BlockEntityOpenableContainer
     {
         public abstract InventoryGeneric inventory { get; set; }
         public string type = "normal-generic";
@@ -48,7 +48,7 @@ namespace Collectible_Exchange
 
         public override void Initialize(ICoreAPI api)
         {
-            ownBlock = api.World.BlockAccessor.GetBlock(pos);
+            ownBlock = api.World.BlockAccessor.GetBlock(Pos);
 
             defaultType = ownBlock.Attributes?["defaultType"]?.AsString("normal-generic");
             if (defaultType == null) defaultType = "normal-generic";
@@ -73,7 +73,7 @@ namespace Collectible_Exchange
                 {
                     this.type = nowType;
                     InitInventory(ownBlock);
-                    Inventory.LateInitialize(InventoryClassName + "-" + pos.X + "/" + pos.Y + "/" + pos.Z, api);
+                    Inventory.LateInitialize(InventoryClassName + "-" + Pos.X + "/" + Pos.Y + "/" + Pos.Z, Api);
                     Inventory.ResolveBlocksOrItems();
                     Inventory.OnAcquireTransitionSpeed = Inventory_OnAcquireTransitionSpeed;
                     MarkDirty();
@@ -116,7 +116,7 @@ namespace Collectible_Exchange
                 }
             }
 
-            if (api != null && api.Side == EnumAppSide.Client)
+            if (Api != null && Api.Side == EnumAppSide.Client)
             {
                 ownMesh = null;
                 MarkDirty(true);
@@ -191,7 +191,7 @@ namespace Collectible_Exchange
 
             if (inventory.PutLocked && inventory.IsEmpty) return false;
 
-            if (api.World is IServerWorldAccessor)
+            if (Api.World is IServerWorldAccessor)
             {
                 byte[] data;
 
@@ -207,9 +207,9 @@ namespace Collectible_Exchange
                     data = ms.ToArray();
                 }
 
-                ((ICoreServerAPI)api).Network.SendBlockEntityPacket(
+                ((ICoreServerAPI)Api).Network.SendBlockEntityPacket(
                     (IServerPlayer)byPlayer,
-                    pos.X, pos.Y, pos.Z,
+                    Pos.X, Pos.Y, Pos.Z,
                     (int)EnumBlockContainerPacketId.OpenInventory,
                     data
                 );
@@ -227,14 +227,14 @@ namespace Collectible_Exchange
             BlockGenericTypedContainer block = ownBlock as BlockGenericTypedContainer;
             if (ownBlock == null)
             {
-                block = api.World.BlockAccessor.GetBlock(pos) as BlockGenericTypedContainer;
+                block = Api.World.BlockAccessor.GetBlock(Pos) as BlockGenericTypedContainer;
                 ownBlock = block;
             }
-            if (block == null || api == null) return null;
+            if (block == null || Api == null) return null;
 
             string key = "typedContainerMeshes" + ownBlock.FirstCodePart() + block.Subtype;
 
-            Dictionary<string, MeshData> meshes = ObjectCacheUtil.GetOrCreate(api, key, () =>
+            Dictionary<string, MeshData> meshes = ObjectCacheUtil.GetOrCreate(Api, key, () =>
             {
                 return new Dictionary<string, MeshData>();
             });
@@ -252,12 +252,12 @@ namespace Collectible_Exchange
                 return null;
             }
 
-            return meshes[type + block.Subtype] = block.GenMesh(api as ICoreClientAPI, type, shapename, tesselator);
+            return meshes[type + block.Subtype] = block.GenMesh(Api as ICoreClientAPI, type, shapename, tesselator);
         }
 
 
 
-        public bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tesselator)
+        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tesselator)
         {
             if (ownMesh == null)
             {

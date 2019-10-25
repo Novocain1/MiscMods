@@ -1,10 +1,10 @@
 {
 	"type": "code",
-	"name": "SwingingDoor",
-	"modid": "swingingdoor",
+	"name": "DeepOreBits",
+	"modid": "deeporebits",
 	"description" : "",
 	"authors": ["Novocain"],
-	"version": "1.0.1",
+	"version": "1.0.0",
 	"dependencies": {
 	}
 }

@@ -75,15 +75,47 @@ namespace SwingingDoor
                 world.BlockAccessor.SetBlock(0, pos.DownCopy());
             }
         }
+
+        public override int GetRandomColor(ICoreClientAPI capi, BlockPos pos, BlockFacing facing)
+        {
+            if (Variant["ud"] == "top")
+            {
+                var textures = capi.World.BlockAccessor.GetBlock(pos.DownCopy()).Textures;
+                if (textures == null || textures.Count == 0) return 0;
+                if (!textures.TryGetValue(facing.Code, out CompositeTexture tex))
+                {
+                    tex = textures.First().Value;
+                }
+                if (tex?.Baked == null) return 0;
+
+                int color = capi.BlockTextureAtlas.GetRandomPixel(tex.Baked.TextureSubId);
+
+                if (TintIndex > 0)
+                {
+                    color = capi.ApplyColorTintOnRgba(TintIndex, color, pos.X, pos.Y, pos.Z);
+                }
+
+                return color;
+            }
+
+            return base.GetRandomColor(capi, pos, facing);
+        }
+
+        public override int GetRandomColor(ICoreClientAPI capi, ItemStack stack)
+        {
+            return base.GetRandomColor(capi, stack);
+        }
     }
 
-    class BlockEntitySwingingDoor : BlockEntity, IBlockShapeSupplier
+    class BlockEntitySwingingDoor : BlockEntity
     {
         Block OwnBlock { get; set; }
         BlockEntityAnimationUtil Util { get; set; }
         string AnimKey { get; set; }
         int AnimCount { get => Util.activeAnimationsByAnimCode.Count;  }
         bool IsClosed { get => OwnBlock.Variant["state"] == "closed"; }
+        ICoreAPI api { get => Api; }
+        BlockPos pos { get => Pos; }
         Block OpenState { get => api.World.BlockAccessor.GetBlock(OwnBlock.CodeWithVariant("state", "open")); }
         Block ClosedState { get => api.World.BlockAccessor.GetBlock(OwnBlock.CodeWithVariant("state", "closed")); }
         Block BetweenState { get => api.World.BlockAccessor.GetBlock(OwnBlock.CodeWithVariant("state", "between")); }
@@ -146,6 +178,6 @@ namespace SwingingDoor
             Util?.StopAnimation(AnimKey);
         }
 
-        public bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator) => AnimCount > 0;
+        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator) => AnimCount > 0;
     }
 }

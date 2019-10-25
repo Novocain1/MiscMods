@@ -88,7 +88,9 @@ namespace Collectible_Exchange
                 case "list":
                     if (sapi.World.BlockAccessor.GetBlockEntity(pos) is BlockEntityShop)
                     {
-                        byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, (sapi.World.BlockAccessor.GetBlockEntity(pos) as BlockEntityShop).GetBlockInfo(byPlayer), EnumChatType.OwnMessage);
+                        StringBuilder builder = new StringBuilder();
+                        ((BlockEntityShop)sapi.World.BlockAccessor.GetBlockEntity(pos)).GetBlockInfo(byPlayer, builder);
+                        byPlayer.SendMessage(GlobalConstants.GeneralChatGroup, builder.ToString(), EnumChatType.OwnMessage);
                     }
                     break;
                 case "trade":
@@ -140,24 +142,24 @@ namespace Collectible_Exchange
 
         public bool Exchange(IPlayer byPlayer)
         {
-            if (api.Side.IsServer())
+            if (Api.Side.IsServer())
             {
                 foreach (var val in Exchanges)
                 {
                     ItemSlot active = byPlayer.InventoryManager.ActiveHotbarSlot;
                     if (ExchangePossible(val, active, out ItemSlot exchangeSlot, out ItemSlot emptySlot))
                     {
-                        if (active.TryPutInto(api.World, emptySlot, val.Input.StackSize) == val.Input.StackSize)
+                        if (active.TryPutInto(Api.World, emptySlot, val.Input.StackSize) == val.Input.StackSize)
                         {
                             DummySlot dummy = new DummySlot();
-                            if (exchangeSlot.TryPutInto(api.World, dummy, val.Output.StackSize) == val.Output.StackSize)
+                            if (exchangeSlot.TryPutInto(Api.World, dummy, val.Output.StackSize) == val.Output.StackSize)
                             {
                                 if (!byPlayer.InventoryManager.TryGiveItemstack(dummy.Itemstack))
                                 {
-                                    byPlayer.Entity.World.SpawnItemEntity(dummy.Itemstack, pos.ToVec3d());
+                                    byPlayer.Entity.World.SpawnItemEntity(dummy.Itemstack, Pos.ToVec3d());
                                 }
-                                api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/cashregister"), pos.X, pos.Y, pos.Z);
-                                inventory.Sort(api, EnumSortMode.ID);
+                                Api.World.PlaySoundAt(AssetLocation.Create("sounds/effect/cashregister"), Pos.X, Pos.Y, Pos.Z);
+                                inventory.Sort(Api, EnumSortMode.ID);
                                 return true;
                             }
                         }
@@ -231,17 +233,14 @@ namespace Collectible_Exchange
             base.ToTreeAttributes(tree);
         }
 
-        public override string GetBlockInfo(IPlayer forPlayer)
+        public override void GetBlockInfo(IPlayer forPlayer, StringBuilder builder)
         {
-            string v = "";
-            try { v = base.GetBlockInfo(forPlayer); } catch(Exception) { }
-            StringBuilder builder = new StringBuilder(v).AppendLine().AppendLine("Can Exchange:");
+            builder.AppendLine().AppendLine("Can Exchange:");
             foreach (var val in Exchanges)
             {
                 string ib = val.Input.Class == EnumItemClass.Block ? "block-" : "item-", ob = val.Output.Class == EnumItemClass.Block ? "block-" : "item-";
                 builder.AppendLine(val.Input.StackSize + "x " + Lang.Get(ib + val.Input.Collectible.Code.ToShortString()) + " For " + val.Output.StackSize + "x " + Lang.Get(ob + val.Output.Collectible.Code.ToShortString()));
             }
-            return builder.ToString();
         }
     }
 

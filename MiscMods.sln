@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CivMods", "CivMods\CivMods.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwingingDoorMod", "SwingingDoorMod\SwingingDoorMod.csproj", "{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepOreBits", "DeepOreBits\DeepOreBits.csproj", "{057339CE-024F-435A-B3EC-B5ED3582163E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7C1D677-BB48-41F8-B554-1D120D3B0F1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{057339CE-024F-435A-B3EC-B5ED3582163E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{057339CE-024F-435A-B3EC-B5ED3582163E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{057339CE-024F-435A-B3EC-B5ED3582163E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{057339CE-024F-435A-B3EC-B5ED3582163E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

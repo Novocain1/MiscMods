@@ -148,4 +148,3 @@ void main ()
 	outColor = vec4(Color.xyz, 1.0);
 }
 
-

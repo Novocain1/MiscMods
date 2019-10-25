@@ -45,7 +45,6 @@ namespace VSHUD
     class GuiDialogClock : HudElement
     {
         long id;
-        long id2;
 
         public GuiDialogClock(ICoreClientAPI capi) : base(capi)
         {
@@ -116,7 +115,6 @@ namespace VSHUD
         {
             base.Dispose();
             capi.World.UnregisterGameTickListener(id);
-            capi.World.UnregisterGameTickListener(id2);
         }
 
         public override string ToggleKeyCombinationCode => "clock";

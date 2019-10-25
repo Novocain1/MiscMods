@@ -57,5 +57,6 @@
         "*-open-west": { "x1": 0, "y1": 0, "z1": 0.9375, "x2": 1, "y2": 1, "z2": 1 },
         "*-open-east": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 0.0625 },
         "*-between-*": { "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0 }
-    }
+    },
+    "drops": [{ "code": "swingingdoor-bottom-{wood}-closed-north" }]
 }

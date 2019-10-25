@@ -24,6 +24,8 @@ namespace VSHUD
         WaypointUtilConfig config;
         Waypoint waypoint;
 
+        public override float ZSize => 0.01f;
+
         public HudElementWaypoint(ICoreClientAPI capi, Waypoint waypoint, int waypointID) : base(capi)
         {
             this.waypoint = waypoint;
