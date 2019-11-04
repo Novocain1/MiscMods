@@ -1,0 +1,9 @@
+{
+    "code": "blueprint",
+    "class": "ItemBlueprint",
+    "texture": {
+        "base": "game:item/lore/paper"
+    },
+    "maxstacksize": 1,
+    "creativeinventory": { "general": ["*"], "items": ["*"] },
+}
