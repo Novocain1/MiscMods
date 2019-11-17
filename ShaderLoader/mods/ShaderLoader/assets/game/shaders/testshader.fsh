@@ -61,24 +61,30 @@ vec2 Rotate(float speedx, float speedy, float radius){
 float near = 0.001; 
 float far  = 1500.0;
 
+float DepthAtPixel(vec2 pix) 
+{
+	float depth = texture(iDepthBuffer, pix).x;
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+vec4 ColorAtPixel(vec2 pix)
+{
+	return texture(iColor, pix);
+}
+
 float Depth() 
 {
-	float depth = texture(iDepthBuffer, uv).x;
-    float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));// + NoiseFromPixelPosition(ivec2(int(iResolution.x * uv.x), int(iResolution.y * uv.y)), int(iTime), int(iResolution.x)).x;
-	//return depth;
+	return DepthAtPixel(uv);
 }
+
+
 float depth = Depth();
 
-vec3 vDepth = vec3(Depth());
 vec4 Color = texture(iColor, uv);
 vec4 Light = texture(iLight, uv);
 float iGlow = Light.r;
 float iGodRay = Light.g;
-
-vec4 pColor(vec2 uva){
-	return texture(iColor, uva);
-}
 
 vec3 camVec = vec3(cos(iCamera.x) * cos(iCamera.y), sin(iCamera.x), cos(iCamera.x) * sin(-iCamera.y));
 vec3 camNrm = normalize(camVec);
@@ -143,8 +149,29 @@ vec3 FakeInfrared(vec3 c)
 	return 1.0 - ChannelMix(c, arr);
 }
 
-void main () 
+vec3 Shade() 
 {
-	outColor = vec4(Color.xyz, 1.0);
+	if (depth >= far) { return Color.rgb; }
+	float size = 0.001;
+	float weight = 1.0;
+	float strength = 0.25;
+
+	for (float x = uv.x - size; x < uv.x + size; x++) 
+	{
+		for (float y = uv.y - size; y < uv.y + size; y++) 
+		{
+			if (DepthAtPixel(vec2(x,y)) > depth)
+			{
+				weight -= strength;
+			}
+		}
+	}
+	return Color.rgb * weight;
+	//return vec3(weight);
 }
 
+void main () 
+{
+	outColor = vec4(Shade(), 1.0);
+	//outColor = vec4(Color.rgb, 1);
+}

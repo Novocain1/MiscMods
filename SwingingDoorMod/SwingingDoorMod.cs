@@ -88,7 +88,7 @@ namespace SwingingDoor
                 }
                 if (tex?.Baked == null) return 0;
 
-                int color = capi.BlockTextureAtlas.GetRandomPixel(tex.Baked.TextureSubId);
+                int color = capi.BlockTextureAtlas.GetRandomColor(tex.Baked.TextureSubId);
 
                 if (TintIndex > 0)
                 {
