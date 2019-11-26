@@ -11,6 +11,8 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.ServerMods.NoObf;
+using Newtonsoft.Json.Linq;
+using Vintagestory.API.Server;
 
 namespace SwingingDoor
 {
@@ -112,7 +114,7 @@ namespace SwingingDoor
         Block OwnBlock { get; set; }
         BlockEntityAnimationUtil Util { get; set; }
         string AnimKey { get; set; }
-        int AnimCount { get => Util.activeAnimationsByAnimCode.Count;  }
+        int AnimCount { get => Util.activeAnimationsByAnimCode.Count; }
         bool IsClosed { get => OwnBlock.Variant["state"] == "closed"; }
         ICoreAPI api { get => Api; }
         BlockPos pos { get => Pos; }
@@ -179,5 +181,37 @@ namespace SwingingDoor
         }
 
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator) => AnimCount > 0;
+    }
+
+    public class System_glTF : ModSystem
+    {
+        ICoreAPI api;
+        public Dictionary<AssetLocation, ModelglTf> Assets_glTF { get; set; }
+
+        public override void Start(ICoreAPI api)
+        {
+            this.api = api;
+            api.Assets.AddPathOrigin("game", "gltf");
+        }
+
+        public override void StartClientSide(ICoreClientAPI api)
+        {
+            api.Event.BlockTexturesLoaded += LoadglTF;
+        }
+
+        public override void StartServerSide(ICoreServerAPI api)
+        {
+            api.Event.SaveGameLoaded += LoadglTF;
+        }
+
+        private void LoadglTF()
+        {
+            Assets_glTF = api.Assets.GetMany<ModelglTf>(api.World.Logger, "gltf/");
+        }
+    }
+
+    public class AssetExtends
+    {
+        public static AssetCategory gltf = new AssetCategory("gltf", false, EnumAppSide.Universal);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,38 +19,45 @@ namespace DeepOreBits
 {
     class GenDeepOreBits : ModStdWorldGen
     {
-        ICoreServerAPI api;
+        ICoreServerAPI Api;
         public override bool ShouldLoad(EnumAppSide side) => side == EnumAppSide.Server;
         public override double ExecuteOrder() => 0.9;
-        NormalizedSimplexNoise noise;
+        LCGRandom rnd;
         IWorldGenBlockAccessor bA;
-        public Dictionary<int, int> surfaceBlocks = new Dictionary<int, int>();
+        Dictionary<int, int> surfaceBlocks = new Dictionary<int, int>();
+        List<DeepOreGenProperty> genProperties;
 
-        public override void StartServerSide(ICoreServerAPI api)
+        public override void StartServerSide(ICoreServerAPI Api)
         {
-            this.api = api;
+            this.Api = Api;
             if (DoDecorationPass)
             {
-                foreach (var block in api.World.Blocks)
+                foreach (var block in Api.World.Blocks)
                 {
                     if (block is BlockOre)
                     {
-                        int? id = api.World.BlockAccessor.GetBlock(new AssetLocation("looseores".Apd(block.Variant["type"]).Apd(block.Variant["rock"])))?.Id;
+                        int? id = Api.World.BlockAccessor.GetBlock(new AssetLocation("looseores".Apd(block.Variant["type"]).Apd(block.Variant["rock"])))?.Id;
                         if (id != null)
                         {
                             surfaceBlocks.Add(block.Id, (int)id);
                         }
                     }
                 }
-                api.Event.InitWorldGenerator(InitWorldGen, "standard");
-                api.Event.ChunkColumnGeneration(OnChunkColumnGen, EnumWorldGenPass.TerrainFeatures, "standard");
-                api.Event.GetWorldgenBlockAccessor(c => bA = c.GetBlockAccessor(true));
+                genProperties = Api.Assets.Get("deeporebits:worldgen/deeporebits.json").ToObject<List<DeepOreGenProperty>>();
+
+                foreach (var val in genProperties)
+                {
+                    val.id = Api.World.GetBlock(val.Code).Id;
+                }
+
+                Api.Event.InitWorldGenerator(InitWorldGen, "standard");
+                Api.Event.ChunkColumnGeneration(OnChunkColumnGen, EnumWorldGenPass.TerrainFeatures, "standard");
+                Api.Event.GetWorldgenBlockAccessor(c => bA = c.GetBlockAccessor(true));
             }
         }
 
         private void OnChunkColumnGen(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
-            /*
             Dictionary<Vec3i, int> ores = new Dictionary<Vec3i, int>();
             for (int cY = 0; cY < chunks.Length; cY++)
             {
@@ -75,11 +83,24 @@ namespace DeepOreBits
                     int ore = val.Value;
                     if (surfaceBlocks.TryGetValue(ore, out int surface))
                     {
+                        double chance = 1.0;
+                        genProperties.Any(d =>
+                        {
+                            if (d.id == surface)
+                            {
+                                chance = d.Chance;
+                                return true;
+                            }
+                            return false;
+                        });
+
+                        if (rnd.NextDouble() > chance) continue;
+
                         for (int y = vec.Y; y < chunksize; y++)
                         {
                             rnd.InitPositionSeed(chunkX * vec.X, chunkZ * vec.Z);
                             if (y < 1 || rnd.NextDouble() > 0.1) continue;
-                            int dX = rnd.NextInt(chunksize - 1), dZ = rnd.NextInt(chunksize - 1);
+                            int dX = rnd.NextInt(chunksize), dZ = rnd.NextInt(chunksize);
 
                             int block = chunk.Blocks[(y * chunksize + dZ) * chunksize + dX];
                             int dBlock = chunk.Blocks[((y - 1) * chunksize + dZ) * chunksize + dX];
@@ -87,18 +108,35 @@ namespace DeepOreBits
                             {
                                 chunk.Blocks[(y * chunksize + dZ) * chunksize + dX] = surface;
                                 bA.ScheduleBlockUpdate(new BlockPos(dX, y, dZ));
+                                break;
                             }
                         }
                     }
                 }
             }
-            */
         }
 
         public void InitWorldGen()
         {
-            LoadGlobalConfig(api);
-            noise = NormalizedSimplexNoise.FromDefaultOctaves(TerraGenConfig.terrainGenOctaves, 0.002, 0.9, api.WorldManager.Seed);
+            LoadGlobalConfig(Api);
+            rnd = new LCGRandom(Api.WorldManager.Seed);
         }
+    }
+    [JsonObject(MemberSerialization.OptIn)]
+    class DeepOreGenProperty
+    {
+        public DeepOreGenProperty(AssetLocation code, float chance)
+        {
+            Code = code;
+            Chance = chance;
+        }
+
+        public int id;
+
+        [JsonProperty]
+        public AssetLocation Code { get; set; }
+
+        [JsonProperty]
+        public double Chance { get; set; }
     }
 }

@@ -105,7 +105,6 @@
     <Compile Include="ArrayStuff.cs" />
     <Compile Include="GenDeepOreBits.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestGen.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -102,8 +102,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModelglTf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SwingingDoorMod.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
