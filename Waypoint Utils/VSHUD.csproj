@@ -98,6 +98,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utility\ClaimUI.cs" />
     <Compile Include="Utility\Clock.cs" />
     <Compile Include="Utility\ColorStuff.cs" />
     <Compile Include="Dialog\HudElementWaypoint.cs" />
