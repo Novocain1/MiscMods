@@ -4,6 +4,7 @@ layout(location = 0) in vec3 vertex;
 out vec2 uv;
 
 uniform sampler2D iDepthBuffer;
+uniform sampler2D iGodrays;
 
 uniform vec2 iResolution;
 uniform vec2 iMouse;
@@ -43,6 +44,6 @@ uniform float iActiveTool;
 
 void main(void)
 {
-    gl_Position = vec4(vertex.xy , 1.0, 1);
+    gl_Position = vec4(vertex.xy, 1, 1);
     uv = (vertex.xy + 1.0) / 2.0;
 }

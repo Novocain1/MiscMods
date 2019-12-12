@@ -13,6 +13,8 @@ using Vintagestory.Client.NoObf;
 using Vintagestory.ServerMods.NoObf;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Server;
+using Vintagestory.API.Config;
+using System.IO;
 
 namespace SwingingDoor
 {
@@ -186,32 +188,172 @@ namespace SwingingDoor
     public class System_glTF : ModSystem
     {
         ICoreAPI api;
-        public Dictionary<AssetLocation, ModelglTf> Assets_glTF { get; set; }
+        public Dictionary<AssetLocation, JObject> gltfs = new Dictionary<AssetLocation, JObject>();
+        public List<IAsset> objs = new List<IAsset>();
+        public Dictionary<AssetLocation, MeshData> gltfmeshes = new Dictionary<AssetLocation, MeshData>();
+        public Dictionary<AssetLocation, MeshData> objmeshes = new Dictionary<AssetLocation, MeshData>();
+        public MeshRenderer testrenderer;
 
         public override void Start(ICoreAPI api)
         {
             this.api = api;
-            api.Assets.AddPathOrigin("game", "gltf");
         }
 
         public override void StartClientSide(ICoreClientAPI api)
         {
-            api.Event.BlockTexturesLoaded += LoadglTF;
+            api.Event.BlockTexturesLoaded += LoadRawMeshes;
+            api.RegisterCommand("testrender", "", "", (p, a) =>
+            {
+                BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
+                if (testrenderer != null)
+                {
+                    api.Event.UnregisterRenderer(testrenderer, EnumRenderStage.Opaque);
+                    testrenderer.Dispose();
+                }
+                if (pos != null)
+                {
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), objmeshes.First().Value);
+                    api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
+                }
+            });
         }
 
         public override void StartServerSide(ICoreServerAPI api)
         {
-            api.Event.SaveGameLoaded += LoadglTF;
+            api.Event.SaveGameLoaded += LoadRawMeshes;
         }
 
-        private void LoadglTF()
+        private void LoadRawMeshes()
         {
-            Assets_glTF = api.Assets.GetMany<ModelglTf>(api.World.Logger, "gltf/");
+            gltfs = api.World.AssetManager.GetMany<JObject>(api.World.Logger, "shapes/gltf");
+            objs = api.World.AssetManager.GetMany("shapes/obj");
+            ConvertObj();
         }
+
+        private void ConvertObj()
+        {
+            foreach (var val in objs)
+            {
+                if (val.Location.ToString().Contains(".obj"))
+                {
+                    MeshData mesh = new MeshData(1, 1);
+                    Queue<Vec3f> normals = new Queue<Vec3f>();
+                    Queue<Vec3f> vertices = new Queue<Vec3f>();
+                    Queue<Vec2f> vertexUvs = new Queue<Vec2f>();
+                    Queue<int> vertexIndices = new Queue<int>();
+                    var lines = val.ToText().Split('\n');
+                    foreach (var str in lines)
+                    {
+                        if (str.StartsWith("v "))
+                        {
+                            var n = str.Split(' ');
+                            vertices.Enqueue(new Vec3f(float.Parse(n[1]), float.Parse(n[2]), float.Parse(n[3])));
+                        }
+                        else if (str.StartsWith("vn "))
+                        {
+                            var n = str.Split(' ');
+                            normals.Enqueue(new Vec3f(float.Parse(n[1]), float.Parse(n[2]), float.Parse(n[3])));
+                        }
+                        else if (str.StartsWith("vt "))
+                        {
+                            var n = str.Split(' ');
+                            vertexUvs.Enqueue(new Vec2f(float.Parse(n[1]), float.Parse(n[2])));
+                        }
+                        else if (str.StartsWith("f "))
+                        {
+                            var n = str.Split(' ');
+
+                            for (int i = 1; i < n.Length; i++)
+                            {
+                                var ind = n[i].Split('/');
+                                if (int.TryParse(ind[0], out int vI))
+                                {
+                                    vertexIndices.Enqueue(int.Parse(ind[0]));
+                                }
+                                else
+                                {
+                                    ind = n[i].Replace("//", " ").Split(' ');
+                                    if (!ind[0].Contains('\r'))
+                                    {
+                                        vertexIndices.Enqueue(int.Parse(ind[0]));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for (int i = vertices.Count; i > 0; i--)
+                    {
+                        Vec3f vec = vertices.Count > 0 ? vertices.Dequeue() : new Vec3f();
+                        Vec2f uv = vertexUvs.Count > 0 ? vertexUvs.Dequeue() : new Vec2f();
+                        Vec3f nrm = normals.Count > 0 ? normals.Dequeue() : new Vec3f();
+                        
+                        mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, uv.X, uv.Y, ColorUtil.WhiteArgb, 0, VertexFlags.NormalToPackedInt(nrm) << 15);
+                    }
+
+                    for (int i = vertexIndices.Count; i > 0; i--)
+                    {
+                        mesh.AddIndex(vertexIndices.Dequeue() - 1);
+                    }
+                    objmeshes.Add(val.Location, mesh);
+                }
+            }
+        }
+    }
+    public static class Extentions
+    {
+        public static void SetUv(this MeshData mesh, TextureAtlasPosition texPos) => mesh.SetUv(new float[] { texPos.x1, texPos.y1, texPos.x2, texPos.y1, texPos.x2, texPos.y2, texPos.x1, texPos.y2 });
     }
 
     public class AssetExtends
     {
         public static AssetCategory gltf = new AssetCategory("gltf", false, EnumAppSide.Universal);
+        public static AssetCategory obj = new AssetCategory("obj", false, EnumAppSide.Universal);
+        public static AssetCategory mtl = new AssetCategory("mtl", false, EnumAppSide.Universal);
+
+    }
+
+    public class MeshRenderer : IRenderer
+    {
+        private ICoreClientAPI capi;
+        private BlockPos pos;
+        private MeshRef mesh;
+        public Matrixf ModelMat = new Matrixf();
+        public bool shouldRender;
+
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, MeshData mesh)
+        {
+            this.capi = capi;
+            this.pos = pos;
+            this.mesh = capi.Render.UploadMesh(mesh);
+        }
+
+        public double RenderOrder => 0.5;
+
+        public int RenderRange => 24;
+
+        public void Dispose()
+        {
+            mesh.Dispose();
+        }
+
+        public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
+        {
+            if (mesh == null) return;
+            IRenderAPI render = capi.Render;
+            Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
+            render.GlDisableCullFace();
+            render.GlToggleBlend(true, EnumBlendMode.Standard);
+            IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
+            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/stone/rock/chert1.png"));
+
+            prog.ModelMatrix = ModelMat.Identity()
+                .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
+                .Translate(0.5, 0.5, 0.5)
+                .Values;
+            prog.ViewMatrix = render.CameraMatrixOriginf;
+            prog.ProjectionMatrix = render.CurrentProjectionMatrix;
+            capi.Render.RenderMesh(mesh);
+            prog.Stop();
+        }
     }
 }

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.Client.NoObf;
+using Vintagestory.Common;
 using Vintagestory.GameContent;
 
 namespace VSHUD

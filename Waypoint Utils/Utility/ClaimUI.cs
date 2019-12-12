@@ -151,6 +151,7 @@ namespace VSHUD
             if (base.TryClose())
             {
                 capi.Settings.Bool["claimGui"] = false;
+                op = false;
                 Dispose();
                 return true;
             }

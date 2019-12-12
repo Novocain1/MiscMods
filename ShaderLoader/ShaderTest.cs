@@ -10,6 +10,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Client.NoObf;
 
 namespace ShaderTestMod
 {
@@ -160,16 +161,14 @@ namespace ShaderTestMod
 
         public double RenderOrder => 0;
 
-        public int RenderRange => 1;
+        public int RenderRange => 1000;
 
         public OrthoRenderer(ICoreClientAPI api, IShaderProgram prog)
         {
             this.prog = prog;
             capi = api;
             MeshData quadMesh = QuadMeshUtil.GetQuad();
-            
             quadMesh.Rgba = null;
-
             quadRef = capi.Render.UploadMesh(quadMesh);
         }
 
@@ -177,18 +176,21 @@ namespace ShaderTestMod
         {
             if (prog.Disposed) return;
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
-            curShader.Stop();
-
+            curShader?.Stop();
             prog.Use();
+
             capi.Render.GlToggleBlend(true);
             prog.SetDefaultUniforms(capi);
             prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
             prog.BindTexture2D("iColor", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[0], 1);
             prog.BindTexture2D("iLight", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[1], 2);
+            prog.BindTexture2D("iGodrays", capi.Render.FrameBuffers[(int)EnumFrameBuffer.GodRays].ColorTextureIds[0], 3);
+            prog.BindTexture2D("iShadowMapNear", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapNear].DepthTextureId, 4);
+            prog.BindTexture2D("iShadowMapFar", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapFar].DepthTextureId, 5);
 
             capi.Render.RenderMesh(quadRef);
             prog.Stop();
-            curShader.Use();
+            curShader?.Use();
         }
 
         public void Dispose()

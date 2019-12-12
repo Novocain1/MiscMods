@@ -9,6 +9,9 @@ out vec4 outColor;
 uniform sampler2D iDepthBuffer;
 uniform sampler2D iColor;
 uniform sampler2D iLight;
+uniform sampler2D iGodrays;
+uniform sampler2D iShadowMapNear;
+uniform sampler2D iShadowMapFar;
 
 uniform vec2 iResolution;
 uniform vec2 iMouse;
@@ -58,8 +61,8 @@ vec2 Rotate(float speedx, float speedy, float radius){
 	return vec2(sin(iTime*speedx)*radius, cos(iTime*speedy)*radius);
 }
 
-float near = 0.001; 
-float far  = 1500.0;
+float near = 0.5; 
+float far  = 1.0;
 
 float DepthAtPixel(vec2 pix) 
 {
@@ -76,6 +79,26 @@ vec4 ColorAtPixel(vec2 pix)
 float Depth() 
 {
 	return DepthAtPixel(uv);
+}
+
+vec4 SNAtPixel(vec2 pix)
+{
+	return texture(iShadowMapNear, pix);
+}
+
+vec4 ShadowMapNear() 
+{
+	return SNAtPixel(uv);
+}
+
+vec4 SFAtPixel(vec2 pix)
+{
+	return texture(iShadowMapFar, pix);
+}
+
+vec4 ShadowMapFar() 
+{
+	return SFAtPixel(uv);
 }
 
 
@@ -103,13 +126,17 @@ float RngTime(vec2 i, float speed)
 	return fract(sin(dot(i*mix(0.9,1.0, sin(iTime*speed)), vec2(12.9898, 78.233)))*43758.5453123);
 }
 
-vec3 test()
+vec3 NrmAtPixel(vec2 pix)
 {
-	vec4 pos = vec4((uv.xy * 0.5) / (depth), uv.x, 1.0) * uv.y;
+	vec4 pos = vec4((pix.xy * 0.5) / (depth), pix.x, 1.0) * pix.y;
 	vec3 n = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz))) * 0.5 + 0.5;
 	return n;
 }
-vec3 Nrm = test();
+
+vec3 Nrm()
+{
+	return NrmAtPixel(uv);
+}
 
 vec3 ChannelMix(vec3 Input, vec3 rmix, vec3 gmix, vec3 bmix)
 {
@@ -155,23 +182,23 @@ vec3 Shade()
 	float size = 0.001;
 	float weight = 1.0;
 	float strength = 0.25;
-
-	for (float x = uv.x - size; x < uv.x + size; x++) 
+	for (float x = uv.x - size; x < uv.x + size; x += 0.01) 
 	{
-		for (float y = uv.y - size; y < uv.y + size; y++) 
+		for (float y = uv.y - size; y < uv.y + size; y += 0.01) 
 		{
-			if (DepthAtPixel(vec2(x,y)) > depth)
+			float d = DepthAtPixel(vec2(x,y));
+			if (d > depth)
 			{
 				weight -= strength;
 			}
 		}
 	}
-	return Color.rgb * weight;
-	//return vec3(weight);
+	//return Color.rgb * weight;
+	return vec3(weight);
 }
 
 void main () 
 {
-	outColor = vec4(Shade(), 1.0);
+	outColor = vec4(Color.rgb, 1.0);
 	//outColor = vec4(Color.rgb, 1);
 }

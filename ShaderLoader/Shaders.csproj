@@ -110,15 +110,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mods\ShaderLoader\assets\game\config\orthoshaderlist.json" />
-    <None Include="mods\ShaderLoader\assets\game\shaders\testshader.fsh" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="mods\ShaderLoader\assets\game\shaders\testshader.vsh" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="mods\ShaderLoader\assets\game\shaderincludes\" />
+    <Folder Include="mods\ShaderLoader\assets\game\shaders\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="RedirectLogs.cs" />
     <Compile Include="ShaderTest.cs" />
   </ItemGroup>
