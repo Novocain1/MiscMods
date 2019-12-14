@@ -190,9 +190,8 @@ namespace SwingingDoor
         ICoreAPI api;
         public Dictionary<AssetLocation, JObject> gltfs = new Dictionary<AssetLocation, JObject>();
         public List<IAsset> objs = new List<IAsset>();
-        public Dictionary<AssetLocation, MeshData> gltfmeshes = new Dictionary<AssetLocation, MeshData>();
-        public Dictionary<AssetLocation, MeshData> objmeshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
+
         public MeshRenderer testrenderer;
 
         public override void Start(ICoreAPI api)
@@ -205,15 +204,17 @@ namespace SwingingDoor
             api.Event.BlockTexturesLoaded += LoadRawMeshes;
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {
+
+                AssetLocation loc = new AssetLocation(a.PopWord());
                 BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
                 if (testrenderer != null)
                 {
                     api.Event.UnregisterRenderer(testrenderer, EnumRenderStage.Opaque);
                     testrenderer.Dispose();
                 }
-                if (pos != null)
+                if (pos != null && loc != null && meshes.TryGetValue(loc, out MeshData mesh))
                 {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), meshes.First().Value, new Vec3f());
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), mesh, new Vec3f());
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
                 }
             });
@@ -312,7 +313,7 @@ namespace SwingingDoor
 
                     mesh.Flags = packedNormals.ToArray();
                     mesh.Uv = packedUVs.ToArray();
-                    objmeshes.Add(val.Location, mesh);
+                    meshes.Add(val.Location, mesh);
                 }
             }
         }
