@@ -192,6 +192,7 @@ namespace SwingingDoor
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> gltfmeshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, MeshData> objmeshes = new Dictionary<AssetLocation, MeshData>();
+        public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
         public MeshRenderer testrenderer;
 
         public override void Start(ICoreAPI api)
@@ -212,7 +213,7 @@ namespace SwingingDoor
                 }
                 if (pos != null)
                 {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), objmeshes.First().Value);
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), meshes.First().Value, new Vec3f());
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
                 }
             });
@@ -226,6 +227,7 @@ namespace SwingingDoor
         private void LoadRawMeshes()
         {
             gltfs = api.World.AssetManager.GetMany<JObject>(api.World.Logger, "shapes/gltf");
+            meshes = api.World.AssetManager.GetMany<MeshData>(api.World.Logger, "shapes/meshdata");
             objs = api.World.AssetManager.GetMany("shapes/obj");
             ConvertObj();
         }
@@ -281,19 +283,35 @@ namespace SwingingDoor
                             }
                         }
                     }
+
+                    Queue<int> packedNormals = new Queue<int>();
+                    Queue<float> packedUVs = new Queue<float>();
+                    for (int i = normals.Count; i > 0; i--)
+                    {
+                        Vec3f nrm = normals.Dequeue();
+                        packedNormals.Enqueue(VertexFlags.NormalToPackedInt(nrm.X, nrm.Y, nrm.Z) << 15);
+                    }
+
+                    for (int i = vertexUvs.Count; i > 0; i--)
+                    {
+                        Vec2f uv = vertexUvs.Dequeue();
+                        packedUVs.Enqueue(uv.X);
+                        packedUVs.Enqueue(uv.Y);
+                    }
+
                     for (int i = vertices.Count; i > 0; i--)
                     {
                         Vec3f vec = vertices.Count > 0 ? vertices.Dequeue() : new Vec3f();
-                        Vec2f uv = vertexUvs.Count > 0 ? vertexUvs.Dequeue() : new Vec2f();
-                        Vec3f nrm = normals.Count > 0 ? normals.Dequeue() : new Vec3f();
-                        
-                        mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, uv.X, uv.Y, ColorUtil.WhiteArgb, 0, VertexFlags.NormalToPackedInt(nrm) << 15);
+                        mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, 0, 0);
                     }
 
                     for (int i = vertexIndices.Count; i > 0; i--)
                     {
                         mesh.AddIndex(vertexIndices.Dequeue() - 1);
                     }
+
+                    mesh.Flags = packedNormals.ToArray();
+                    mesh.Uv = packedUVs.ToArray();
                     objmeshes.Add(val.Location, mesh);
                 }
             }
@@ -309,6 +327,7 @@ namespace SwingingDoor
         public static AssetCategory gltf = new AssetCategory("gltf", false, EnumAppSide.Universal);
         public static AssetCategory obj = new AssetCategory("obj", false, EnumAppSide.Universal);
         public static AssetCategory mtl = new AssetCategory("mtl", false, EnumAppSide.Universal);
+        public static AssetCategory meshdata = new AssetCategory("meshdata", false, EnumAppSide.Universal);
 
     }
 
@@ -316,15 +335,17 @@ namespace SwingingDoor
     {
         private ICoreClientAPI capi;
         private BlockPos pos;
-        private MeshRef mesh;
+        private MeshRef meshRef;
         public Matrixf ModelMat = new Matrixf();
         public bool shouldRender;
+        Vec3f rotation;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, MeshData mesh)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, MeshData meshData, Vec3f rotation)
         {
             this.capi = capi;
             this.pos = pos;
-            this.mesh = capi.Render.UploadMesh(mesh);
+            this.rotation = rotation;
+            this.meshRef = capi.Render.UploadMesh(meshData);
         }
 
         public double RenderOrder => 0.5;
@@ -333,26 +354,28 @@ namespace SwingingDoor
 
         public void Dispose()
         {
-            mesh.Dispose();
+            meshRef.Dispose();
         }
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (mesh == null) return;
+            if (meshRef == null) return;
             IRenderAPI render = capi.Render;
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
             render.GlDisableCullFace();
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/stone/rock/chert1.png"));
+            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/stone/rock/bauxite1.png"));
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
                 .Translate(0.5, 0.5, 0.5)
+                .RotateDeg(rotation)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
-            capi.Render.RenderMesh(mesh);
+
+            capi.Render.RenderMesh(meshRef);
             prog.Stop();
         }
     }
