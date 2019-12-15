@@ -204,8 +204,8 @@ namespace SwingingDoor
             api.Event.BlockTexturesLoaded += LoadRawMeshes;
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {
-
-                AssetLocation loc = new AssetLocation(a.PopWord());
+                string l = a.PopWord();
+                AssetLocation loc = l != null ? new AssetLocation(l) : null;
                 BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
                 if (testrenderer != null)
                 {
@@ -340,6 +340,7 @@ namespace SwingingDoor
         public Matrixf ModelMat = new Matrixf();
         public bool shouldRender;
         Vec3f rotation;
+        float dRot;
 
         public MeshRenderer(ICoreClientAPI capi, BlockPos pos, MeshData meshData, Vec3f rotation)
         {
@@ -363,15 +364,16 @@ namespace SwingingDoor
             if (meshRef == null) return;
             IRenderAPI render = capi.Render;
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
-            render.GlDisableCullFace();
+            //render.GlDisableCullFace();
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/stone/rock/bauxite1.png"));
+            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/wood/debarked/oak.png"));
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
                 .Translate(0.5, 0.5, 0.5)
                 .RotateDeg(rotation)
+                //.RotateZDeg(dRot += deltaTime * 512)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
