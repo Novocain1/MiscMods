@@ -205,7 +205,7 @@ namespace SwingingDoor
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {
                 string l = a.PopWord();
-                AssetLocation loc = l != null ? new AssetLocation(l) : null;
+                AssetLocation loc = l != null ? new AssetLocation(l) : new AssetLocation("game:shapes/obj/mesh.obj");
                 BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
                 if (testrenderer != null)
                 {
@@ -299,10 +299,10 @@ namespace SwingingDoor
                         packedUVs.Enqueue(uv.X);
                         packedUVs.Enqueue(uv.Y);
                     }
-
+                    
                     for (int i = vertices.Count; i > 0; i--)
                     {
-                        Vec3f vec = vertices.Count > 0 ? vertices.Dequeue() : new Vec3f();
+                        Vec3f vec = vertices.Dequeue();
                         mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, 0, 0);
                     }
 
@@ -328,8 +328,8 @@ namespace SwingingDoor
         public static AssetCategory gltf = new AssetCategory("gltf", false, EnumAppSide.Universal);
         public static AssetCategory obj = new AssetCategory("obj", false, EnumAppSide.Universal);
         public static AssetCategory mtl = new AssetCategory("mtl", false, EnumAppSide.Universal);
+        public static AssetCategory ply = new AssetCategory("ply", false, EnumAppSide.Universal);
         public static AssetCategory meshdata = new AssetCategory("meshdata", false, EnumAppSide.Universal);
-
     }
 
     public class MeshRenderer : IRenderer

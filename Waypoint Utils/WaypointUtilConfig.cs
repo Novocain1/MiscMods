@@ -23,9 +23,14 @@ namespace VSHUD
         public int MinLLID { get; set; } = 128;
         public float LightLevelAlpha { get; set; } = 0.8f;
         public int LightLevelRed { get; set; } = 8;
+
         public bool LUShowAbove { get; set; } = true;
         public bool LUSpawning { get; set; } = true;
         public bool LUOpaque { get; set; } = true;
+
+        public bool PRShow { get; set; } = true;
+        public bool PRTex { get; set; } = true;
+
         public List<int> DisabledColors { get; set; } = new List<int>();
     }
 
