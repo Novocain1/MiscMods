@@ -28,7 +28,7 @@ namespace VSHUD
                     case "enabled":
                         config.PRShow = !config.PRShow;
                         break;
-                    case "textured":
+                    case "tinted":
                         config.PRTex = !config.PRTex;
                         break;
                     default:
@@ -36,6 +36,7 @@ namespace VSHUD
                 }
                 api.ModLoader.GetModSystem<ConfigLoader>().SaveConfig();
             });
+            api.Event.LevelFinalize += () => api.Shader.ReloadShaders();
         }
     }
 
@@ -49,8 +50,10 @@ namespace VSHUD
         Vec3d camPos { get => player?.Entity.CameraPos; }
         WaypointUtilConfig config { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config; }
         MeshRef mRef;
+        string lastCode;
         IRenderAPI rpi;
         public Matrixf ModelMat = new Matrixf();
+        Block toBlock;
 
         public PlacementPreviewHelper ph;
 
@@ -62,13 +65,20 @@ namespace VSHUD
             capi.Event.RegisterGameTickListener(dt =>
             {
                 if (invBlock == null || pos == null) return;
-                UpdateBlockMesh(ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection));
+                toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
+                if (toBlock?.Code?.ToString() != lastCode)
+                {
+                    UpdateBlockMesh(toBlock);
+                    lastCode = toBlock?.Code?.ToString();
+                }
             }, 30);
         }
 
-        public void UpdateBlockMesh(Block block)
+        public void UpdateBlockMesh(Block toBlock)
         {
-            capi.Tesselator.TesselateBlock(block, out MeshData mesh);
+            if (toBlock == null) return;
+            capi.Tesselator.TesselateBlock(toBlock, out MeshData mesh);
+            mesh.AddTintIndex(toBlock.TintIndex);
             if (mRef != null) mRef.Dispose();
             mRef = rpi.UploadMesh(mesh);
         }
@@ -84,7 +94,7 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (invBlock == null || pos == null || mRef == null || !config.PRShow) return;
+            if (invBlock == null || toBlock == null || pos == null || mRef == null || !config.PRShow) return;
             BlockPos adjPos = pos.Copy();
             switch (playerSelection.Face.Code)
             {
@@ -123,8 +133,11 @@ namespace VSHUD
             prog.RgbaTint = new Vec4f(1, 1, 1, 0.5f);
             if (!config.PRTex)
             {
-                prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/green.png"));
+                prog.Tex2dOverlay2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/blue.png"));
+                prog.OverlayOpacity = 0.5f;
             }
+            prog.ExtraGlow = 255 / 2;
+            
             rpi.RenderMesh(mRef);
             prog.Stop();
         }

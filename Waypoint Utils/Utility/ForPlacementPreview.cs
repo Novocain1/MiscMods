@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
@@ -18,6 +19,8 @@ namespace VSHUD
         private OmniAttatchablePlacement omniAttatchablePlacement;
         private HorizontalAttachablePlacement horizontalAttachablePlacement;
         private HorizontalOrientablePlacement horizontalOrientablePlacement;
+        private LadderPlacement ladderPlacement;
+        private PillarPlacement pillarPlacement;
 
         public PlacementPreviewHelper()
         {
@@ -27,57 +30,53 @@ namespace VSHUD
             omniAttatchablePlacement = new OmniAttatchablePlacement();
             horizontalAttachablePlacement = new HorizontalAttachablePlacement();
             horizontalOrientablePlacement = new HorizontalOrientablePlacement();
+            ladderPlacement = new LadderPlacement();
+            pillarPlacement = new PillarPlacement();
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
         {
             if (invBlock is BlockStairs)
             {
-                stairsPlacement.Stairs = (BlockStairs)invBlock;
-                if (stairsPlacement.TryGetPlacedBlock(world, byPlayer, blockSel, out Block block))
+                if (stairsPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block))
                 {
                     return block;
                 }
             }
             else if (invBlock is BlockFence)
             {
-                fencePlacement.Fence = (BlockFence)invBlock;
-                fencePlacement.GetPlacedBlock(world, byPlayer, blockSel, out Block block);
+                fencePlacement.GetPlacedBlock(world, invBlock, blockSel, out Block block);
                 return block;
+            }
+            else if (invBlock.HasBehavior<BlockBehaviorPillar>())
+            {
+                if (pillarPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             else if (invBlock.HasBehavior<BlockBehaviorOmniAttachable>())
             {
-                omniAttatchablePlacement.block = invBlock;
-                omniAttatchablePlacement.UpdateProps();
-                if (omniAttatchablePlacement.TryGetPlacedBlock(world, blockSel, out Block block))
-                {
-                    return block;
-                }
+                if (omniAttatchablePlacement.TryGetPlacedBlock(world, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             else if (invBlock.HasBehavior<BlockBehaviorHorizontalAttachable>())
             {
-                horizontalAttachablePlacement.block = invBlock;
-                if (horizontalAttachablePlacement.TryGetPlacedBlock(world, blockSel, out Block block))
-                {
-                    return block;
-                }
+                if (horizontalAttachablePlacement.TryGetPlacedBlock(world, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             else if (invBlock.HasBehavior<BlockBehaviorHorizontalOrientable>())
             {
-                horizontalOrientablePlacement.block = invBlock;
-                if (horizontalOrientablePlacement.TryGetPlacedBlock(world, byPlayer, blockSel, out Block block))
-                {
-                    return block;
-                }
+                if (horizontalOrientablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
+            }
+            else if (invBlock.HasBehavior<BlockBehaviorLadder>())
+            {
+                if (ladderPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             else if (invBlock.BlockBehaviors.Any(b => b.ToString() == "Vintagestory.ServerMods.BlockBehaviorOmniRotatable"))
             {
-                omniRotatablePlacement.block = invBlock;
-                omniRotatablePlacement.UpdateProps();
-                if (omniRotatablePlacement.TryGetPlacedBlock(world, byPlayer, blockSel, out Block block))
-                {
-                    return block;
-                }
+                if (omniRotatablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             return invBlock;
         }
@@ -86,10 +85,11 @@ namespace VSHUD
     public class StairsPlacement
     {
         bool hasDownVariant { get => !(Stairs.Attributes?["noDownVariant"].AsBool() ?? false); }
-        public BlockStairs Stairs { get; set; }
+        public Block Stairs { get; set; }
 
-        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, out Block block)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block outBlock)
         {
+            Stairs = block;
             BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
 
             if (blockSel.Face.IsVertical)
@@ -102,8 +102,8 @@ namespace VSHUD
             }
 
             AssetLocation blockCode = Stairs.CodeWithParts(horVer[1].Code, horVer[0].Code);
-            block = world.BlockAccessor.GetBlock(blockCode);
-            if (block == null) return false;
+            outBlock = world.BlockAccessor.GetBlock(blockCode);
+            if (outBlock == null) return false;
 
             return true;
         }
@@ -111,14 +111,13 @@ namespace VSHUD
 
     public class OmniRotatablePlacement
     {
-        public Block block { get; set; }
         private bool rotateH = false;
         private bool rotateV = false;
         private bool rotateV4 = false;
         private string facing = "player";
         private bool rotateSides = false;
 
-        public void UpdateProps()
+        public void UpdateProps(Block block)
         {
             foreach (var bh in block.BlockBehaviors)
             {
@@ -134,8 +133,9 @@ namespace VSHUD
             }
         }
 
-        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, out Block orientedBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
+            UpdateProps(block);
             AssetLocation blockCode = null;
             if (rotateSides)
             {
@@ -274,7 +274,7 @@ namespace VSHUD
 
             if (blockCode == null)
             {
-                blockCode = this.block.Code;
+                blockCode = block.Code;
             }
 
             orientedBlock = world.BlockAccessor.GetBlock(blockCode);
@@ -285,15 +285,13 @@ namespace VSHUD
 
     public class FencePlacement
     {
-        public BlockFence Fence { get; set; }
-
-        public string GetOrientations(IWorldAccessor world, BlockPos pos)
+        public string GetOrientations(IWorldAccessor world, Block block, BlockPos pos)
         {
             string orientations =
-                GetFenceCode(world, pos, BlockFacing.NORTH) +
-                GetFenceCode(world, pos, BlockFacing.EAST) +
-                GetFenceCode(world, pos, BlockFacing.SOUTH) +
-                GetFenceCode(world, pos, BlockFacing.WEST)
+                GetFenceCode(world, block, pos, BlockFacing.NORTH) +
+                GetFenceCode(world, block, pos, BlockFacing.EAST) +
+                GetFenceCode(world, block, pos, BlockFacing.SOUTH) +
+                GetFenceCode(world, block, pos, BlockFacing.WEST)
             ;
 
             if (orientations.Length == 0) orientations = "empty";
@@ -301,21 +299,21 @@ namespace VSHUD
             return orientations;
         }
 
-        private string GetFenceCode(IWorldAccessor world, BlockPos pos, BlockFacing facing)
+        private string GetFenceCode(IWorldAccessor world, Block block, BlockPos pos, BlockFacing facing)
         {
-            if (ShouldConnectAt(world, pos, facing)) return "" + facing.Code[0];
+            if (ShouldConnectAt(world, block, pos, facing)) return "" + facing.Code[0];
 
             return "";
         }
 
-        public void GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, out Block block)
+        public void GetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
         {
-            string orientations = GetOrientations(world, blockSel.Position);
-            block = world.BlockAccessor.GetBlock(Fence.CodeWithParts(orientations));
-            if (block == null) block = Fence;
+            string orientations = GetOrientations(world, block, blockSel.Position);
+            outBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(orientations));
+            if (block == null) outBlock = block;
         }
 
-        public bool ShouldConnectAt(IWorldAccessor world, BlockPos ownPos, BlockFacing side)
+        public bool ShouldConnectAt(IWorldAccessor world, Block fenceblock, BlockPos ownPos, BlockFacing side)
         {
             Block block = world.BlockAccessor.GetBlock(ownPos.AddCopy(side));
 
@@ -326,7 +324,7 @@ namespace VSHUD
             }
 
             return
-                (block.FirstCodePart() == Fence.FirstCodePart() || block.FirstCodePart() == Fence.FirstCodePart() + "gate")
+                (block.FirstCodePart() == fenceblock.FirstCodePart() || block.FirstCodePart() == fenceblock.FirstCodePart() + "gate")
                 || block.SideSolid[side.GetOpposite().Index];
             ;
         }
@@ -335,16 +333,16 @@ namespace VSHUD
     public class OmniAttatchablePlacement
     {
         public string facingCode = "orientation";
-        public Block block { get; set; }
 
-        public void UpdateProps()
+        public void UpdateProps(Block block)
         {
             facingCode = block.GetBehavior<BlockBehaviorOmniAttachable>().properties["facingCode"].AsString("orientation");
         }
 
-        public bool TryGetPlacedBlock(IWorldAccessor world, BlockSelection blockSel, out Block orientatedBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block orientatedBlock)
         {
-            if (TryAttachTo(world, blockSel.Position, blockSel.Face, out Block block1))
+            UpdateProps(block);
+            if (TryAttachTo(world, block, blockSel.Position, blockSel.Face, out Block block1))
             {
                 orientatedBlock = block1;
                 return true;
@@ -353,7 +351,7 @@ namespace VSHUD
             BlockFacing[] faces = BlockFacing.ALLFACES;
             for (int i = 0; i < faces.Length; i++)
             {
-                if (TryAttachTo(world, blockSel.Position, faces[i], out Block block2))
+                if (TryAttachTo(world, block, blockSel.Position, faces[i], out Block block2))
                 {
                     orientatedBlock = block2;
                     return true;
@@ -363,7 +361,7 @@ namespace VSHUD
             return false;
         }
 
-        bool TryAttachTo(IWorldAccessor world, BlockPos blockpos, BlockFacing onBlockFace, out Block orientedBlock)
+        bool TryAttachTo(IWorldAccessor world, Block block, BlockPos blockpos, BlockFacing onBlockFace, out Block orientedBlock)
         {
             orientedBlock = null;
             BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
@@ -382,14 +380,12 @@ namespace VSHUD
 
     public class HorizontalAttachablePlacement
     {
-        public Block block { get; set; }
-
-        public bool TryGetPlacedBlock(IWorldAccessor world, BlockSelection blockSel, out Block outBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
         {
             // Prefer selected block face
             if (blockSel.Face.IsHorizontal)
             {
-                if (TryAttachTo(world, blockSel, out Block orientedBlock))
+                if (TryAttachTo(world, block, blockSel, out Block orientedBlock))
                 {
                     outBlock = orientedBlock;
                     return true;
@@ -402,7 +398,7 @@ namespace VSHUD
             for (int i = 0; i < faces.Length; i++)
             {
                 blockSel.Face = faces[i];
-                if (TryAttachTo(world, blockSel, out Block orientedBlock))
+                if (TryAttachTo(world, block, blockSel, out Block orientedBlock))
                 {
                     outBlock = orientedBlock;
                     return true;
@@ -413,7 +409,7 @@ namespace VSHUD
         }
 
 
-        bool TryAttachTo(IWorldAccessor world, BlockSelection blockSel, out Block orientedBlock)
+        bool TryAttachTo(IWorldAccessor world, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
             BlockFacing oppositeFace = blockSel.Face.GetOpposite();
             orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(oppositeFace.Code));
@@ -424,13 +420,115 @@ namespace VSHUD
 
     public class HorizontalOrientablePlacement
     {
-        public Block block { get; set; }
-
-        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, out Block orientedBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
             BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
             AssetLocation blockCode = block.CodeWithParts(horVer[0].Code);
             orientedBlock = world.BlockAccessor.GetBlock(blockCode);
+
+            return orientedBlock != null;
+        }
+    }
+
+    public class LadderPlacement
+    {
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
+        {
+            BlockPos pos = blockSel.Position;
+
+            BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
+            AssetLocation blockCode = block.CodeWithParts(horVer[0].Code);
+
+            orientedBlock = world.BlockAccessor.GetBlock(blockCode);
+            // Otherwise place if we have support for it
+            if (HasSupport(orientedBlock, world.BlockAccessor, pos)) return true;
+
+
+            // Otherwise maybe on the other side?
+            blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+            orientedBlock = world.BlockAccessor.GetBlock(blockCode);
+            if (orientedBlock != null && HasSupport(orientedBlock, world.BlockAccessor, pos))  return true;
+
+            return false;
+        }
+
+        public bool HasSupportUp(Block forBlock, IBlockAccessor blockAccess, BlockPos pos)
+        {
+            BlockFacing ownFacing = BlockFacing.FromCode(forBlock.LastCodePart());
+
+            BlockPos upPos = pos.UpCopy();
+
+            return
+                SideSolid(blockAccess, pos, ownFacing)
+                || SideSolid(blockAccess, upPos, BlockFacing.UP)
+                || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos))
+            ;
+        }
+
+
+        public bool HasSupportDown(Block forBlock, IBlockAccessor blockAccess, BlockPos pos)
+        {
+            BlockFacing ownFacing = BlockFacing.FromCode(forBlock.LastCodePart());
+
+            BlockPos downPos = pos.DownCopy();
+
+            return
+                SideSolid(blockAccess, pos, ownFacing)
+                || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
+                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos))
+            ;
+        }
+
+        public bool HasSupport(Block forBlock, IBlockAccessor blockAccess, BlockPos pos)
+        {
+            BlockFacing ownFacing = BlockFacing.FromCode(forBlock.LastCodePart());
+
+            BlockPos downPos = pos.DownCopy();
+            BlockPos upPos = pos.UpCopy();
+
+            return
+                SideSolid(blockAccess, pos, ownFacing)
+                || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
+                || SideSolid(blockAccess, upPos, BlockFacing.UP)
+                || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos))
+                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos))
+            ;
+        }
+
+        public bool SideSolid(IBlockAccessor blockAccess, BlockPos pos, BlockFacing facing)
+        {
+            return blockAccess.GetBlock(pos.X + facing.Normali.X, pos.Y, pos.Z + facing.Normali.Z).SideSolid[facing.GetOpposite().Index];
+        }
+    }
+
+    public class PillarPlacement
+    {
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
+        {
+            bool invertedPlacement = block.GetBehavior<BlockBehaviorPillar>().properties["invertedPlacement"].AsBool(false);
+            string rotation = null;
+            switch (blockSel.Face.Axis)
+            {
+                case EnumAxis.X: rotation = "we"; break;
+                case EnumAxis.Y: rotation = "ud"; break;
+                case EnumAxis.Z: rotation = "ns"; break;
+            }
+
+            if (invertedPlacement)
+            {
+                BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
+
+                if (blockSel.Face.IsVertical)
+                {
+                    rotation = horVer[0].Axis == EnumAxis.X ? "we" : "ns";
+                }
+                else
+                {
+                    rotation = "ud";
+                }
+            }
+
+            orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(rotation));
 
             return orientedBlock != null;
         }
