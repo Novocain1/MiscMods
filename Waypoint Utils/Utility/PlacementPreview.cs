@@ -7,8 +7,10 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
 using Vintagestory.GameContent;
+using Vintagestory.ServerMods;
 
 namespace VSHUD
 {
@@ -44,13 +46,16 @@ namespace VSHUD
     {
         ICoreClientAPI capi;
         IClientPlayer player { get => capi?.World?.Player; }
-        Block invBlock { get => player?.InventoryManager?.ActiveHotbarSlot?.Itemstack?.Block; }
+        ItemStack invStack { get => player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;  }
+        Block invBlock { get => invStack?.Block; }
         BlockSelection playerSelection { get => player?.CurrentBlockSelection; }
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
         WaypointUtilConfig config { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config; }
+        ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
+        bool shouldDispose = true;
+
         MeshRef mRef;
-        string lastCode;
         IRenderAPI rpi;
         public Matrixf ModelMat = new Matrixf();
         Block toBlock;
@@ -62,24 +67,28 @@ namespace VSHUD
             this.capi = capi;
             rpi = capi.Render;
             ph = new PlacementPreviewHelper();
-            capi.Event.RegisterGameTickListener(dt =>
-            {
-                if (invBlock == null || pos == null) return;
-                toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
-                if (toBlock?.Code?.ToString() != lastCode)
-                {
-                    UpdateBlockMesh(toBlock);
-                    lastCode = toBlock?.Code?.ToString();
-                }
-            }, 30);
         }
 
-        public void UpdateBlockMesh(Block toBlock)
+        public void UpdateBlockMesh(Block toBlock, BlockPos altPos)
         {
             if (toBlock == null) return;
-            capi.Tesselator.TesselateBlock(toBlock, out MeshData mesh);
+            MeshData mesh;
+            if (toBlock is BlockChisel && (mRef = capi.ModLoader.GetModSystem<ChiselBlockModelCache>().GetOrCreateMeshRef(invStack)) != null)
+            {
+                shouldDispose = false;
+                return;
+            }
+            else if (toBlock.HasAlternates)
+            {
+                long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ?
+                    GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, tesselatormanager.altblockModelDatas[toBlock.Id].Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, tesselatormanager.altblockModelDatas[toBlock.Id].Length);
+                mesh = tesselatormanager.altblockModelDatas[toBlock.Id][alternateIndex];
+            }
+            else mesh = tesselatormanager.blockModelDatas[toBlock.Id];
+
             mesh.AddTintIndex(toBlock.TintIndex);
-            if (mRef != null) mRef.Dispose();
+            if (mRef != null && shouldDispose) mRef.Dispose();
+            shouldDispose = true;
             mRef = rpi.UploadMesh(mesh);
         }
 
@@ -92,40 +101,37 @@ namespace VSHUD
             mRef?.Dispose();
         }
 
+        public bool SneakCheck
+        {
+            get =>
+                (
+                invBlock?.HasBehavior<BlockBehaviorRightClickPickup>() ?? false ||
+                invBlock is BlockMeal ||
+                invBlock is BlockBucket
+                )
+                && !player.Entity.Controls.Sneak;
+        }
+
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (invBlock == null || toBlock == null || pos == null || mRef == null || !config.PRShow) return;
-            BlockPos adjPos = pos.Copy();
-            switch (playerSelection.Face.Code)
-            {
-                case "up":
-                    adjPos.Up();
-                    break;
-                case "down":
-                    adjPos.Down();
-                    break;
-                case "north":
-                    adjPos.West();
-                    break;
-                case "south":
-                    adjPos.East();
-                    break;
-                case "east":
-                    adjPos.North();
-                    break;
-                case "west":
-                    adjPos.South();
-                    break;
-                default:
-                    break;
-            }
+            if (invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
+            toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
+            if (toBlock == null) return;
+            BlockPos adjPos = playerSelection.GetRecommendedPos(capi, toBlock);
+
+            UpdateBlockMesh(toBlock, adjPos);
+            if (mRef == null) return;
+            
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
+            if (toBlock is BlockPlant) rpi.GlDisableCullFace();
+            Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);
             prog.ModelMatrix = ModelMat
                 .Identity()
                 .Translate(adjPos.X - camPos.X, adjPos.Y - camPos.Y, adjPos.Z - camPos.Z)
+                .Translate(offset.X, 0, offset.Y)
                 .Values;
             
             prog.ViewMatrix = rpi.CameraMatrixOriginf;

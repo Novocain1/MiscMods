@@ -273,5 +273,49 @@ namespace VSHUD
                 capi.BlockTextureAtlas.GetPosition(collectible.Code.GetBlock(capi), direction);
         }
         public static double DistanceTo(this Vec3d start, Vec3d end) => Math.Sqrt(start.SquareDistanceTo(end));
+
+        public static BlockPos GetRecommendedPos(this BlockSelection sel, ICoreAPI api, Block block)
+        {
+            BlockPos adjPos = sel.Position.Copy();
+            if (!api.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(block))
+            {
+                switch (sel.Face.Code)
+                {
+                    case "up":
+                        adjPos.Up();
+                        break;
+                    case "down":
+                        adjPos.Down();
+                        break;
+                    case "north":
+                        adjPos.West();
+                        break;
+                    case "south":
+                        adjPos.East();
+                        break;
+                    case "east":
+                        adjPos.North();
+                        break;
+                    case "west":
+                        adjPos.South();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return adjPos;
+        }
+
+        public static Vec2f GetOffset(this BlockPos pos, Block block)
+        {
+            float offX = 0, offZ = 0;
+
+            if (block.RandomDrawOffset)
+            {
+                offX = (GameMath.oaatHash(pos.X, 0, pos.Z) % 12) / 36f;
+                offZ = (GameMath.oaatHash(pos.X, 1, pos.Z) % 12) / 36f;
+            }
+            return new Vec2f(offX, offZ);
+        }
     }
 }

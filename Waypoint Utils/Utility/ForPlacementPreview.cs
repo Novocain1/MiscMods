@@ -21,6 +21,7 @@ namespace VSHUD
         private HorizontalOrientablePlacement horizontalOrientablePlacement;
         private LadderPlacement ladderPlacement;
         private PillarPlacement pillarPlacement;
+        private TorchPlacement torchPlacement;
 
         public PlacementPreviewHelper()
         {
@@ -32,6 +33,7 @@ namespace VSHUD
             horizontalOrientablePlacement = new HorizontalOrientablePlacement();
             ladderPlacement = new LadderPlacement();
             pillarPlacement = new PillarPlacement();
+            torchPlacement = new TorchPlacement();
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
@@ -47,6 +49,11 @@ namespace VSHUD
             {
                 fencePlacement.GetPlacedBlock(world, invBlock, blockSel, out Block block);
                 return block;
+            }
+            else if (invBlock is BlockTorch)
+            {
+                if (torchPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
             }
             else if (invBlock.HasBehavior<BlockBehaviorPillar>())
             {
@@ -531,6 +538,55 @@ namespace VSHUD
             orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(rotation));
 
             return orientedBlock != null;
+        }
+    }
+
+    public class TorchPlacement
+    {
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block ownBlock, BlockSelection blockSel, out Block outBlock)
+        {
+            outBlock = null;
+            BlockPos ajdPos = blockSel.GetRecommendedPos(world.Api, ownBlock);
+
+            if (byPlayer.Entity.Controls.Sneak)
+            {
+                return false;
+            }
+
+            // Prefer selected block face
+            if (blockSel.Face.IsHorizontal || blockSel.Face == BlockFacing.UP)
+            {
+                if (TryAttachTo(world, ownBlock, ajdPos, blockSel.Face, out outBlock)) return true;
+            }
+
+            // Otherwise attach to any possible face
+
+            BlockFacing[] faces = BlockFacing.ALLFACES;
+            for (int i = 0; i < faces.Length; i++)
+            {
+                if (faces[i] == BlockFacing.DOWN) continue;
+
+                if (TryAttachTo(world, ownBlock, ajdPos, faces[i], out outBlock)) return true;
+            }
+
+            return false;
+        }
+
+        bool TryAttachTo(IWorldAccessor world, Block ownBlock, BlockPos blockpos, BlockFacing onBlockFace, out Block outBlock)
+        {
+            outBlock = null;
+
+            BlockFacing onFace = onBlockFace;
+
+            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
+            Block block = world.BlockAccessor.GetBlock(world.BlockAccessor.GetBlockId(attachingBlockPos));
+
+            if (block.CanAttachBlockAt(world.BlockAccessor, block, attachingBlockPos, onFace))
+            {
+                outBlock = world.BlockAccessor.GetBlock(ownBlock.CodeWithParts(onBlockFace.Code));
+            }
+
+            return outBlock != null;
         }
     }
 }
