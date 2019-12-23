@@ -29,7 +29,7 @@ namespace VSHUD
         public bool LUOpaque { get; set; } = true;
 
         public bool PRShow { get; set; } = true;
-        public bool PRTex { get; set; } = true;
+        public bool PRTint { get; set; } = false;
 
         public List<int> DisabledColors { get; set; } = new List<int>();
     }

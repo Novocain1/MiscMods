@@ -25,13 +25,16 @@ namespace VSHUD
             {
                 WaypointUtilConfig config = api.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
                 string arg = args.PopWord();
+                bool? enabled = args.PopBool();
                 switch (arg)
                 {
                     case "enabled":
-                        config.PRShow = !config.PRShow;
+                        config.PRShow = enabled ?? !config.PRShow;
+                        api.ShowChatMessage("Block preview set to " + config.PRShow);
                         break;
                     case "tinted":
-                        config.PRTex = !config.PRTex;
+                        config.PRTint = enabled ?? !config.PRTint;
+                        api.ShowChatMessage("Block preview tinting set to " + config.PRTint);
                         break;
                     default:
                         break;
@@ -73,8 +76,23 @@ namespace VSHUD
         {
             if (toBlock == null) return;
             MeshData mesh;
-            if (toBlock is BlockChisel && (mRef = capi.ModLoader.GetModSystem<ChiselBlockModelCache>().GetOrCreateMeshRef(invStack)) != null)
+            MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
+
+            if (toBlock is BlockMeal)
             {
+                mRef = meshCache.GetOrCreateMealInContainerMeshRef(toBlock, ((BlockMeal)toBlock).GetCookingRecipe(capi.World, invStack), ((BlockMeal)toBlock).GetNonEmptyContents(capi.World, invStack));
+                shouldDispose = false;
+                return;
+            }
+            else if (toBlock is BlockCookedContainer)
+            {
+                mRef = meshCache.GetOrCreateMealInContainerMeshRef(toBlock, ((BlockCookedContainer)toBlock).GetCookingRecipe(capi.World, invStack), ((BlockCookedContainer)toBlock).GetNonEmptyContents(capi.World, invStack), new Vec3f(0.0f, 2.5f / 16f, 0.0f));
+                shouldDispose = false;
+                return;
+            }
+            else if (toBlock is BlockChisel)
+            {
+                mRef = capi.ModLoader.GetModSystem<ChiselBlockModelCache>().GetOrCreateMeshRef(invStack);
                 shouldDispose = false;
                 return;
             }
@@ -105,7 +123,7 @@ namespace VSHUD
         {
             get =>
                 (
-                invBlock?.HasBehavior<BlockBehaviorRightClickPickup>() ?? false ||
+                (invBlock?.HasBehavior<BlockBehaviorRightClickPickup>() ?? false) ||
                 invBlock is BlockMeal ||
                 invBlock is BlockBucket
                 )
@@ -137,7 +155,7 @@ namespace VSHUD
             prog.ViewMatrix = rpi.CameraMatrixOriginf;
             prog.ProjectionMatrix = rpi.CurrentProjectionMatrix;
             prog.RgbaTint = new Vec4f(1, 1, 1, 0.5f);
-            if (!config.PRTex)
+            if (!config.PRTint)
             {
                 prog.Tex2dOverlay2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/blue.png"));
                 prog.OverlayOpacity = 0.5f;
