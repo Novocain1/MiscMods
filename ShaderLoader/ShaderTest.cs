@@ -16,13 +16,12 @@ namespace ShaderTestMod
 {
     public class ShaderTest : ModSystem
     {
+        public ScreenSpaceRenderer renderer;
         public ICoreClientAPI capi;
-        OrthoRenderer[] orthoRenderers;
         public float[] controls;
         public Vec3f[] vec3s;
         public float[] floats;
         ITreeAttribute healthTree;
-        long id;
 
         public string[] orthoShaderKeys;
 
@@ -30,14 +29,7 @@ namespace ShaderTestMod
         {
             capi = api;
 
-            id = api.Event.RegisterGameTickListener(dt =>
-            {
-                if (capi.World.Player?.Entity != null)
-                {
-                    StartShade(capi.World.Player);
-                    api.Event.UnregisterGameTickListener(id);
-                }
-            }, 500);
+            api.Event.LevelFinalize += () => { capi.Shader.ReloadShaders();  StartShade(capi.World.Player); };
         }
 
         public void StartShade(IPlayer player)
@@ -57,38 +49,30 @@ namespace ShaderTestMod
 
             capi.Event.ReloadShader += LoadShaders;
             LoadShaders();
-            if (orthoRenderers == null) return;
-
-            for (int i = 0; i < orthoRenderers.Length; i++)
-            {
-                capi.Event.RegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho, orthoShaderKeys[i]);
-            }
         }
 
         public bool LoadShaders()
         {
-            List<OrthoRenderer> rendererers = new List<OrthoRenderer>();
+            if (renderer != null)
+            {
+                capi.Event.UnregisterRenderer(renderer, EnumRenderStage.Ortho);
+                renderer.Dispose();
+            }
+
+            List<IShaderProgram> shaders = new List<IShaderProgram>();
             orthoShaderKeys = capi.Assets.TryGet("config/orthoshaderlist.json")?.ToObject<string[]>();
             if (orthoShaderKeys == null) return false;
 
-            for (int i = 0; i < orthoShaderKeys.Length; i++)
+            foreach (var val in orthoShaderKeys)
             {
                 IShaderProgram shader = capi.Shader.NewShaderProgram();
-                int program = capi.Shader.RegisterFileShaderProgram(orthoShaderKeys[i], shader);
+                int program = capi.Shader.RegisterFileShaderProgram(val, shader);
                 shader = capi.Render.GetShader(program);
                 shader.Compile();
-
-                OrthoRenderer renderer = new OrthoRenderer(capi, shader);
-
-                if (orthoRenderers != null)
-                {
-                    orthoRenderers[i].prog = shader;
-                    capi.Event.ReRegisterRenderer(orthoRenderers[i], EnumRenderStage.Ortho);
-                }
-                rendererers.Add(renderer);
+                shaders.Add(shader);
             }
-            orthoRenderers = rendererers.ToArray();
-
+            renderer = new ScreenSpaceRenderer(capi, shaders);
+            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Ortho);
             return true;
         }
 
@@ -138,7 +122,6 @@ namespace ShaderTestMod
         public Vec3f[] GetVec3s()
         {
             IPlayer player = capi.World.Player;
-            BlockPos pos = capi.World.Player.Entity.Pos.AsBlockPos;
             BlockPos lPos = player.CurrentBlockSelection != null ? player.CurrentBlockSelection.Position : new BlockPos(0, -1, 0);
             return new Vec3f[]
             {
@@ -151,11 +134,11 @@ namespace ShaderTestMod
         }
     }
 
-    public class OrthoRenderer : IRenderer
+    public class ScreenSpaceRenderer : IRenderer
     {
         MeshRef quadRef;
         ICoreClientAPI capi;
-        public IShaderProgram prog;
+        public List<IShaderProgram> progs;
 
         public Matrixf ModelMat = new Matrixf();
 
@@ -163,9 +146,9 @@ namespace ShaderTestMod
 
         public int RenderRange => 1000;
 
-        public OrthoRenderer(ICoreClientAPI api, IShaderProgram prog)
+        public ScreenSpaceRenderer(ICoreClientAPI api, List<IShaderProgram> progs)
         {
-            this.prog = prog;
+            this.progs = progs;
             capi = api;
             MeshData quadMesh = QuadMeshUtil.GetQuad();
             quadMesh.Rgba = null;
@@ -174,27 +157,30 @@ namespace ShaderTestMod
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (prog.Disposed) return;
-            IShaderProgram curShader = capi.Render.CurrentActiveShader;
-            curShader?.Stop();
-            prog.Use();
-
             capi.Render.GlToggleBlend(true);
-            prog.SetDefaultUniforms(capi);
-            prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
-            prog.BindTexture2D("iColor", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[0], 1);
-            prog.BindTexture2D("iLight", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[1], 2);
-            prog.BindTexture2D("iGodrays", capi.Render.FrameBuffers[(int)EnumFrameBuffer.GodRays].ColorTextureIds[0], 3);
-            prog.BindTexture2D("iShadowMapNear", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapNear].DepthTextureId, 4);
-            prog.BindTexture2D("iShadowMapFar", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapFar].DepthTextureId, 5);
+            IShaderProgram curShader = capi.Render.CurrentActiveShader;
 
-            capi.Render.RenderMesh(quadRef);
-            prog.Stop();
+            curShader?.Stop();
+            foreach (var prog in progs)
+            {
+                if (prog.Disposed) continue;
+                prog.Use();
+                prog.SetDefaultUniforms(capi);
+                prog.BindTexture2D("iDepthBuffer", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].DepthTextureId, 0);
+                prog.BindTexture2D("iColor", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[0], 1);
+                prog.BindTexture2D("iLight", capi.Render.FrameBuffers[(int)EnumFrameBuffer.Primary].ColorTextureIds[1], 2);
+                prog.BindTexture2D("iGodrays", capi.Render.FrameBuffers[(int)EnumFrameBuffer.GodRays].ColorTextureIds[0], 3);
+                prog.BindTexture2D("iShadowMapNear", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapNear].DepthTextureId, 4);
+                prog.BindTexture2D("iShadowMapFar", capi.Render.FrameBuffers[(int)EnumFrameBuffer.ShadowmapFar].DepthTextureId, 5);
+                capi.Render.RenderMesh(quadRef);
+                prog.Stop();
+            }
             curShader?.Use();
         }
 
         public void Dispose()
         {
+            quadRef.Dispose();
         }
     }
 

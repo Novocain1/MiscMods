@@ -197,6 +197,23 @@ vec3 Shade()
 	return vec3(weight);
 }
 
+vec3 Shade2() 
+{
+	float size = 0.001;
+	vec3 weight = vec3(1);
+	float strength = 0.05;
+	for (float x = uv.x - size; x < uv.x + size; x += 0.001) 
+	{
+		for (float y = uv.y - size; y < uv.y + size; y += 0.001) 
+		{
+			vec3 d = ColorAtPixel(vec2(x,y)).rgb;
+			if (d.r != Color.r) weight.rgb -= strength;
+		}
+	}
+	//return Color.rgb * weight;
+	return Color.rgb * weight;
+}
+
 void main () 
 {
 	outColor = vec4(Color.rgb, 1.0);
