@@ -273,7 +273,7 @@ namespace CivMods
                 );
 
                 p.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -0.6f);
-                p.addPos.Set(1, 2, 1);
+                p.AddPos.Set(1, 2, 1);
                 p.addLifeLength = 0.5f;
                 p.RedEvolve = new EvolvingNatFloat(EnumTransformFunction.LINEAR, 80);
                 return p;
@@ -289,14 +289,14 @@ namespace CivMods
             int r = 53;
             int g = 221;
             int b = 172;
-            p.color = (r << 16) | (g << 8) | (b << 0) | (50 << 24);
+            p.Color = (r << 16) | (g << 8) | (b << 0) | (50 << 24);
 
-            p.addPos.Set(0, 0, 0);
+            p.AddPos.Set(0, 0, 0);
             p.BlueEvolve = null;
             p.RedEvolve = null;
             p.GreenEvolve = null;
-            p.minSize = 0.1f;
-            p.maxSize = 0.2f;
+            p.MinSize = 0.1f;
+            p.MaxSize = 0.2f;
             p.SizeEvolve = null;
             p.OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.LINEAR, 100f);
 
@@ -304,11 +304,11 @@ namespace CivMods
             double ypos = 1.9 + api.World.Rand.NextDouble() * 0.2;
             double zpos = rndPos.nextFloat();
 
-            p.lifeLength = GameMath.Sqrt(xpos * xpos + zpos * zpos) / 10;
-            p.minPos.Set(posvec.X + xpos, posvec.Y + ypos, posvec.Z + zpos);
-            p.minVelocity.Set(-(float)xpos, -1 - (float)api.World.Rand.NextDouble() / 2, -(float)zpos);
-            p.minQuantity = 0.25f;
-            p.addQuantity = 0;
+            p.LifeLength = GameMath.Sqrt(xpos * xpos + zpos * zpos) / 10;
+            p.MinPos.Set(posvec.X + xpos, posvec.Y + ypos, posvec.Z + zpos);
+            p.MinVelocity.Set(-(float)xpos, -1 - (float)api.World.Rand.NextDouble() / 2, -(float)zpos);
+            p.MinQuantity = 0.25f;
+            p.AddQuantity = 0;
 
             return p;
         }
