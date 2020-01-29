@@ -8,6 +8,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
+using Vintagestory.ServerMods;
 
 namespace VSHUD
 {
@@ -22,6 +23,7 @@ namespace VSHUD
         private LadderPlacement ladderPlacement;
         private PillarPlacement pillarPlacement;
         private TorchPlacement torchPlacement;
+        private NWOrientablePlacement nWOrientablePlacement;
 
         public PlacementPreviewHelper()
         {
@@ -34,6 +36,7 @@ namespace VSHUD
             ladderPlacement = new LadderPlacement();
             pillarPlacement = new PillarPlacement();
             torchPlacement = new TorchPlacement();
+            nWOrientablePlacement = new NWOrientablePlacement();
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
@@ -53,6 +56,11 @@ namespace VSHUD
             else if (invBlock is BlockTorch)
             {
                 if (torchPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
+                else return null;
+            }
+            else if (invBlock.HasBehavior<BlockBehaviorNWOrientable>())
+            {
+                if (nWOrientablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
                 else return null;
             }
             else if (invBlock.HasBehavior<BlockBehaviorPillar>())
@@ -80,7 +88,7 @@ namespace VSHUD
                 if (ladderPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
                 else return null;
             }
-            else if (invBlock.BlockBehaviors.Any(b => b.ToString() == "Vintagestory.ServerMods.BlockBehaviorOmniRotatable"))
+            else if (invBlock.HasBehavior<BlockBehaviorOmniRotatable>())
             {
                 if (omniRotatablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
                 else return null;
@@ -538,6 +546,19 @@ namespace VSHUD
             orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(rotation));
 
             return orientedBlock != null;
+        }
+    }
+
+    public class NWOrientablePlacement
+    {
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block ownBlock, BlockSelection blockSel, out Block outBlock)
+        {
+            BlockFacing[] blockFacingArray = Block.SuggestedHVOrientation(byPlayer, blockSel);
+            string str = "ns";
+            if (blockFacingArray[0].Index == 1 || blockFacingArray[0].Index == 3) str = "we";
+
+            outBlock = world.BlockAccessor.GetBlock(ownBlock.CodeWithParts(str));
+            return outBlock != null;
         }
     }
 

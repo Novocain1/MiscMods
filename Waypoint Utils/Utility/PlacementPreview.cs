@@ -54,6 +54,7 @@ namespace VSHUD
         BlockSelection playerSelection { get => player?.CurrentBlockSelection; }
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
+        Vec3d playerPos { get => player?.Entity.Pos.XYZ;  }
         WaypointUtilConfig config { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
@@ -103,11 +104,12 @@ namespace VSHUD
                 mesh = tesselatormanager.altblockModelDatas[toBlock.Id][alternateIndex];
             }
             else mesh = tesselatormanager.blockModelDatas[toBlock.Id];
-
+            
             mesh.AddTintIndex(toBlock.TintIndex);
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
-            mRef = rpi.UploadMesh(mesh);
+            MeshData rotMesh = mesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, toBlock.GetRotY(playerPos, playerSelection), 0);
+            mRef = rpi.UploadMesh(rotMesh);
         }
 
         public double RenderOrder => 0.5;
@@ -155,6 +157,7 @@ namespace VSHUD
             prog.ViewMatrix = rpi.CameraMatrixOriginf;
             prog.ProjectionMatrix = rpi.CurrentProjectionMatrix;
             prog.RgbaTint = new Vec4f(1, 1, 1, 0.5f);
+            
             if (!config.PRTint)
             {
                 prog.Tex2dOverlay2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/blue.png"));

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTK.Graphics.OpenGL;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
@@ -15,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using Vintagestory.API.Server;
 using Vintagestory.API.Config;
 using System.IO;
+using Vintagestory.API.Util;
 
 namespace SwingingDoor
 {
@@ -185,12 +187,19 @@ namespace SwingingDoor
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator) => AnimCount > 0;
     }
 
-    public class System_glTF : ModSystem
+    static class ComponentMap
+    {
+        public const int SCALAR = 1, VEC2 = 2, VEC3 = 3, VEC4 = 4, MAT2 = 4, MAT3 = 9, MAT4 = 16;
+    }
+
+    public class LoadCustomModels : ModSystem
     {
         ICoreAPI api;
+        ICoreClientAPI capi;
         public Dictionary<AssetLocation, JObject> gltfs = new Dictionary<AssetLocation, JObject>();
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
+        public Dictionary<AssetLocation, MeshRef> meshrefs = new Dictionary<AssetLocation, MeshRef>();
 
         public MeshRenderer testrenderer;
 
@@ -201,7 +210,17 @@ namespace SwingingDoor
 
         public override void StartClientSide(ICoreClientAPI api)
         {
+            this.capi = api;
             api.Event.BlockTexturesLoaded += LoadRawMeshes;
+            api.Event.LeaveWorld += () =>
+            {
+                foreach (var val in meshrefs)
+                {
+                    if (!val.Value.Disposed) val.Value.Dispose();
+                }
+                meshrefs.Clear();
+            };
+
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {
                 string l = a.PopWord();
@@ -212,9 +231,9 @@ namespace SwingingDoor
                     api.Event.UnregisterRenderer(testrenderer, EnumRenderStage.Opaque);
                     testrenderer.Dispose();
                 }
-                if (pos != null && loc != null && meshes.TryGetValue(loc, out MeshData mesh))
+                if (pos != null && loc != null)
                 {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), mesh, new Vec3f());
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc, new Vec3f());
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
                 }
             });
@@ -231,6 +250,151 @@ namespace SwingingDoor
             meshes = api.World.AssetManager.GetMany<MeshData>(api.World.Logger, "shapes/meshdata");
             objs = api.World.AssetManager.GetMany("shapes/obj");
             ConvertObj();
+            if (capi != null) BuildMeshRefs();
+        }
+
+        private void BuildMeshRefs()
+        {
+            foreach (var val in meshes)
+            {
+                meshrefs.Add(val.Key, capi.Render.UploadMesh(val.Value));
+            }
+
+            foreach (var val in gltfs)
+            {
+                var data = val.Value.ToObject<GltfType>();
+                var buffers = data.Buffers;
+                var accessors = data.Accessors;
+                var bufferViews = data.BufferViews;
+
+                int vaoId = GL.GenVertexArray();
+                int vaoSlot = 0;
+
+                GL.BindVertexArray(vaoId);
+
+                int xyzVboId = 0;
+                int normalsVboId = 0;
+                int uvVboId = 0;
+                int vboIdIndex = 0;
+                int rgbaVboId = 0;
+                int customDataFloatVboId = 0;
+                int customDataShortVboId = 0;
+                int customDataIntVboId = 0;
+                int customDataByteVboId = 0;
+                int rgba2VboId = 0;
+                int flagsVboId = 0;
+                int indices = 0;
+
+                foreach (var mesha in data.Meshes)
+                {
+                    foreach (var primitive in mesha.Primitives)
+                    {
+                        Accessor[] accs = new Accessor[]
+                        {
+                            accessors[primitive.Attributes.Position], accessors[primitive.Attributes.Normal],
+                            accessors[primitive.Attributes.Texcoord0], accessors[primitive.Indices]
+                        };
+
+                        int i = 0;
+                        foreach (var acc in accs)
+                        {
+                            var bufferview = data.BufferViews[acc.BufferView];
+                            var buffer = data.Buffers[bufferview.Buffer];
+                            byte[] bufferdat = Convert.FromBase64String(buffer.Uri.Replace("data:application/octet-stream;base64,", "")).SubArray(bufferview.ByteOffset, bufferview.ByteLength);
+                            BufferTarget tgt = i != 3 ? BufferTarget.ArrayBuffer : BufferTarget.ElementArrayBuffer;
+
+                            GenVBO(bufferdat, primitive, acc.BufferView, tgt, acc.Type, acc.ComponentType, ref vaoSlot, out int vboId);
+
+                            switch (i)
+                            {
+                                case 0:
+                                    xyzVboId = vboId;
+                                    break;
+                                case 1:
+                                    normalsVboId = vboId;
+                                    break;
+                                case 2:
+                                    uvVboId = vboId;
+                                    break;
+                                case 3:
+                                    vboIdIndex = vboId;
+                                    indices = acc.Count;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            i++;
+                        }
+                    }
+                }
+
+
+                MeshRef mesh = new VAO()
+                {
+                    VaoId = vaoId,
+                    vaoSlotNumber = vaoSlot,
+                    vboIdIndex = vboIdIndex,
+                    normalsVboId = normalsVboId,
+                    IndicesCount = indices,
+                    xyzVboId = xyzVboId,
+                    uvVboId = uvVboId,
+                    rgbaVboId = rgbaVboId,
+                    rgba2VboId = rgba2VboId,
+                    customDataFloatVboId = customDataFloatVboId,
+                    customDataIntVboId = customDataIntVboId,
+                    customDataByteVboId = customDataByteVboId,
+                    customDataShortVboId = customDataShortVboId,
+                    flagsVboId = flagsVboId
+                };
+                meshrefs.Add(val.Key, mesh);
+            }
+        }
+
+        public void GenVBO(byte[] bufferdat, Primitive primitive, long bufferview,  BufferTarget target, EnumGltfAccessorType type, VertexAttribPointerType cType, ref int vaoSlot, out int vboId)
+        {
+            int buffersize =
+                type == EnumGltfAccessorType.MAT2 ? ComponentMap.MAT2 :
+                type == EnumGltfAccessorType.MAT3 ? ComponentMap.MAT3 :
+                type == EnumGltfAccessorType.MAT4 ? ComponentMap.MAT4 :
+                type == EnumGltfAccessorType.SCALAR ? ComponentMap.SCALAR :
+                type == EnumGltfAccessorType.VEC2 ? ComponentMap.VEC2 :
+                type == EnumGltfAccessorType.VEC3 ? ComponentMap.VEC3 :
+                type == EnumGltfAccessorType.VEC4 ? ComponentMap.VEC4 : 2;
+            bool normalized = primitive.Attributes.Normal == bufferview;
+
+            vboId = GL.GenBuffer();
+            GL.BindBuffer(target, vboId);
+            GL.BufferData(target, CtypeToSize(cType) * bufferdat.Length, bufferdat, BufferUsageHint.StaticDraw);
+            GL.VertexAttribPointer(vaoSlot, buffersize, cType, normalized, 0, 0);
+            
+            vaoSlot++;
+        }
+
+        public int CtypeToSize(VertexAttribPointerType cType)
+        {
+            switch (cType)
+            {
+                case VertexAttribPointerType.Byte:
+                    return sizeof(sbyte);
+                case VertexAttribPointerType.UnsignedByte:
+                    return sizeof(byte);
+                case VertexAttribPointerType.Short:
+                    return sizeof(short);
+                case VertexAttribPointerType.UnsignedShort:
+                    return sizeof(ushort);
+                case VertexAttribPointerType.Int:
+                    return sizeof(int);
+                case VertexAttribPointerType.UnsignedInt:
+                    return sizeof(uint);
+                case VertexAttribPointerType.Float:
+                    return sizeof(float);
+                case VertexAttribPointerType.Double:
+                    return sizeof(double);
+                case VertexAttribPointerType.HalfFloat:
+                    return sizeof(float);
+                default:
+                    return sizeof(int);
+            }
         }
 
         private void ConvertObj()
@@ -321,6 +485,13 @@ namespace SwingingDoor
     public static class Extentions
     {
         public static void SetUv(this MeshData mesh, TextureAtlasPosition texPos) => mesh.SetUv(new float[] { texPos.x1, texPos.y1, texPos.x2, texPos.y1, texPos.x2, texPos.y2, texPos.x1, texPos.y2 });
+
+        public static T[] SubArray<T>(this T[] data, long index, long length)
+        {
+            T[] result = new T[length];
+            Array.Copy(data, index, result, 0, length);
+            return result;
+        }
     }
 
     public class AssetExtends
@@ -338,16 +509,17 @@ namespace SwingingDoor
         private BlockPos pos;
         private MeshRef meshRef;
         public Matrixf ModelMat = new Matrixf();
+        public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
         public bool shouldRender;
         Vec3f rotation;
         float dRot;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, MeshData meshData, Vec3f rotation)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation)
         {
             this.capi = capi;
             this.pos = pos;
             this.rotation = rotation;
-            this.meshRef = capi.Render.UploadMesh(meshData);
+            this.meshRef = models.meshrefs[location];
         }
 
         public double RenderOrder => 0.5;
@@ -356,7 +528,6 @@ namespace SwingingDoor
 
         public void Dispose()
         {
-            meshRef.Dispose();
         }
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)

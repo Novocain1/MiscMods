@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -23,17 +24,25 @@ namespace VSHUD
         public long id;
         WaypointUtilConfig config;
         Waypoint waypoint;
+        WaypointUtilSystem system { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>(); }
+
+        public Dictionary<string, LoadedTexture> texturesByIcon { get => system.texturesByIcon; }
+        public MeshRef quadModel;
+        private Matrixf mvMat = new Matrixf();
+        CairoFont font;
+        public bool isAligned;
 
         public override float ZSize => 0.01f;
 
         public HudElementWaypoint(ICoreClientAPI capi, Waypoint waypoint, int waypointID) : base(capi)
         {
             this.waypoint = waypoint;
-            this.DialogTitle = waypoint.Title;
-            this.absolutePos = waypoint.Position.Clone();
-            this.color = waypoint.Color;
+            DialogTitle = waypoint.Title;
+            absolutePos = waypoint.Position.Clone();
+            color = waypoint.Color;
             this.waypointID = waypointID;
             config = capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
+            quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
         }
 
         public override void OnOwnPlayerDataReceived()
@@ -43,10 +52,10 @@ namespace VSHUD
 
             double[] dColor = ColorUtil.ToRGBADoubles(color);
 
-            CairoFont font = CairoFont.WhiteSmallText();
+            font = CairoFont.WhiteSmallText();
             font.Color = dColor;
 
-            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0);
+            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15);
 
             SingleComposer = capi.Gui
                 .CreateCompo(DialogTitle + capi.Gui.OpenedGuis.Count + 1, dialogBounds)
@@ -62,7 +71,9 @@ namespace VSHUD
         {
             UpdateTitle();
             distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
-            dialogText = DialogTitle + " " + distance + "m" + "\n\u2022";
+            bool km = distance >= 1000;
+
+            dialogText = DialogTitle.UcFirst() + " " + (km ? Math.Round(distance / 1000, 3) : distance) + (km ? "km" : "m");
             order = (1.0 / distance) * 0.0001;
         }
 
@@ -109,11 +120,34 @@ namespace VSHUD
             double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
-            bool isAligned = (yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51);
+            isAligned = ((yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51)) && !system.WaypointElements.Any(ui => ui.isAligned && ui != this);
 
             if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
-            else SingleComposer.GetDynamicText("text").SetNewText("\n\u2022");
+            else SingleComposer.GetDynamicText("text").SetNewText("");
 
+            if (texturesByIcon != null)
+            {
+                IShaderProgram engineShader = capi.Render.GetEngineShader(EnumShaderProgram.Gui);
+                Vec4f newColor = new Vec4f();
+                ColorUtil.ToRGBAVec4f(color, ref newColor);
+
+                engineShader.Uniform("rgbaIn", newColor);
+                engineShader.Uniform("extraGlow", 0);
+                engineShader.Uniform("applyColor", 0);
+                engineShader.Uniform("noTexture", 0.0f);
+                float scale = isAligned ? 0.8f : 0.5f;
+
+                LoadedTexture loadedTexture;
+                if (!texturesByIcon.TryGetValue(waypoint.Icon, out loadedTexture)) return;
+                engineShader.BindTexture2D("tex2d", texturesByIcon[waypoint.Icon].TextureId, 0);
+                mvMat.Set(capi.Render.CurrentModelviewMatrix)
+                    .Translate(SingleComposer.Bounds.absFixedX + 125, SingleComposer.Bounds.absFixedY + 30, pos.Z)
+                    .Scale(loadedTexture.Width, loadedTexture.Height, 0.0f)
+                    .Scale(scale, scale, 0.0f);
+                engineShader.UniformMatrix("projectionMatrix", capi.Render.CurrentProjectionMatrix);
+                engineShader.UniformMatrix("modelViewMatrix", mvMat.Values);
+                capi.Render.RenderMesh(quadModel);
+            }
             base.OnRenderGUI(deltaTime);
         }
 

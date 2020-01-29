@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.Common;
+using Vintagestory.GameContent;
 
 namespace VSHUD
 {
@@ -55,7 +57,7 @@ namespace VSHUD
         {
             base.OnOwnPlayerDataReceived();
 
-            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 225, 125);
+            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 512, 256);
 
             double[] stroke = new double[] { 0, 0, 0, 1 };
 
@@ -63,7 +65,8 @@ namespace VSHUD
                 .AddDynamicText("", CairoFont.WhiteSmallText().WithStroke(stroke, 2), EnumTextOrientation.Justify, textBounds.ForkChild(), "clock")
                 .Compose();
 
-            id = capi.World.RegisterGameTickListener(dt => UpdateText(), 30);
+            id = capi.World.RegisterGameTickListener(dt => UpdateText(), 100);
+
         }
 
         public void UpdateText()
@@ -72,6 +75,7 @@ namespace VSHUD
             ClimateCondition climate = capi.World.BlockAccessor.GetClimateAt(entityPos);
 
             GameCalendar cal = (GameCalendar)capi.World.Calendar;
+            float stability = (float)capi.World.Player.Entity.WatchedAttributes.GetDouble("temporalStability", 0.0);
 
             string hour = cal.FullHourOfDay < 10 ? "0" + cal.FullHourOfDay : "" + cal.FullHourOfDay;
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
@@ -82,9 +86,12 @@ namespace VSHUD
             stringBuilder.AppendLine("Date: " + cal.DayOfYear + "/" + cal.DaysPerYear + ", " + cal.Year)
                 .AppendLine("Time: " + hour + dot + minute)
                 .AppendLine("Global Season: " + cal.Season)
-                .AppendLine("Average Temperature: " + Math.Round(climate.Temperature, 3))
-                .AppendLine("Average Rainfall: " + Math.Round(climate.Rainfall, 3))
-                .AppendLine("Average Fertility: " + Math.Round(climate.Fertility, 3));
+                .AppendLine("Local Temperature: " + Math.Round(climate.Temperature, 3))
+                .AppendLine("Local Rainfall: " + Math.Round(climate.Rainfall, 3))
+                .AppendLine("Local Fertility: " + Math.Round(climate.Fertility, 3))
+                .AppendLine("Local Wind Velocity: " + GlobalConstants.CurrentWindSpeedClient.Sanitize())
+                .AppendLine("Local Temporal Stability: " + Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3))
+                .AppendLine("Player Temporal Stability: " + Math.Round(stability * 100f, 3) + "%");
 
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
         }

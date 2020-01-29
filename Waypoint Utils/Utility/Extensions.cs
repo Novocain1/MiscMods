@@ -317,5 +317,51 @@ namespace VSHUD
             }
             return new Vec2f(offX, offZ);
         }
+
+        public static float GetRotY(this Block block, Vec3d entityPos, BlockSelection blockSel)
+        {
+            BlockPos targetPos = blockSel.DidOffset ? blockSel.Position.AddCopy(blockSel.Face.GetOpposite()) : blockSel.Position;
+            
+            if (targetPos != null)
+            {
+                if (block is BlockBucket)
+                {
+                    double dx = entityPos.X - (targetPos.X + blockSel.HitPosition.X);
+                    double dz = (float)entityPos.Z - (targetPos.Z + blockSel.HitPosition.Z);
+                    float angleHor = (float)Math.Atan2(dx, dz);
+
+                    float deg22dot5rad = GameMath.PIHALF / 4;
+                    float roundRad = ((int)Math.Round(angleHor / deg22dot5rad)) * deg22dot5rad;
+                    return roundRad;
+                }
+                else if (block is BlockGenericTypedContainer)
+                {
+                    float num2 = (float)Math.Atan2(entityPos.X - ((double)targetPos.X + blockSel.HitPosition.X), entityPos.Z - ((double)targetPos.Z + blockSel.HitPosition.Z));
+                    string str = block.Attributes?["rotatatableInterval"]["normal-generic"]?.AsString("22.5deg") ?? "22.5deg";
+                    if (str == "22.5degnot45deg")
+                    {
+                        float num3 = (float)(int)Math.Round((double)num2 / 1.57079637050629) * 1.570796f;
+                        float num4 = 0.3926991f;
+                        return ((double)Math.Abs(num2 - num3) < (double)num4 ? num3 : num3 + 0.3926991f * (float)Math.Sign(num2 - num3)) + (GameMath.DEG2RAD * 90);
+                    }
+                    if (!(str == "22.5deg")) return 0;
+
+                    float num5 = 0.3926991f;
+                    float num6 = (float)(int)Math.Round((double)num2 / (double)num5) * num5;
+                    return num6 + (GameMath.DEG2RAD * 90);
+                }
+            }
+
+            return 0;
+        }
+
+        public static bool IsAnglePlacable(this Block block) => block is BlockBucket || block is BlockGenericTypedContainer;
+
+        public static string Sanitize(this Vec3f vec) => new Vec3d(vec.X, vec.Y, vec.Z).Sanitize();
+
+        public static string Sanitize(this Vec3d vec)
+        {
+            return "X: " + Math.Round(vec.X, 3) + ", Y: " + Math.Round(vec.Y, 3) + ", Z: " + Math.Round(vec.Z, 3);
+        }
     }
 }

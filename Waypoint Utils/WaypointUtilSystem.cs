@@ -14,6 +14,9 @@ using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 using Newtonsoft.Json;
 using System.IO;
+using Cairo;
+using Vintagestory.API.Util;
+using Path = System.IO.Path;
 
 namespace VSHUD
 {
@@ -23,8 +26,34 @@ namespace VSHUD
         ICoreClientAPI capi;
         public ConfigLoader cL;
         public WaypointUtilConfig Config;
+        public WaypointMapLayer WPLayer { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
 
-        public List<Waypoint> Waypoints { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single().ownWaypoints; }
+        public Dictionary<string, LoadedTexture> texturesByIcon;
+
+        public void PopulateTextures()
+        {
+            if (this.texturesByIcon == null | false)
+            {
+                this.texturesByIcon = new Dictionary<string, LoadedTexture>();
+                ImageSurface surface = new ImageSurface((Format)0, 25, 25);
+                Context cr = new Context((Surface)surface);
+                string[] strArray = new string[13]
+                { "circle", "bee", "cave", "home", "ladder", "pick", "rocks", "ruins", "spiral", "star1", "star2", "trader", "vessel" };
+                foreach (string text in strArray)
+                {
+                    cr.Operator = (Operator)0;
+                    cr.SetSourceRGBA(0.0, 0.0, 0.0, 0.0);
+                    cr.Paint();
+                    cr.Operator = (Operator)2;
+                    capi.Gui.Icons.DrawIcon(cr, "wp" + text.UcFirst(), 1.0, 1.0, 15.0, 15.0, ColorUtil.WhiteArgbDouble);
+                    this.texturesByIcon[text] = new LoadedTexture(capi, capi.Gui.LoadCairoTexture(surface, false), 20, 20);
+                }
+                cr.Dispose();
+                ((Surface)surface).Dispose();
+            }
+        }
+
+        public List<Waypoint> Waypoints { get => WPLayer.ownWaypoints; }
         public List<WaypointRelative> WaypointsRel {
             get
             {
@@ -46,12 +75,14 @@ namespace VSHUD
             }
         }
 
-        List<HudElementWaypoint> WaypointElements { get; set; } = new List<HudElementWaypoint>();
+        public List<HudElementWaypoint> WaypointElements { get; set; } = new List<HudElementWaypoint>();
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             base.StartClientSide(api);
             capi = api;
+            PopulateTextures();
+
             cL = capi.ModLoader.GetModSystem<ConfigLoader>();
             Config = cL.Config;
 
