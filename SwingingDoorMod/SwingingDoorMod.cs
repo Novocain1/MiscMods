@@ -279,12 +279,21 @@ namespace SwingingDoor
                 foreach (var gltfMesh in gltfType.Meshes) foreach (var primitive in gltfMesh.Primitives)
                 {
                         Dictionary<string, long> dict = new Dictionary<string, long>();
-                        dict.Add("position", primitive.Attributes.Position);
+                        dict.Add("vertex", primitive.Attributes.Position);
                         dict.Add("uv", primitive.Attributes.Texcoord0);
                         dict.Add("normal", primitive.Attributes.Normal);
                         dict.Add("indices", primitive.Indices);
                         dict.Add("material", primitive.Material);
                         accvalues.Add(dict);
+                }
+
+                foreach (var mat in gltfType.Materials)
+                {
+                    if (mat?.PbrMetallicRoughness?.BaseColorTexture?.Index == null) continue;
+
+                    Dictionary<string, long> dict = new Dictionary<string, long>();
+                    dict.Add("basecolor", mat.PbrMetallicRoughness.BaseColorTexture.Index);
+                    accvalues.Add(dict);
                 }
 
                 foreach (var dict in accvalues) foreach (var acc in dict)
@@ -300,7 +309,7 @@ namespace SwingingDoor
                 MeshData mesh = new MeshData(1, 1);
 
                 //positions
-                byte[] posbytes = buffdat["position"].ToArray();
+                byte[] posbytes = buffdat["vertex "].ToArray();
                 Queue<Vec3f> positions = ToVec3fs(posbytes);
 
                 //uvs
@@ -320,6 +329,10 @@ namespace SwingingDoor
                 Queue<Vec3f> material = ToVec3fs(matbytes);
 
                 ApplyQueues(normals, positions, uv, indices, ref mesh);
+
+                //texture
+                byte[] texbytes = buffdat["basecolor"].ToArray();
+                //convert it from png and store it somewhere
 
                 meshes.Add(gltf.Key, mesh);
             }
@@ -547,7 +560,7 @@ namespace SwingingDoor
             //render.GlDisableCullFace();
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/wood/debarked/oak.png"));
+            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("gltf/boat.png"));
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
