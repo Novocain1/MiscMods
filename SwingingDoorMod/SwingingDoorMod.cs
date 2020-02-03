@@ -419,7 +419,7 @@ namespace SwingingDoor
 
             for (int i = vertexIndices.Count; i > 0; i--)
             {
-                mesh.AddIndex(vertexIndices.Dequeue() - 0);
+                mesh.AddIndex(vertexIndices.Dequeue() - offset);
             }
 
             mesh.Flags = packedNormals.ToArray();
