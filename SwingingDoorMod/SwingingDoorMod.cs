@@ -17,6 +17,8 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Config;
 using System.IO;
 using Vintagestory.API.Util;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 
 namespace SwingingDoor
 {
@@ -196,7 +198,7 @@ namespace SwingingDoor
     {
         ICoreAPI api;
         ICoreClientAPI capi;
-        public Dictionary<AssetLocation, JObject> gltfs = new Dictionary<AssetLocation, JObject>();
+        public Dictionary<AssetLocation, GltfType> gltfs = new Dictionary<AssetLocation, GltfType>();
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, MeshRef> meshrefs = new Dictionary<AssetLocation, MeshRef>();
@@ -233,7 +235,8 @@ namespace SwingingDoor
                 }
                 if (pos != null && loc != null)
                 {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc, new Vec3f());
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc, new Vec3f(), out bool failed);
+                    if (failed) return;
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
                 }
             });
@@ -246,9 +249,10 @@ namespace SwingingDoor
 
         private void LoadRawMeshes()
         {
-            gltfs = api.World.AssetManager.GetMany<JObject>(api.World.Logger, "shapes/gltf");
+            gltfs = api.World.AssetManager.GetMany<GltfType>(api.World.Logger, "shapes/gltf");
             meshes = api.World.AssetManager.GetMany<MeshData>(api.World.Logger, "shapes/meshdata");
             objs = api.World.AssetManager.GetMany("shapes/obj");
+            ConvertGltf();
             ConvertObj();
             if (capi != null) BuildMeshRefs();
         }
@@ -259,142 +263,167 @@ namespace SwingingDoor
             {
                 meshrefs.Add(val.Key, capi.Render.UploadMesh(val.Value));
             }
+        }
 
-            foreach (var val in gltfs)
+        private void ConvertGltf()
+        {
+            foreach (var gltf in gltfs)
             {
-                var data = val.Value.ToObject<GltfType>();
-                var buffers = data.Buffers;
-                var accessors = data.Accessors;
-                var bufferViews = data.BufferViews;
+                GltfType gltfType = gltf.Value;
+                var buffers = gltfType.Buffers;
+                var accessors = gltfType.Accessors;
+                var bufferViews = gltfType.BufferViews;
+                List<Dictionary<string, long>> accvalues = new List<Dictionary<string, long>>();
+                Dictionary<string, Queue<byte>> buffdat = new Dictionary<string, Queue<byte>>();
 
-                int vaoId = GL.GenVertexArray();
-                int vaoSlot = 0;
-
-                GL.BindVertexArray(vaoId);
-
-                int xyzVboId = 0;
-                int normalsVboId = 0;
-                int uvVboId = 0;
-                int vboIdIndex = 0;
-                int rgbaVboId = 0;
-                int customDataFloatVboId = 0;
-                int customDataShortVboId = 0;
-                int customDataIntVboId = 0;
-                int customDataByteVboId = 0;
-                int rgba2VboId = 0;
-                int flagsVboId = 0;
-                int indices = 0;
-
-                foreach (var mesha in data.Meshes)
+                foreach (var gltfMesh in gltfType.Meshes) foreach (var primitive in gltfMesh.Primitives)
                 {
-                    foreach (var primitive in mesha.Primitives)
-                    {
-                        Accessor[] accs = new Accessor[]
-                        {
-                            accessors[primitive.Attributes.Position], accessors[primitive.Attributes.Normal],
-                            accessors[primitive.Attributes.Texcoord0], accessors[primitive.Indices]
-                        };
-
-                        int i = 0;
-                        foreach (var acc in accs)
-                        {
-                            var bufferview = data.BufferViews[acc.BufferView];
-                            var buffer = data.Buffers[bufferview.Buffer];
-                            byte[] bufferdat = Convert.FromBase64String(buffer.Uri.Replace("data:application/octet-stream;base64,", "")).SubArray(bufferview.ByteOffset, bufferview.ByteLength);
-                            BufferTarget tgt = i != 3 ? BufferTarget.ArrayBuffer : BufferTarget.ElementArrayBuffer;
-
-                            GenVBO(bufferdat, primitive, acc.BufferView, tgt, acc.Type, acc.ComponentType, ref vaoSlot, out int vboId);
-
-                            switch (i)
-                            {
-                                case 0:
-                                    xyzVboId = vboId;
-                                    break;
-                                case 1:
-                                    normalsVboId = vboId;
-                                    break;
-                                case 2:
-                                    uvVboId = vboId;
-                                    break;
-                                case 3:
-                                    vboIdIndex = vboId;
-                                    indices = acc.Count;
-                                    break;
-                                default:
-                                    break;
-                            }
-                            i++;
-                        }
-                    }
+                        Dictionary<string, long> dict = new Dictionary<string, long>();
+                        dict.Add("position", primitive.Attributes.Position);
+                        dict.Add("uv", primitive.Attributes.Texcoord0);
+                        dict.Add("normal", primitive.Attributes.Normal);
+                        dict.Add("indices", primitive.Indices);
+                        dict.Add("material", primitive.Material);
+                        accvalues.Add(dict);
                 }
 
-
-                MeshRef mesh = new VAO()
+                foreach (var dict in accvalues) foreach (var acc in dict)
                 {
-                    VaoId = vaoId,
-                    vaoSlotNumber = vaoSlot,
-                    vboIdIndex = vboIdIndex,
-                    normalsVboId = normalsVboId,
-                    IndicesCount = indices,
-                    xyzVboId = xyzVboId,
-                    uvVboId = uvVboId,
-                    rgbaVboId = rgbaVboId,
-                    rgba2VboId = rgba2VboId,
-                    customDataFloatVboId = customDataFloatVboId,
-                    customDataIntVboId = customDataIntVboId,
-                    customDataByteVboId = customDataByteVboId,
-                    customDataShortVboId = customDataShortVboId,
-                    flagsVboId = flagsVboId
-                };
-                meshrefs.Add(val.Key, mesh);
+                        Queue<byte> bytes;
+                        if (!buffdat.TryGetValue(acc.Key, out bytes)) buffdat.Add(acc.Key, new Queue<byte>()); bytes = buffdat[acc.Key];
+                        var bufferview = bufferViews[acc.Value];
+                        var buffer = buffers[bufferview.Buffer];
+                        byte[] bufferdat = Convert.FromBase64String(buffer.Uri.Replace("data:application/octet-stream;base64,", "")).SubArray(bufferview.ByteOffset, bufferview.ByteLength);
+                        for (int i = 0; i < bufferdat.Length; i++) bytes.Enqueue(bufferdat[i]);
+                }
+
+                MeshData mesh = new MeshData(1, 1);
+
+                //positions
+                byte[] posbytes = buffdat["position"].ToArray();
+                Queue<Vec3f> positions = ToVec3fs(posbytes);
+
+                //uvs
+                byte[] uvbytes = buffdat["uv"].ToArray();
+                Queue<Vec2f> uv = ToVec2fs(uvbytes);
+
+                //normals
+                byte[] nrmbytes = buffdat["normal"].ToArray();
+                Queue<Vec3f> normals = ToVec3fs(nrmbytes);
+
+                //indices
+                byte[] indbytes = buffdat["indices"].ToArray();
+                Queue<int> indices = ToInts(indbytes);
+
+                //material
+                byte[] matbytes = buffdat["material"].ToArray();
+                Queue<Vec3f> material = ToVec3fs(matbytes);
+
+                ApplyQueues(normals, positions, uv, indices, ref mesh);
+
+                meshes.Add(gltf.Key, mesh);
             }
+
         }
 
-        public void GenVBO(byte[] bufferdat, Primitive primitive, long bufferview,  BufferTarget target, EnumGltfAccessorType type, VertexAttribPointerType cType, ref int vaoSlot, out int vboId)
-        {
-            int buffersize =
-                type == EnumGltfAccessorType.MAT2 ? ComponentMap.MAT2 :
-                type == EnumGltfAccessorType.MAT3 ? ComponentMap.MAT3 :
-                type == EnumGltfAccessorType.MAT4 ? ComponentMap.MAT4 :
-                type == EnumGltfAccessorType.SCALAR ? ComponentMap.SCALAR :
-                type == EnumGltfAccessorType.VEC2 ? ComponentMap.VEC2 :
-                type == EnumGltfAccessorType.VEC3 ? ComponentMap.VEC3 :
-                type == EnumGltfAccessorType.VEC4 ? ComponentMap.VEC4 : 2;
-            bool normalized = primitive.Attributes.Normal == bufferview;
+        public Queue<Vec3f> ToVec3fs(byte[] bytes) => ToVec3fs(ToFloats(bytes));
+        public Queue<Vec2f> ToVec2fs(byte[] bytes) => ToVec2fs(ToFloats(bytes));
+        public Queue<int> ToInts(byte[] bytes) => ToInts(ToShorts(bytes));
 
-            vboId = GL.GenBuffer();
-            GL.BindBuffer(target, vboId);
-            GL.BufferData(target, CtypeToSize(cType) * bufferdat.Length, bufferdat, BufferUsageHint.StaticDraw);
-            GL.VertexAttribPointer(vaoSlot, buffersize, cType, normalized, 0, 0);
-            
-            vaoSlot++;
-        }
-
-        public int CtypeToSize(VertexAttribPointerType cType)
+        public Queue<Vec3f> ToVec3fs(Queue<float> floats)
         {
-            switch (cType)
+            Queue<Vec3f> vecs = new Queue<Vec3f>();
+            for (int i = floats.Count; i > 0 && floats.Count > 1; i--)
             {
-                case VertexAttribPointerType.Byte:
-                    return sizeof(sbyte);
-                case VertexAttribPointerType.UnsignedByte:
-                    return sizeof(byte);
-                case VertexAttribPointerType.Short:
-                    return sizeof(short);
-                case VertexAttribPointerType.UnsignedShort:
-                    return sizeof(ushort);
-                case VertexAttribPointerType.Int:
-                    return sizeof(int);
-                case VertexAttribPointerType.UnsignedInt:
-                    return sizeof(uint);
-                case VertexAttribPointerType.Float:
-                    return sizeof(float);
-                case VertexAttribPointerType.Double:
-                    return sizeof(double);
-                case VertexAttribPointerType.HalfFloat:
-                    return sizeof(float);
-                default:
-                    return sizeof(int);
+                vecs.Enqueue(new Vec3f(floats.Dequeue(), floats.Dequeue(), floats.Dequeue()));
             }
+            return vecs;
+        }
+
+        public Queue<Vec2f> ToVec2fs(Queue<float> floats)
+        {
+            Queue<Vec2f> vecs = new Queue<Vec2f>();
+            for (int i = floats.Count; i > 0 && floats.Count > 0; i--)
+            {
+                vecs.Enqueue(new Vec2f(floats.Dequeue(), floats.Dequeue()));
+            }
+            return vecs;
+        }
+
+        public Queue<int> ToInts(Queue<ushort> shorts)
+        {
+            Queue<int> ints = new Queue<int>();
+            for (int i = shorts.Count; i > 0 && shorts.Count > 0; i--)
+            {
+                ints.Enqueue(shorts.Dequeue());
+            }
+            return ints;
+        }
+
+        public Queue<float> ToFloats(byte[] bytes)
+        {
+            Queue<float> queue = new Queue<float>();
+
+            for (int i = 0; i < bytes.Length; i += sizeof(float))
+            {
+                Queue<byte> postrim = new Queue<byte>();
+                for (int j = i; j < i + sizeof(float); j++)
+                {
+                    postrim.Enqueue(bytes[j]);
+                }
+                float pos = BitConverter.ToSingle(postrim.ToArray(), 0);
+                queue.Enqueue(pos);
+            }
+            return queue;
+        }
+
+        public Queue<ushort> ToShorts(byte[] bytes)
+        {
+            Queue<ushort> queue = new Queue<ushort>();
+
+            for (int i = 0; i < bytes.Length; i += sizeof(ushort))
+            {
+                Queue<byte> postrim = new Queue<byte>();
+                for (int j = i; j < i + sizeof(ushort); j++)
+                {
+                    postrim.Enqueue(bytes[j]);
+                }
+                ushort pos = BitConverter.ToUInt16(postrim.ToArray(), 0);
+                queue.Enqueue(pos);
+            }
+            return queue;
+        }
+
+        public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh, int offset = 0)
+        {
+            Queue<int> packedNormals = new Queue<int>();
+            Queue<float> packedUVs = new Queue<float>();
+            for (int i = normals.Count; i > 0; i--)
+            {
+                Vec3f nrm = normals.Dequeue();
+                packedNormals.Enqueue(VertexFlags.NormalToPackedInt(nrm.X, nrm.Y, nrm.Z) << 15);
+            }
+
+            for (int i = vertexUvs.Count; i > 0; i--)
+            {
+                Vec2f uv = vertexUvs.Dequeue();
+                packedUVs.Enqueue(uv.X);
+                packedUVs.Enqueue(uv.Y);
+            }
+
+            for (int i = vertices.Count; i > 0; i--)
+            {
+                Vec3f vec = vertices.Dequeue();
+                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, 0, 0);
+            }
+
+            for (int i = vertexIndices.Count; i > 0; i--)
+            {
+                mesh.AddIndex(vertexIndices.Dequeue() - 0);
+            }
+
+            mesh.Flags = packedNormals.ToArray();
+            mesh.Uv = packedUVs.ToArray();
         }
 
         private void ConvertObj()
@@ -448,35 +477,7 @@ namespace SwingingDoor
                             }
                         }
                     }
-
-                    Queue<int> packedNormals = new Queue<int>();
-                    Queue<float> packedUVs = new Queue<float>();
-                    for (int i = normals.Count; i > 0; i--)
-                    {
-                        Vec3f nrm = normals.Dequeue();
-                        packedNormals.Enqueue(VertexFlags.NormalToPackedInt(nrm.X, nrm.Y, nrm.Z) << 15);
-                    }
-
-                    for (int i = vertexUvs.Count; i > 0; i--)
-                    {
-                        Vec2f uv = vertexUvs.Dequeue();
-                        packedUVs.Enqueue(uv.X);
-                        packedUVs.Enqueue(uv.Y);
-                    }
-                    
-                    for (int i = vertices.Count; i > 0; i--)
-                    {
-                        Vec3f vec = vertices.Dequeue();
-                        mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, 0, 0);
-                    }
-
-                    for (int i = vertexIndices.Count; i > 0; i--)
-                    {
-                        mesh.AddIndex(vertexIndices.Dequeue() - 1);
-                    }
-
-                    mesh.Flags = packedNormals.ToArray();
-                    mesh.Uv = packedUVs.ToArray();
+                    ApplyQueues(normals, vertices, vertexUvs, vertexIndices, ref mesh, 1);
                     meshes.Add(val.Location, mesh);
                 }
             }
@@ -512,14 +513,22 @@ namespace SwingingDoor
         public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
         public bool shouldRender;
         Vec3f rotation;
-        float dRot;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, out bool failed)
         {
-            this.capi = capi;
-            this.pos = pos;
-            this.rotation = rotation;
-            this.meshRef = models.meshrefs[location];
+            failed = false;
+            try
+            {
+                this.capi = capi;
+                this.pos = pos;
+                this.rotation = rotation;
+                this.meshRef = models.meshrefs[location];
+            }
+            catch (Exception)
+            {
+                failed = true;
+                Dispose();
+            }
         }
 
         public double RenderOrder => 0.5;

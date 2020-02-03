@@ -63,6 +63,12 @@ namespace VSHUD
                 .Compose()
             ;
 
+            SingleComposer.Bounds.Alignment = EnumDialogArea.None;
+            SingleComposer.Bounds.fixedOffsetX = 0;
+            SingleComposer.Bounds.fixedOffsetY = 0;
+            SingleComposer.Bounds.absMarginX = 0;
+            SingleComposer.Bounds.absMarginY = 0;
+
             UpdateDialog();
             id = capi.World.RegisterGameTickListener(dt => UpdateDialog(), 500 + capi.World.Rand.Next(0, 64));
         }
@@ -109,13 +115,8 @@ namespace VSHUD
                 SingleComposer.Compose();
             }
 
-            SingleComposer.Bounds.Alignment = EnumDialogArea.None;
-            SingleComposer.Bounds.fixedOffsetX = 0;
-            SingleComposer.Bounds.fixedOffsetY = 0;
             SingleComposer.Bounds.absFixedX = pos.X - SingleComposer.Bounds.OuterWidth / 2;
             SingleComposer.Bounds.absFixedY = capi.Render.FrameHeight - pos.Y - SingleComposer.Bounds.OuterHeight * FloatyDialogAlign;
-            SingleComposer.Bounds.absMarginX = 0;
-            SingleComposer.Bounds.absMarginY = 0;
 
             double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;

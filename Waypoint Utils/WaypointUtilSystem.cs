@@ -22,7 +22,6 @@ namespace VSHUD
 {
     class WaypointUtilSystem : ModSystem
     {
-        long id;
         ICoreClientAPI capi;
         public ConfigLoader cL;
         public WaypointUtilConfig Config;
@@ -35,8 +34,8 @@ namespace VSHUD
             if (this.texturesByIcon == null | false)
             {
                 this.texturesByIcon = new Dictionary<string, LoadedTexture>();
-                ImageSurface surface = new ImageSurface((Format)0, 25, 25);
-                Context cr = new Context((Surface)surface);
+                ImageSurface surface = new ImageSurface(0, 64, 64);
+                Context cr = new Context(surface);
                 string[] strArray = new string[13]
                 { "circle", "bee", "cave", "home", "ladder", "pick", "rocks", "ruins", "spiral", "star1", "star2", "trader", "vessel" };
                 foreach (string text in strArray)
@@ -45,11 +44,11 @@ namespace VSHUD
                     cr.SetSourceRGBA(0.0, 0.0, 0.0, 0.0);
                     cr.Paint();
                     cr.Operator = (Operator)2;
-                    capi.Gui.Icons.DrawIcon(cr, "wp" + text.UcFirst(), 1.0, 1.0, 15.0, 15.0, ColorUtil.WhiteArgbDouble);
-                    this.texturesByIcon[text] = new LoadedTexture(capi, capi.Gui.LoadCairoTexture(surface, false), 20, 20);
+                    capi.Gui.Icons.DrawIcon(cr, "wp" + text.UcFirst(), 1.0, 1.0, 32.0, 32.0, ColorUtil.WhiteArgbDouble);
+                    texturesByIcon[text] = new LoadedTexture(capi, capi.Gui.LoadCairoTexture(surface, false), 20, 20);
                 }
                 cr.Dispose();
-                ((Surface)surface).Dispose();
+                surface.Dispose();
             }
         }
 
@@ -97,34 +96,27 @@ namespace VSHUD
 
             capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
-            id = api.World.RegisterGameTickListener(dt =>
+            capi.Event.LevelFinalize += () =>
             {
                 EntityPlayer player = api.World.Player.Entity;
+                frontEnd.OnOwnPlayerDataReceived();
 
-                if (player != null)
+                player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
                 {
-                    frontEnd.OnOwnPlayerDataReceived();
-                    player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
+                    if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
+
+                    if (player.WatchedAttributes["entityDead"].ToString() == "1")
                     {
-                        if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
+                        capi.SendChatMessage(string.Format("/waypoint addati {5} ={0} ={1} ={2} #{3} {4}", 
+                            player.Pos.X, player.Pos.Y, player.Pos.Z, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "*Player Death Waypoint*", "rocks", null));
+                    }
+                });
 
-                        if (player.WatchedAttributes["entityDead"].ToString() == "1")
-                        {
-                            api.SendChatMessage("/waypoint add #" + ColorStuff.RandomHexColorVClamp(api, 0.50, 0.80) + " *Player Death Waypoint*");
-                        }
-                    });
+                RepopulateDialogs();
+                capi.Event.RegisterCallback(dt => Update(), 100);
+            };
 
-                    api.World.RegisterCallback(d => RepopulateDialogs(), 100);
-
-                    api.World.RegisterGameTickListener(d =>
-                    {
-                        Update();
-                    }, 500);
-
-                    api.World.UnregisterGameTickListener(id);
-                }
-            }, 500);
-
+            capi.Event.KeyDown += (e) => Update();
         }
 
         private void CmdWaypointConfig(int groupId, CmdArgs args)
