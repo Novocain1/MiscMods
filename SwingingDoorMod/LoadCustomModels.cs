@@ -34,6 +34,9 @@ namespace SwingingDoor
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {
                 string l = a.PopWord();
+                Vec3d rot = a.PopVec3d() ?? new Vec3d();
+                Vec3d scale = a.PopVec3d() ?? new Vec3d(1, 1, 1);
+
                 AssetLocation loc = l != null ? new AssetLocation(l) : new AssetLocation("game:shapes/obj/mesh.obj");
                 BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
                 if (testrenderer != null)
@@ -43,7 +46,9 @@ namespace SwingingDoor
                 }
                 if (pos != null && loc != null)
                 {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc, new Vec3f(), out bool failed);
+                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc,
+                        new Vec3f((float)rot.X, (float)rot.Y, (float)rot.Z), 
+                        new Vec3f((float)scale.X, (float)scale.Y, (float)scale.Z), out bool failed);
                     if (failed) return;
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
                 }
@@ -224,7 +229,7 @@ namespace SwingingDoor
             return queue;
         }
 
-        public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh, int offset = 0)
+        public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh)
         {
             Queue<int> packedNormals = new Queue<int>();
             Queue<float> packedUVs = new Queue<float>();
@@ -249,7 +254,7 @@ namespace SwingingDoor
 
             for (int i = vertexIndices.Count; i > 0; i--)
             {
-                mesh.AddIndex(vertexIndices.Dequeue() - offset);
+                mesh.AddIndex(vertexIndices.Dequeue());
             }
 
             mesh.Flags = packedNormals.ToArray();
@@ -283,7 +288,7 @@ namespace SwingingDoor
                         else if (str.StartsWith("vt "))
                         {
                             var n = str.Split(' ');
-                            vertexUvs.Enqueue(new Vec2f(float.Parse(n[1]), float.Parse(n[2])));
+                            vertexUvs.Enqueue(new Vec2f(float.Parse(n[1]) - 1, float.Parse(n[2]) - 1));
                         }
                         else if (str.StartsWith("f "))
                         {
@@ -307,7 +312,7 @@ namespace SwingingDoor
                             }
                         }
                     }
-                    ApplyQueues(normals, vertices, vertexUvs, vertexIndices, ref mesh, 1);
+                    ApplyQueues(normals, vertices, vertexUvs, vertexIndices, ref mesh);
                     meshes.Add(val.Location, mesh);
                 }
             }

@@ -15,8 +15,9 @@ namespace SwingingDoor
         public bool shouldRender;
         AssetLocation location;
         Vec3f rotation;
+        Vec3f scale;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, out bool failed)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed)
         {
             failed = false;
             try
@@ -25,6 +26,7 @@ namespace SwingingDoor
                 this.pos = pos;
                 this.rotation = rotation;
                 this.location = location;
+                this.scale = scale;
                 MeshData mesh = models.meshes[location];
                 if (models.gltfTextures.TryGetValue(location, out TextureAtlasPosition tPos))
                 {
@@ -66,6 +68,7 @@ namespace SwingingDoor
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
                 .Translate(0.5, 0.5, 0.5)
                 .RotateDeg(rotation)
+                .Scale(scale.X, scale.Y, scale.Z)
                 //.RotateZDeg(dRot += deltaTime * 512)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;

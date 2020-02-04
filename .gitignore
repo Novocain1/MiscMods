@@ -275,3 +275,4 @@ __pycache__/
 *.zip
 
 !/SwingingDoorMod/mods/SwingingDoorMod/assets/game/shapes/obj/*
+/SwingingDoorMod/mods/SwingingDoorMod/assets/game/shapes/gltf/tent.gltf
