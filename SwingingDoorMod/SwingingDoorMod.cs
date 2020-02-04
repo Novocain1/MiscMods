@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 using System.Text;
 using System.Threading.Tasks;
@@ -202,6 +203,7 @@ namespace SwingingDoor
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, MeshRef> meshrefs = new Dictionary<AssetLocation, MeshRef>();
+        public Dictionary<AssetLocation, TexRef> gltfTextures = new Dictionary<AssetLocation, TexRef>();
 
         public MeshRenderer testrenderer;
 
@@ -287,13 +289,16 @@ namespace SwingingDoor
                         accvalues.Add(dict);
                 }
 
-                foreach (var mat in gltfType.Materials)
+                if (gltfType.Materials != null)
                 {
-                    if (mat?.PbrMetallicRoughness?.BaseColorTexture?.Index == null) continue;
+                    foreach (var mat in gltfType.Materials)
+                    {
+                        if (mat?.PbrMetallicRoughness?.BaseColorTexture?.Index == null) continue;
 
-                    Dictionary<string, long> dict = new Dictionary<string, long>();
-                    dict.Add("basecolor", mat.PbrMetallicRoughness.BaseColorTexture.Index);
-                    accvalues.Add(dict);
+                        Dictionary<string, long> dict = new Dictionary<string, long>();
+                        dict.Add("basecolor", gltfType.Images[mat.PbrMetallicRoughness.BaseColorTexture.Index].BufferView);
+                        accvalues.Add(dict);
+                    }
                 }
 
                 foreach (var dict in accvalues) foreach (var acc in dict)
@@ -309,7 +314,7 @@ namespace SwingingDoor
                 MeshData mesh = new MeshData(1, 1);
 
                 //positions
-                byte[] posbytes = buffdat["vertex "].ToArray();
+                byte[] posbytes = buffdat["vertex"].ToArray();
                 Queue<Vec3f> positions = ToVec3fs(posbytes);
 
                 //uvs
@@ -331,8 +336,22 @@ namespace SwingingDoor
                 ApplyQueues(normals, positions, uv, indices, ref mesh);
 
                 //texture
-                byte[] texbytes = buffdat["basecolor"].ToArray();
-                //convert it from png and store it somewhere
+                if (capi != null && buffdat.ContainsKey("basecolor"))
+                {
+                    byte[] texbytes = buffdat["basecolor"]?.ToArray();
+                    BitmapExternal bitmap = capi.Render.BitmapCreateFromPng(texbytes);
+                    capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position);
+                    Size2i size = capi.BlockTextureAtlas.Size;
+                    gltfTextures.Add(gltf.Key, new TexRef(position, id, new Vec2f((float)bitmap.Width / size.Width, (float)bitmap.Height / size.Height)));
+
+                    for (int i = 0; i < mesh.Uv.Length; i++)
+                    {
+                        float x = position.x2 - position.x1;
+                        float y = position.y2 - position.y1;
+
+                        mesh.Uv[i] = i % 2 == 0 ? (mesh.Uv[i] * x) + position.x1 : (mesh.Uv[i] * y) + position.y1;
+                    }
+                }
 
                 meshes.Add(gltf.Key, mesh);
             }
@@ -508,6 +527,20 @@ namespace SwingingDoor
         }
     }
 
+    public class TexRef
+    {
+        public TextureAtlasPosition pos;
+        public int id;
+        public Vec2f texSize;
+
+        public TexRef(TextureAtlasPosition pos, int id, Vec2f texSize)
+        {
+            this.pos = pos;
+            this.id = id;
+            this.texSize = texSize;
+        }
+    }
+
     public class AssetExtends
     {
         public static AssetCategory gltf = new AssetCategory("gltf", false, EnumAppSide.Universal);
@@ -525,6 +558,7 @@ namespace SwingingDoor
         public Matrixf ModelMat = new Matrixf();
         public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
         public bool shouldRender;
+        AssetLocation location;
         Vec3f rotation;
 
         public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, out bool failed)
@@ -535,6 +569,7 @@ namespace SwingingDoor
                 this.capi = capi;
                 this.pos = pos;
                 this.rotation = rotation;
+                this.location = location;
                 this.meshRef = models.meshrefs[location];
             }
             catch (Exception)
@@ -560,7 +595,11 @@ namespace SwingingDoor
             //render.GlDisableCullFace();
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-            prog.Tex2D = capi.Render.GetOrLoadTexture(new AssetLocation("gltf/boat.png"));
+            if (models.gltfTextures.TryGetValue(location, out TexRef tex))
+            {
+                prog.Tex2D = tex.pos.atlasTextureId;
+            }
+            else prog.Tex2D = 0;
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
