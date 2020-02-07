@@ -156,6 +156,7 @@ namespace VSHUD
         {
             base.Dispose();
             capi.World.UnregisterGameTickListener(id);
+            quadModel.Dispose();
         }
 
         public override void OnGuiOpened()

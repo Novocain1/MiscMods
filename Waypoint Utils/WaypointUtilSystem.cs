@@ -195,7 +195,7 @@ namespace VSHUD
             return true;
         }
 
-        public void Update()
+        public void Update(bool forceRepop = false)
         {
             if (WaypointElements.Count == 0) RepopulateDialogs();
             if (WaypointElements.Count > 0)
@@ -208,8 +208,8 @@ namespace VSHUD
                 {
                     foreach (var val in WaypointElements)
                     {
-                        if (val.IsOpened() && val.distance > Config.DotRange && !val.DialogTitle.Contains("*")) val.TryClose();
-                        else if (!val.IsOpened() && val.distance < Config.DotRange || val.DialogTitle.Contains("*")) val.TryOpen();
+                        if (val.IsOpened() && (val.distance > Config.DotRange || Config.DisabledColors.Contains(val.color)) && !val.DialogTitle.Contains("*")) val.TryClose();
+                        else if (!Config.DisabledColors.Contains(val.color)) val.TryOpen();
                     }
                 }
                 else

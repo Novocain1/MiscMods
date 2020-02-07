@@ -52,6 +52,7 @@ namespace VSHUD
                 {
                     UpdateDropDown(colors, newval);
                     capi.TriggerChatMessage(".wpcfg save");
+                    capi.Event.RegisterCallback(dt => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Update(), 100);
                 },
                 ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 250, -170, 125, 25), "dropdown")
                 .AddTextToggleButtons(new string[] { "Create WP", "Purge Death Waypoints", "Toggle Floaty Waypoints", "Toggle Block Waypoints", "Toggle This Color" }, CairoFont.ButtonText().WithFontSize(10), i =>
@@ -85,6 +86,7 @@ namespace VSHUD
                         default:
                             break;
                     }
+                    capi.Event.RegisterCallback(dt => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Update(), 100);
 
                 }, new ElementBounds[] {
                     ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 5, -200, 80, 25),

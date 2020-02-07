@@ -55,7 +55,6 @@ namespace SwingingDoor
             if (meshRef == null) return;
             IRenderAPI render = capi.Render;
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
-            //render.GlDisableCullFace();
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             if (models.gltfTextures.TryGetValue(location, out TextureAtlasPosition tex))
@@ -69,7 +68,6 @@ namespace SwingingDoor
                 .Translate(0.5, 0.5, 0.5)
                 .RotateDeg(rotation)
                 .Scale(scale.X, scale.Y, scale.Z)
-                //.RotateZDeg(dRot += deltaTime * 512)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
