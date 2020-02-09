@@ -115,8 +115,7 @@ namespace VSHUD
                 RepopulateDialogs();
                 capi.Event.RegisterCallback(dt => Update(), 100);
             };
-
-            capi.Event.KeyDown += (e) => Update();
+            capi.Event.RegisterGameTickListener(dt => Update(), 500);
         }
 
         private void CmdWaypointConfig(int groupId, CmdArgs args)
@@ -195,8 +194,9 @@ namespace VSHUD
             return true;
         }
 
-        public void Update(bool forceRepop = false)
+        public void Update()
         {
+            //capi.ShowChatMessage("U" + capi.World.Rand.Next());
             if (WaypointElements.Count == 0) RepopulateDialogs();
             if (WaypointElements.Count > 0)
             {
@@ -209,7 +209,7 @@ namespace VSHUD
                     foreach (var val in WaypointElements)
                     {
                         if (val.IsOpened() && (val.distance > Config.DotRange || Config.DisabledColors.Contains(val.color)) && !val.DialogTitle.Contains("*")) val.TryClose();
-                        else if (!Config.DisabledColors.Contains(val.color)) val.TryOpen();
+                        else if (!val.IsOpened() && (val.distance < Config.DotRange && !Config.DisabledColors.Contains(val.color)) || val.DialogTitle.Contains("*")) val.TryOpen();
                     }
                 }
                 else

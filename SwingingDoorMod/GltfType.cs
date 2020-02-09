@@ -140,6 +140,9 @@ namespace SwingingDoor
         [JsonProperty("baseColorTexture")]
         public Texture BaseColorTexture { get; set; }
 
+        [JsonProperty("baseColorFactor")]
+        public float[] BaseColorFactor { get; set; }
+
         [JsonProperty("metallicRoughnessTexture")]
         public Texture MetallicRoughnessTexture { get; set; }
     }

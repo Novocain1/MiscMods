@@ -25,6 +25,7 @@ namespace VSHUD
         WaypointUtilConfig config;
         Waypoint waypoint;
         WaypointUtilSystem system { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>(); }
+        public override bool Focused => false;
 
         public Dictionary<string, LoadedTexture> texturesByIcon { get => system.texturesByIcon; }
         public MeshRef quadModel;
@@ -32,7 +33,7 @@ namespace VSHUD
         CairoFont font;
         public bool isAligned;
 
-        public override float ZSize => 0.01f;
+        public override float ZSize => (float)order;
 
         public HudElementWaypoint(ICoreClientAPI capi, Waypoint waypoint, int waypointID) : base(capi)
         {
@@ -70,6 +71,11 @@ namespace VSHUD
             SingleComposer.Bounds.absMarginY = 0;
 
             UpdateDialog();
+            RegisterDialogUpdate();
+        }
+
+        public void RegisterDialogUpdate()
+        {
             id = capi.World.RegisterGameTickListener(dt => UpdateDialog(), 500 + capi.World.Rand.Next(0, 64));
         }
 
@@ -80,7 +86,9 @@ namespace VSHUD
             bool km = distance >= 1000;
 
             dialogText = DialogTitle.UcFirst() + " " + (km ? Math.Round(distance / 1000, 3) : distance) + (km ? "km" : "m");
-            order = (1.0 / distance) * 0.0001;
+            float orderi = (float)((config.DotRange - distance) * 0.001f) - 1.0f;
+            orderi *= 0.5f;
+            order = isAligned ? orderi + 0.5f : orderi;
         }
 
         public void UpdateTitle()
@@ -101,7 +109,7 @@ namespace VSHUD
         {
             WaypointUtilConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
 
-            Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z + 0.5);
+            Vec3d aboveHeadPos = new Vec3d(waypointPos.X + 0.5, waypointPos.Y + FloatyDialogPosition, waypointPos.Z);
             Vec3d pos = MatrixToolsd.Project(aboveHeadPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
 
             if (pos.Z < 0 || (distance > config.DotRange && !dialogText.Contains("*")))
@@ -126,6 +134,8 @@ namespace VSHUD
             if (isAligned || distance < config.TitleRange || dialogText.Contains("*")) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("");
 
+            //if (isAligned) order = (config.DotRange - distance) * 0.0001f;
+
             if (texturesByIcon != null)
             {
                 IShaderProgram engineShader = capi.Render.GetEngineShader(EnumShaderProgram.Gui);
@@ -142,7 +152,7 @@ namespace VSHUD
                 if (!texturesByIcon.TryGetValue(waypoint.Icon, out loadedTexture)) return;
                 engineShader.BindTexture2D("tex2d", texturesByIcon[waypoint.Icon].TextureId, 0);
                 mvMat.Set(capi.Render.CurrentModelviewMatrix)
-                    .Translate(SingleComposer.Bounds.absFixedX + 125, SingleComposer.Bounds.absFixedY + 30, pos.Z)
+                    .Translate(SingleComposer.Bounds.absFixedX + 125, SingleComposer.Bounds.absFixedY + 30, order - 0.5f)
                     .Scale(loadedTexture.Width, loadedTexture.Height, 0.0f)
                     .Scale(scale, scale, 0.0f);
                 engineShader.UniformMatrix("projectionMatrix", capi.Render.CurrentProjectionMatrix);
@@ -152,16 +162,25 @@ namespace VSHUD
             base.OnRenderGUI(deltaTime);
         }
 
+        public override void OnGuiClosed()
+        {
+            base.OnGuiClosed();
+            Dispose();
+        }
+
         public override void Dispose()
         {
             base.Dispose();
             capi.World.UnregisterGameTickListener(id);
             quadModel.Dispose();
+            SingleComposer.Dispose();
         }
 
         public override void OnGuiOpened()
         {
             base.OnGuiOpened();
+            if (quadModel.Disposed) quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
+            RegisterDialogUpdate();
         }
     }
 }

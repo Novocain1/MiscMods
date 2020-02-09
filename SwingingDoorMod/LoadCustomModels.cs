@@ -24,6 +24,7 @@ namespace SwingingDoor
         public override void Start(ICoreAPI api)
         {
             this.api = api;
+            api.RegisterBlockClass("BlockCustomMesh", typeof(BlockCustomMesh));
         }
 
         public override void StartClientSide(ICoreClientAPI api)
@@ -79,6 +80,7 @@ namespace SwingingDoor
                 var bufferViews = gltfType.BufferViews;
                 List<Dictionary<string, long>> accvalues = new List<Dictionary<string, long>>();
                 Dictionary<string, Queue<byte>> buffdat = new Dictionary<string, Queue<byte>>();
+                float[] color = null;
 
                 foreach (var gltfMesh in gltfType.Meshes) foreach (var primitive in gltfMesh.Primitives)
                 {
@@ -96,6 +98,7 @@ namespace SwingingDoor
                     foreach (var mat in gltfType.Materials)
                     {
                         if (mat?.PbrMetallicRoughness?.BaseColorTexture?.Index == null) continue;
+                        color = mat.PbrMetallicRoughness.BaseColorFactor;
 
                         Dictionary<string, long> dict = new Dictionary<string, long>();
                         dict.Add("basecolor", gltfType.Images[mat.PbrMetallicRoughness.BaseColorTexture.Index].BufferView);
@@ -117,25 +120,30 @@ namespace SwingingDoor
 
                 //positions
                 byte[] posbytes = buffdat["vertex"].ToArray();
-                Queue<Vec3f> positions = ToVec3fs(posbytes);
+                Queue<Vec3f> positions = posbytes.ToVec3fs();
 
                 //uvs
                 byte[] uvbytes = buffdat["uv"].ToArray();
-                Queue<Vec2f> uv = ToVec2fs(uvbytes);
+                Queue<Vec2f> uv = uvbytes.ToVec2fs();
 
                 //normals
                 byte[] nrmbytes = buffdat["normal"].ToArray();
-                Queue<Vec3f> normals = ToVec3fs(nrmbytes);
+                Queue<Vec3f> normals = nrmbytes.ToVec3fs();
 
                 //indices
                 byte[] indbytes = buffdat["indices"].ToArray();
-                Queue<int> indices = ToInts(indbytes);
+                Queue<int> indices = indbytes.ToInts();
 
                 //material
                 byte[] matbytes = buffdat["material"].ToArray();
-                Queue<Vec3f> material = ToVec3fs(matbytes);
+                Queue<Vec3f> material = matbytes.ToVec3fs();
 
-                ApplyQueues(normals, positions, uv, indices, ref mesh);
+                //color
+                int? colorint = null;
+                
+                if (color != null) colorint = ColorUtil.ToRgba((int)(color[0] * 255), (int)(color[1] * 255), (int)(color[2] * 255), (int)(color[3] * 255));
+                
+                ApplyQueues(normals, positions, uv, indices, ref mesh, colorint);
 
                 //texture
                 if (capi != null && buffdat.ContainsKey("basecolor"))
@@ -161,76 +169,10 @@ namespace SwingingDoor
             return null;
         }
 
-        public Queue<Vec3f> ToVec3fs(byte[] bytes) => ToVec3fs(ToFloats(bytes));
-        public Queue<Vec2f> ToVec2fs(byte[] bytes) => ToVec2fs(ToFloats(bytes));
-        public Queue<int> ToInts(byte[] bytes) => ToInts(ToShorts(bytes));
-
-        public Queue<Vec3f> ToVec3fs(Queue<float> floats)
+        public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh, int? color = null)
         {
-            Queue<Vec3f> vecs = new Queue<Vec3f>();
-            for (int i = floats.Count; i > 0 && floats.Count > 1; i--)
-            {
-                vecs.Enqueue(new Vec3f(floats.Dequeue(), floats.Dequeue(), floats.Dequeue()));
-            }
-            return vecs;
-        }
+            color = color ?? ColorUtil.WhiteArgb;
 
-        public Queue<Vec2f> ToVec2fs(Queue<float> floats)
-        {
-            Queue<Vec2f> vecs = new Queue<Vec2f>();
-            for (int i = floats.Count; i > 0 && floats.Count > 0; i--)
-            {
-                vecs.Enqueue(new Vec2f(floats.Dequeue(), floats.Dequeue()));
-            }
-            return vecs;
-        }
-
-        public Queue<int> ToInts(Queue<ushort> shorts)
-        {
-            Queue<int> ints = new Queue<int>();
-            for (int i = shorts.Count; i > 0 && shorts.Count > 0; i--)
-            {
-                ints.Enqueue(shorts.Dequeue());
-            }
-            return ints;
-        }
-
-        public Queue<float> ToFloats(byte[] bytes)
-        {
-            Queue<float> queue = new Queue<float>();
-
-            for (int i = 0; i < bytes.Length; i += sizeof(float))
-            {
-                Queue<byte> postrim = new Queue<byte>();
-                for (int j = i; j < i + sizeof(float); j++)
-                {
-                    postrim.Enqueue(bytes[j]);
-                }
-                float pos = BitConverter.ToSingle(postrim.ToArray(), 0);
-                queue.Enqueue(pos);
-            }
-            return queue;
-        }
-
-        public Queue<ushort> ToShorts(byte[] bytes)
-        {
-            Queue<ushort> queue = new Queue<ushort>();
-
-            for (int i = 0; i < bytes.Length; i += sizeof(ushort))
-            {
-                Queue<byte> postrim = new Queue<byte>();
-                for (int j = i; j < i + sizeof(ushort); j++)
-                {
-                    postrim.Enqueue(bytes[j]);
-                }
-                ushort pos = BitConverter.ToUInt16(postrim.ToArray(), 0);
-                queue.Enqueue(pos);
-            }
-            return queue;
-        }
-
-        public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh)
-        {
             Queue<int> packedNormals = new Queue<int>();
             Queue<float> packedUVs = new Queue<float>();
             for (int i = normals.Count; i > 0; i--)
@@ -249,14 +191,15 @@ namespace SwingingDoor
             for (int i = vertices.Count; i > 0; i--)
             {
                 Vec3f vec = vertices.Dequeue();
-                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, 0, 0);
+                
+                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, (int)color, 0, 0);
             }
 
             for (int i = vertexIndices.Count; i > 0; i--)
             {
                 mesh.AddIndex(vertexIndices.Dequeue());
             }
-
+            
             mesh.Flags = packedNormals.ToArray();
             mesh.Uv = packedUVs.ToArray();
         }

@@ -1,0 +1,9 @@
+{
+    "code": "custommesh",
+    "class": "BlockCustomMesh",
+    "attributes": {
+        "mesh": "game:shapes/gltf/slope.gltf"
+    },
+    "shape": { "base": "block/basic/cube" },
+    "creativeinventory": { "general": [ "*" ] }
+}

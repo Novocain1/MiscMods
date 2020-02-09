@@ -1,10 +1,31 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 
 namespace SwingingDoor
 {
+    public class BlockCustomMesh : Block
+    {
+        public override void OnJsonTesselation(MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
+        {
+            var texPos = (api as ICoreClientAPI).Render.GetTextureAtlasPosition(new ItemStack(this));
+
+            var newMesh = api.ModLoader.GetModSystem<LoadCustomModels>().GetWithTexPos(new AssetLocation(Attributes["mesh"].ToString()), texPos);
+            Queue<Vec3f> vec = new Queue<float>(newMesh.xyz).ToVec3fs();
+            Queue<Vec2f> uv = new Queue<float>(newMesh.Uv).ToVec2fs();
+            Queue<Vec3f> nrm = new Queue<Vec3f>();
+            Queue<int> ind = new Queue<int>(newMesh.Indices);
+
+            api.ModLoader.GetModSystem<LoadCustomModels>().ApplyQueues(nrm, vec, uv, ind, ref sourceMesh);
+
+            base.OnJsonTesselation(sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
+        }
+    }
+
     public class MeshRenderer : IRenderer
     {
         private ICoreClientAPI capi;
