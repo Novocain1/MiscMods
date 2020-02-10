@@ -2,8 +2,13 @@
     "code": "custommesh",
     "class": "BlockCustomMesh",
     "attributes": {
-        "mesh": "game:shapes/gltf/slope.gltf"
+        "customMesh": {
+            "base": "game:shapes/gltf/slope",
+            "meshType": "gltf",
+            "texture": {
+                "base": "block/stone/rock/granite1"
+            }
+        }
     },
-    "shape": { "base": "block/basic/cube" },
     "creativeinventory": { "general": [ "*" ] }
 }

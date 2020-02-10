@@ -5,24 +5,33 @@ using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 
 namespace SwingingDoor
 {
+    public enum MeshType
+    {
+        gltf, obj, meshdata
+    }
+
+    public class CustomMesh
+    {
+        public string Base { get; set; } = "";
+        public MeshType meshType { get; set; }
+        public CompositeTexture Texture { get; set; }
+        public AssetLocation fullPath { get => new AssetLocation(Base + "." + Enum.GetName(typeof(MeshType), meshType)); }
+    }
+
     public class BlockCustomMesh : Block
     {
-        public override void OnJsonTesselation(MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
+        public LoadCustomModels customModels { get => api.ModLoader.GetModSystem<LoadCustomModels>(); }
+        public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
         {
-            var texPos = (api as ICoreClientAPI).Render.GetTextureAtlasPosition(new ItemStack(this));
+            var cM = Attributes["customMesh"].AsObject<CustomMesh>();
 
-            var newMesh = api.ModLoader.GetModSystem<LoadCustomModels>().GetWithTexPos(new AssetLocation(Attributes["mesh"].ToString()), texPos);
-            Queue<Vec3f> vec = new Queue<float>(newMesh.xyz).ToVec3fs();
-            Queue<Vec2f> uv = new Queue<float>(newMesh.Uv).ToVec2fs();
-            Queue<Vec3f> nrm = new Queue<Vec3f>();
-            Queue<int> ind = new Queue<int>(newMesh.Indices);
+            sourceMesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
 
-            api.ModLoader.GetModSystem<LoadCustomModels>().ApplyQueues(nrm, vec, uv, ind, ref sourceMesh);
-
-            base.OnJsonTesselation(sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
+            base.OnJsonTesselation(ref sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
         }
     }
 
@@ -77,6 +86,7 @@ namespace SwingingDoor
             IRenderAPI render = capi.Render;
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
             render.GlToggleBlend(true, EnumBlendMode.Standard);
+            
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             if (models.gltfTextures.TryGetValue(location, out TextureAtlasPosition tex))
             {

@@ -192,7 +192,7 @@ namespace SwingingDoor
             {
                 Vec3f vec = vertices.Dequeue();
                 
-                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, (int)color, 0, 0);
+                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, 0, (int)color, 0);
             }
 
             for (int i = vertexIndices.Count; i > 0; i--)
