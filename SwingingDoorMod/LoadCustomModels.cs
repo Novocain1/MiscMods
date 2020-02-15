@@ -7,6 +7,10 @@ using Vintagestory.API.MathTools;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using System.Text;
+using System.IO;
+using Vintagestory.Client.NoObf;
+using Vintagestory.API.Config;
 
 namespace SwingingDoor
 {
@@ -52,6 +56,25 @@ namespace SwingingDoor
                         new Vec3f((float)scale.X, (float)scale.Y, (float)scale.Z), out bool failed);
                     if (failed) return;
                     api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
+                }
+            });
+
+            api.RegisterCommand("obj", "", "", (p, a) => 
+            {
+                var bs = api.World.Player.CurrentBlockSelection;
+                var es = api.World.Player.CurrentEntitySelection;
+                string word = a.PopWord("object");
+
+                if (bs != null)
+                {
+                    var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
+                    capi.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
+                    ConvertToObj(mesh, word);
+                }
+                else if (es != null)
+                {
+                    capi.Tesselator.TesselateShape(api.World.GetBlock(0), es.Entity.Properties.Client.LoadedShape, out MeshData mesh);
+                    ConvertToObj(mesh, word);
                 }
             });
         }
@@ -192,7 +215,7 @@ namespace SwingingDoor
             {
                 Vec3f vec = vertices.Dequeue();
                 
-                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, 0, (int)color, 0);
+                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, (int)color, 0);
             }
 
             for (int i = vertexIndices.Count; i > 0; i--)
@@ -200,8 +223,82 @@ namespace SwingingDoor
                 mesh.AddIndex(vertexIndices.Dequeue());
             }
             
-            mesh.Flags = packedNormals.ToArray();
+            //mesh.Normals = packedNormals.ToArray();
+            //mesh.Flags = packedNormals.ToArray();
             mesh.Uv = packedUVs.ToArray();
+        }
+
+        private void ConvertToObj(MeshData mesh, string filename = "object", bool fixuv = true)
+        {
+            try
+            {
+                Queue<float> uvsq = new Queue<float>();
+                if (fixuv)
+                {
+                    for (int i = 0; i < mesh.Uv.Length; i++)
+                    {
+                        if (i + 4 > mesh.UvCount) continue;
+                        float[] transform = new float[] { mesh.Uv[i], mesh.Uv[++i], mesh.Uv[++i], mesh.Uv[++i] };
+                        Mat22.Scale(transform, transform, new float[] { 128.0f, -64.0f });
+                        Mat22X.Translate(transform, transform, new float[] { 0.0f, 1.0f });
+                        for (int j = 0; j < transform.Length; j++)
+                        {
+                            uvsq.Enqueue(transform[j]);
+                        }
+                    }
+                }
+                else
+                {
+                    uvsq = new Queue<float>(mesh.Uv);
+                }
+
+                float[] uvs = uvsq.ToArray();
+
+                using (TextWriter tw = new StreamWriter(Path.Combine(GamePaths.Binaries, filename + ".obj")))
+                {
+                    tw.WriteLine("o " + filename);
+                    for (int i = 0; i < mesh.xyz.Length; i++)
+                    {
+                        if (i % 3 == 0)
+                        {
+                            if (i != 0) tw.WriteLine();
+                            tw.Write("v " + mesh.xyz[i].ToString("F6"));
+                        }
+                        else
+                        {
+                            tw.Write(" " + mesh.xyz[i].ToString("F6"));
+                        }
+
+                    }
+                    tw.WriteLine();
+                    for (int i = 0; i < uvs.Length; i++)
+                    {
+                        if (i % 2 == 0)
+                        {
+                            if (i != 0) tw.WriteLine();
+                            tw.Write("vt " + uvs[i].ToString("F6"));
+                        }
+                        else
+                        {
+                            tw.Write(" " + uvs[i].ToString("F6"));
+                        }
+                    }
+
+                    tw.WriteLine();
+                    for (int i = 0; i < mesh.Indices.Length; i++)
+                    {
+                        tw.WriteLine(
+                            "f " + (mesh.Indices[i] + 1) + "/" + (mesh.Indices[i] + 1) + " "
+                            + (mesh.Indices[++i] + 1) + "/" + (mesh.Indices[i] + 1) + " "
+                            + (mesh.Indices[++i] + 1) + "/" + (mesh.Indices[i] + 1));
+                    }
+                    tw.Close();
+                }
+            }
+            catch (Exception)
+            {
+            }
+
         }
 
         private void ConvertObj()

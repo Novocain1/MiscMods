@@ -19,7 +19,7 @@ namespace SwingingDoor
         public string Base { get; set; } = "";
         public MeshType meshType { get; set; }
         public CompositeTexture Texture { get; set; }
-        public AssetLocation fullPath { get => new AssetLocation(Base + "." + Enum.GetName(typeof(MeshType), meshType)); }
+        public AssetLocation fullPath { get => new AssetLocation(Base + "." + (meshType == MeshType.meshdata ? "json" : Enum.GetName(typeof(MeshType), meshType))); }
     }
 
     public class BlockCustomMesh : Block
@@ -28,7 +28,6 @@ namespace SwingingDoor
         public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
         {
             var cM = Attributes["customMesh"].AsObject<CustomMesh>();
-
             sourceMesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
 
             base.OnJsonTesselation(ref sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
@@ -88,6 +87,7 @@ namespace SwingingDoor
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
+            prog.NormalShaded = 0;
             if (models.gltfTextures.TryGetValue(location, out TextureAtlasPosition tex))
             {
                 prog.Tex2D = tex.atlasTextureId;

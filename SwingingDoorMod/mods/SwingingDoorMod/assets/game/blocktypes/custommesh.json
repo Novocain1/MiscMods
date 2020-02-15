@@ -10,5 +10,7 @@
             }
         }
     },
-    "creativeinventory": { "general": [ "*" ] }
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false }
 }
