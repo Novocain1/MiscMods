@@ -34,6 +34,36 @@ namespace VSHUD
                     ConvertToObj(mesh, word);
                 }
             });
+            api.RegisterCommand("objworld", "", "", (p, a) =>
+            {
+                MeshData mesh = new MeshData(1, 1);
+                BlockPos playerPos = api.World.Player.Entity.Pos.AsBlockPos;
+                int rad = (int)a.PopInt(16);
+                int yrad = (int)a.PopInt(16);
+                bool fixuv = (bool)a.PopBool(false);
+
+                api.World.BlockAccessor.WalkBlocks(playerPos.AddCopy(rad, yrad, rad), playerPos.AddCopy(-rad, -yrad, -rad), (block, bpos) =>
+                {
+                    if (block.Id != 0 && api.World.BlockAccessor.GetLightLevel(bpos, EnumLightLevelType.MaxLight) > 0)
+                    {
+                        api.Tesselator.TesselateBlock(block, out MeshData thismesh);
+                        thismesh = thismesh.Clone();
+                        Vec3f translation = new Vec3f(playerPos.X - bpos.X, playerPos.Y - bpos.Y, playerPos.Z - bpos.Z);
+                        /*
+                        if (block.Lod0Shape?.Base != null)
+                        {
+                            api.Tesselator.TesselateShape(block, api.TesselatorManager.GetCachedShape(block.Lod0Shape.Base), out MeshData lod);
+                            thismesh.AddMeshData(lod);
+                        }
+                        */
+                        thismesh.Translate(translation);
+                        mesh.AddMeshData(thismesh);
+                    }
+                });
+                mesh.Rotate(new Vec3f(0, 0, 0), GameMath.DEG2RAD * 180, 0, 0);
+                ConvertToObj(mesh, "world", fixuv);
+            });
+
         }
 
         private void ConvertToObj(MeshData mesh, string filename = "object", bool fixuv = true)
@@ -42,7 +72,6 @@ namespace VSHUD
             try
             {
                 Queue<float> uvsq = new Queue<float>();
-                Queue<float> vecq = new Queue<float>();
                 if (fixuv)
                 {
                     for (int i = 0; i < mesh.Uv.Length; i++)
