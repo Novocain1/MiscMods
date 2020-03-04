@@ -27,10 +27,18 @@ namespace SwingingDoor
         public LoadCustomModels customModels { get => api.ModLoader.GetModSystem<LoadCustomModels>(); }
         public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
         {
+            base.OnJsonTesselation(ref sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
             var cM = Attributes["customMesh"].AsObject<CustomMesh>();
             sourceMesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
+        }
 
-            base.OnJsonTesselation(ref sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
+        public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
+        {
+            var cM = Attributes["customMesh"].AsObject<CustomMesh>();
+            MeshData mesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
+
+            //renderinfo.ModelRef?.Dispose();
+            renderinfo.ModelRef = capi.Render.UploadMesh(mesh);
         }
     }
 

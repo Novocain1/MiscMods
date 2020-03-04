@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 
@@ -14,8 +16,10 @@ namespace VSHUD
 {
     class MeshTools : ModSystem
     {
+        ICoreClientAPI capi;
         public override void StartClientSide(ICoreClientAPI api)
         {
+            this.capi = api;
             api.RegisterCommand("obj", "", "", (p, a) =>
             {
                 var bs = api.World.Player.CurrentBlockSelection;
@@ -26,71 +30,93 @@ namespace VSHUD
                 {
                     var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
-                    ConvertToObj(mesh, word);
+                    ConvertToObj(mesh, word, true, false);
                 }
                 else if (es != null)
                 {
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), es.Entity.Properties.Client.LoadedShape, out MeshData mesh);
-                    ConvertToObj(mesh, word);
+                    ConvertToObj(mesh, word, true, false);
                 }
             });
+            api.RegisterCommand("meshdata", "", "", (p, a) =>
+            {
+                var bs = api.World.Player.CurrentBlockSelection;
+                var es = api.World.Player.CurrentEntitySelection;
+                string word = a.PopWord("object");
+
+                if (bs != null)
+                {
+                    var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
+                    api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
+                    using (TextWriter tw = new StreamWriter(Path.Combine(GamePaths.Binaries, word + ".json")))
+                    {
+                        tw.Write(JsonConvert.SerializeObject(mesh, Formatting.Indented));
+                    }
+                }
+                else if (es != null)
+                {
+                    api.Tesselator.TesselateShape(api.World.GetBlock(0), es.Entity.Properties.Client.LoadedShape, out MeshData mesh);
+                    using (TextWriter tw = new StreamWriter(Path.Combine(GamePaths.Binaries, word + ".json")))
+                    {
+                        tw.Write(JsonConvert.SerializeObject(mesh, Formatting.Indented));
+                    }
+                }
+            });
+
             api.RegisterCommand("objworld", "", "", (p, a) =>
             {
                 MeshData mesh = new MeshData(1, 1);
                 BlockPos playerPos = api.World.Player.Entity.Pos.AsBlockPos;
                 int rad = (int)a.PopInt(16);
                 int yrad = (int)a.PopInt(16);
-                bool fixuv = (bool)a.PopBool(false);
+                ShapeTesselatorManager tesselatormanager = api.TesselatorManager as ShapeTesselatorManager;
 
                 api.World.BlockAccessor.WalkBlocks(playerPos.AddCopy(rad, yrad, rad), playerPos.AddCopy(-rad, -yrad, -rad), (block, bpos) =>
                 {
                     if (block.Id != 0 && api.World.BlockAccessor.GetLightLevel(bpos, EnumLightLevelType.MaxLight) > 0)
                     {
-                        api.Tesselator.TesselateBlock(block, out MeshData thismesh);
-                        thismesh = thismesh.Clone();
-                        Vec3f translation = new Vec3f(playerPos.X - bpos.X, playerPos.Y - bpos.Y, playerPos.Z - bpos.Z);
-                        /*
-                        if (block.Lod0Shape?.Base != null)
-                        {
-                            api.Tesselator.TesselateShape(block, api.TesselatorManager.GetCachedShape(block.Lod0Shape.Base), out MeshData lod);
-                            thismesh.AddMeshData(lod);
-                        }
-                        */
+                        MeshData thismesh = tesselatormanager.blockModelDatasLod0.ContainsKey(block.Id) ?
+                        tesselatormanager.blockModelDatasLod0[block.Id].Clone() : block.MeshInPos(bpos, api);
+
+                        Vec3f translation = new Vec3f(-(playerPos.X - bpos.X), -(playerPos.Y - bpos.Y), -(playerPos.Z - bpos.Z));
+
                         thismesh.Translate(translation);
                         mesh.AddMeshData(thismesh);
                     }
                 });
-                mesh.Rotate(new Vec3f(0, 0, 0), GameMath.DEG2RAD * 180, 0, 0);
-                ConvertToObj(mesh, "world", fixuv);
+                ConvertToObj(mesh, "world", false, true);
             });
 
         }
 
-        private void ConvertToObj(MeshData mesh, string filename = "object", bool fixuv = true)
+        private void ConvertToObj(MeshData mesh, string filename = "object", params bool[] flags)
         {
             mesh = mesh.Clone();
             try
             {
                 Queue<float> uvsq = new Queue<float>();
-                if (fixuv)
+                for (int i = 0; i < mesh.Uv.Length; i++)
                 {
-                    for (int i = 0; i < mesh.Uv.Length; i++)
+                    if (i + 4 > mesh.UvCount) continue;
+                    float[] transform = new float[] { mesh.Uv[i], mesh.Uv[++i], mesh.Uv[++i], mesh.Uv[++i] };
+                    if (flags[0])
                     {
-                        if (i + 4 > mesh.UvCount) continue;
-                        float[] transform = new float[] { mesh.Uv[i], mesh.Uv[++i], mesh.Uv[++i], mesh.Uv[++i] };
-                        Mat22.Scale(transform, transform, new float[] { 128.0f, -64.0f });
+                        Mat22.Scale(transform, transform, new float[] { capi.BlockTextureAtlas.Size.Width / 32, -(capi.BlockTextureAtlas.Size.Height / 32) });
                         Mat22X.Translate(transform, transform, new float[] { 0.0f, 1.0f });
-                        for (int j = 0; j < transform.Length; j++)
-                        {
-                            uvsq.Enqueue(transform[j]);
-                        }
                     }
-                    mesh.Translate(-0.5f, -0.5f, -0.5f);
+                    if (flags[1])
+                    {
+                        Mat22.Scale(transform, transform, new float[] { 1.0f, -1.0f });
+                        Mat22X.Translate(transform, transform, new float[] { 0.0f, 1.0f });
+                    }
+
+                    for (int j = 0; j < transform.Length; j++)
+                    {
+                        uvsq.Enqueue(transform[j]);
+                    }
                 }
-                else
-                {
-                    uvsq = new Queue<float>(mesh.Uv);
-                }
+
+                mesh.Translate(-0.5f, -0.5f, -0.5f);
 
                 float[] uvs = uvsq.ToArray();
 

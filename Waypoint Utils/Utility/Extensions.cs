@@ -10,6 +10,7 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -362,6 +363,35 @@ namespace VSHUD
         public static string Sanitize(this Vec3d vec)
         {
             return "X: " + Math.Round(vec.X, 3) + ", Y: " + Math.Round(vec.Y, 3) + ", Z: " + Math.Round(vec.Z, 3);
+        }
+
+        public static MeshData MeshInPos(this Block block, BlockPos bpos, ICoreClientAPI api)
+        {
+            MeshData thismesh;
+            ShapeTesselatorManager tesselatormanager = api.TesselatorManager as ShapeTesselatorManager;
+
+            if (block.HasAlternates)
+            {
+                long alternateIndex = block.RandomizeAxes == EnumRandomizeAxes.XYZ ?
+                    GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, tesselatormanager.altblockModelDatas[block.Id].Length) : GameMath.MurmurHash3Mod(bpos.X, 0, bpos.Z, tesselatormanager.altblockModelDatas[block.Id].Length);
+                thismesh = tesselatormanager.altblockModelDatas[block.Id][alternateIndex];
+            }
+            else thismesh = tesselatormanager.blockModelDatas[block.Id];
+
+            if (block.RandomizeRotations)
+            {
+                if (block.BlockMaterial == EnumBlockMaterial.Leaves)
+                {
+                    int index = GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, JsonTesselator.randomRotationsLeaves.Length);
+                    thismesh = thismesh.Clone().MatrixTransform(JsonTesselator.randomRotMatricesLeaves[index]);
+                }
+                else
+                {
+                    int index = GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, JsonTesselator.randomRotations.Length);
+                    thismesh = thismesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
+                }
+            }
+            return thismesh.Clone();
         }
     }
 }

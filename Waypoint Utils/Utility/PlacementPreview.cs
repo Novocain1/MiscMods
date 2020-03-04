@@ -104,7 +104,21 @@ namespace VSHUD
                 mesh = tesselatormanager.altblockModelDatas[toBlock.Id][alternateIndex];
             }
             else mesh = tesselatormanager.blockModelDatas[toBlock.Id];
-            
+
+            if (toBlock.RandomizeRotations)
+            {
+                if (toBlock.BlockMaterial == EnumBlockMaterial.Leaves)
+                {
+                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotationsLeaves.Length);
+                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatricesLeaves[index]);
+                }
+                else
+                {
+                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotations.Length);
+                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
+                }
+            }
+
             mesh.AddTintIndex(toBlock.TintIndex);
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
