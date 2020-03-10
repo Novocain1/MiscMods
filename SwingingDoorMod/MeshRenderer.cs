@@ -24,21 +24,38 @@ namespace SwingingDoor
 
     public class BlockCustomMesh : Block
     {
+        CustomMesh customMesh;
+        MeshData mesh;
+        MeshRef meshRef;
         public LoadCustomModels customModels { get => api.ModLoader.GetModSystem<LoadCustomModels>(); }
+
+        public override void OnLoaded(ICoreAPI api)
+        {
+            base.OnLoaded(api);
+            if (api.Side.IsClient())
+            {
+                customMesh = Attributes["customMesh"].AsObject<CustomMesh>();
+                customMesh.Texture.Bake(api.Assets);
+                mesh = customModels.meshes[customMesh.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[customMesh.Texture.Base]).Translate(0.5f, 0.5f, 0.5f);
+                meshRef = (api as ICoreClientAPI).Render.UploadMesh(mesh);
+            }
+        }
+
         public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
         {
-            base.OnJsonTesselation(ref sourceMesh, pos, chunkExtIds, chunkLightExt, extIndex3d);
-            var cM = Attributes["customMesh"].AsObject<CustomMesh>();
-            sourceMesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
+            sourceMesh = mesh;
         }
 
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
-            var cM = Attributes["customMesh"].AsObject<CustomMesh>();
-            MeshData mesh = customModels.meshes[cM.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[cM.Texture.Base]);
+            renderinfo.ModelRef = meshRef;
+        }
 
-            //renderinfo.ModelRef?.Dispose();
-            renderinfo.ModelRef = capi.Render.UploadMesh(mesh);
+        public override int GetRandomColor(ICoreClientAPI capi, BlockPos pos, BlockFacing facing)
+        {
+            int[] rndColors = capi.BlockTextureAtlas[customMesh.Texture.Base].RndColors;
+
+            return rndColors[(int)Math.Round(capi.World.Rand.NextDouble() * (rndColors.Length - 1))];
         }
     }
 

@@ -195,9 +195,9 @@ namespace SwingingDoor
         public void ApplyQueues(Queue<Vec3f> normals, Queue<Vec3f> vertices, Queue<Vec2f> vertexUvs, Queue<int> vertexIndices, ref MeshData mesh, int? color = null)
         {
             color = color ?? ColorUtil.WhiteArgb;
-
             Queue<int> packedNormals = new Queue<int>();
             Queue<float> packedUVs = new Queue<float>();
+
             for (int i = normals.Count; i > 0; i--)
             {
                 Vec3f nrm = normals.Dequeue();
@@ -215,17 +215,28 @@ namespace SwingingDoor
             {
                 Vec3f vec = vertices.Dequeue();
                 
-                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, ColorUtil.WhiteArgb, (int)color, 0);
+                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, (int)color, 0, 0);
+                if (i % 3 == 0)
+                {
+                    mesh.AddXyzFace(-1);
+                    mesh.AddRenderPass(-1);
+                    mesh.AddTintIndex(0);
+                }
             }
 
             for (int i = vertexIndices.Count; i > 0; i--)
             {
                 mesh.AddIndex(vertexIndices.Dequeue());
             }
-            
-            //mesh.Normals = packedNormals.ToArray();
-            //mesh.Flags = packedNormals.ToArray();
+
+            int pNcount = packedNormals.Count;
+            for (int i = 0; i < pNcount; i++)
+            {
+                mesh.Flags[i] |= packedNormals.Dequeue();
+            }
+
             mesh.Uv = packedUVs.ToArray();
+            mesh.VerticesPerFace = 3;
         }
 
         private void ConvertToObj(MeshData mesh, string filename = "object", bool fixuv = true)

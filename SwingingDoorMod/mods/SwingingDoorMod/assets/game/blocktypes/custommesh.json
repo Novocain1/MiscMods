@@ -3,7 +3,7 @@
     "class": "BlockCustomMesh",
     "attributes": {
         "customMesh": {
-            "base": "game:shapes/gltf/slope",
+            "base": "game:shapes/gltf/sphere",
             "meshType": "gltf",
             "texture": {
                 "base": "block/stone/rock/granite1"
@@ -12,5 +12,6 @@
     },
     "creativeinventory": { "general": [ "*" ] },
     "sidesolid": { "all": false },
-    "sideopaque": { "all": false }
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0
 }
