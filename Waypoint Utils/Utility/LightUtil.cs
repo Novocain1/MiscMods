@@ -102,8 +102,7 @@ namespace VSHUD
         {
             pos = pos ?? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy();
             int rad = config.LightRadius;
-            List<BlockPos> blocks = new List<BlockPos>();
-            List<int> colors = new List<int>() { 0 };
+            Dictionary<BlockPos, int> colors = new Dictionary<BlockPos, int>();
 
             for (int x = -rad; x <= rad; x++)
             {
@@ -125,14 +124,13 @@ namespace VSHUD
                             int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
                             int c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
 
-                            blocks.Add(iPos);
-                            colors.Add(c);
+                            colors.Add(iPos, c);
                         }
                     }
                 }
             }
             
-            capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, blocks, colors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
+            capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, colors.Keys.ToList(), colors.Values.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
         }
 
         public void ClearLightLevelHighlights()
