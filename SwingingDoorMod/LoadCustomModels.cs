@@ -216,7 +216,7 @@ namespace SwingingDoor
                 Vec3f vec = vertices.Dequeue();
                 
                 mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, (int)color, 0, 0);
-                if (i % 3 == 0)
+                if (i % 4 == 0)
                 {
                     mesh.AddXyzFace(-1);
                     mesh.AddRenderPass(-1);
