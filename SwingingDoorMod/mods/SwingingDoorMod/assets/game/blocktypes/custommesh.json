@@ -1,6 +1,10 @@
 {
     "code": "custommesh",
     "class": "BlockCustomMesh",
+    "entityClass": "Generic",
+    "entityBehaviors": [
+        { "name": "CustomMesh" }
+    ],
     "attributes": {
         "customMesh": {
             "base": "game:shapes/gltf/sphere",

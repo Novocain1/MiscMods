@@ -29,6 +29,7 @@ namespace SwingingDoor
         {
             this.api = api;
             api.RegisterBlockClass("BlockCustomMesh", typeof(BlockCustomMesh));
+            api.RegisterBlockEntityBehaviorClass("CustomMesh", typeof(BEBehaviorCustomMesh));
         }
 
         public override void StartClientSide(ICoreClientAPI api)

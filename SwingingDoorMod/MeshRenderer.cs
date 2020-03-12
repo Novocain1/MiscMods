@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Vintagestory.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -20,13 +21,23 @@ namespace SwingingDoor
         public MeshType meshType { get; set; }
         public CompositeTexture Texture { get; set; }
         public AssetLocation fullPath { get => new AssetLocation(Base + "." + (meshType == MeshType.meshdata ? "json" : Enum.GetName(typeof(MeshType), meshType))); }
+        public float rotateX { get; set; } = 0;
+        public float rotateY { get; set; } = 0;
+        public float rotateZ { get; set; } = 0;
+
+        public float scaleX { get; set; } = 1;
+        public float scaleY { get; set; } = 1;
+        public float scaleZ { get; set; } = 1;
+
+        public Vec3f rot { get => new Vec3f(rotateX, rotateY, rotateZ); }
+        public Vec3f scale { get => new Vec3f(scaleX, scaleY, scaleZ); }
     }
 
     public class BlockCustomMesh : Block
     {
-        CustomMesh customMesh;
-        MeshData mesh;
-        MeshRef meshRef;
+        public CustomMesh customMesh;
+        public MeshData mesh;
+        public MeshRef meshRef;
         public LoadCustomModels customModels { get => api.ModLoader.GetModSystem<LoadCustomModels>(); }
 
         public override void OnLoaded(ICoreAPI api)
@@ -36,14 +47,15 @@ namespace SwingingDoor
             {
                 customMesh = Attributes["customMesh"].AsObject<CustomMesh>();
                 customMesh.Texture.Bake(api.Assets);
-                mesh = customModels.meshes[customMesh.fullPath].WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[customMesh.Texture.Base]).Translate(0.5f, 0.5f, 0.5f);
+                mesh = customModels.meshes[customMesh.fullPath].Translate(0.5f, 0.5f, 0.5f);
+                mesh = customMesh.Texture != null ? mesh.WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[customMesh.Texture.Base]) : mesh;
                 meshRef = (api as ICoreClientAPI).Render.UploadMesh(mesh);
             }
         }
 
         public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
         {
-            sourceMesh = mesh;
+            sourceMesh.Clear();
         }
 
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
@@ -59,6 +71,39 @@ namespace SwingingDoor
         }
     }
 
+    public class BEBehaviorCustomMesh : BlockEntityBehavior
+    {
+        ICoreClientAPI capi;
+        MeshRenderer myRenderer;
+
+        BlockCustomMesh blockCustomMesh { get => Blockentity.Block as BlockCustomMesh; }
+        public BEBehaviorCustomMesh(BlockEntity blockentity) : base(blockentity)
+        {
+        }
+
+        public override void Initialize(ICoreAPI api, JsonObject properties)
+        {
+            base.Initialize(api, properties);
+            var c = blockCustomMesh.customMesh;
+            capi = api as ICoreClientAPI;
+
+            if (capi != null) myRenderer = new MeshRenderer(capi, Blockentity.Pos, c.fullPath, c.rot, c.scale, out bool failed, blockCustomMesh.meshRef);
+            capi?.Event.RegisterRenderer(myRenderer, EnumRenderStage.Opaque);
+        }
+
+        public override void OnBlockRemoved()
+        {
+            base.OnBlockRemoved();
+            OnBlockUnloaded();
+        }
+
+        public override void OnBlockUnloaded()
+        {
+            base.OnBlockUnloaded();
+            capi?.Event.UnregisterRenderer(myRenderer, EnumRenderStage.Opaque);
+        }
+    }
+
     public class MeshRenderer : IRenderer
     {
         private ICoreClientAPI capi;
@@ -66,12 +111,11 @@ namespace SwingingDoor
         private MeshRef meshRef;
         public Matrixf ModelMat = new Matrixf();
         public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
-        public bool shouldRender;
         AssetLocation location;
         Vec3f rotation;
         Vec3f scale;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null)
         {
             failed = false;
             try
@@ -86,7 +130,7 @@ namespace SwingingDoor
                 {
                     mesh = mesh.WithTexPos(tPos);
                 }
-                meshRef = capi.Render.UploadMesh(mesh);
+                this.meshRef = meshRef ?? capi.Render.UploadMesh(mesh);
             }
             catch (Exception)
             {
@@ -106,13 +150,16 @@ namespace SwingingDoor
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (meshRef == null) return;
             IRenderAPI render = capi.Render;
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
             render.GlToggleBlend(true, EnumBlendMode.Standard);
+            IShaderProgram activeShader = render.CurrentActiveShader;
+            if (meshRef == null || meshRef.Disposed) return;
+
+            activeShader?.Stop();
             
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-            prog.NormalShaded = 0;
+            prog.NormalShaded = 1;
             if (models.gltfTextures.TryGetValue(location, out TextureAtlasPosition tex))
             {
                 prog.Tex2D = tex.atlasTextureId;
@@ -121,15 +168,14 @@ namespace SwingingDoor
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
-                .Translate(0.5, 0.5, 0.5)
                 .RotateDeg(rotation)
                 .Scale(scale.X, scale.Y, scale.Z)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
-
             capi.Render.RenderMesh(meshRef);
             prog.Stop();
+            activeShader?.Use();
         }
     }
 }
