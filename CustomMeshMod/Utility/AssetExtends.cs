@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Common;
 
-namespace SwingingDoor
+namespace CustomMeshMod
 {
     public class AssetExtends
     {

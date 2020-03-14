@@ -1,0 +1,21 @@
+{
+    "code": "custommesh",
+    "class": "BlockCustomMesh",
+    "entityClass": "Generic",
+    "entityBehaviors": [
+        { "name": "CustomMesh" }
+    ],
+    "attributes": {
+        "customMesh": {
+            "base": "game:shapes/gltf/sphere",
+            "meshType": "gltf",
+            "texture": {
+                "base": "game:block/stone/rock/granite1"
+            }
+        }
+    },
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0
+}

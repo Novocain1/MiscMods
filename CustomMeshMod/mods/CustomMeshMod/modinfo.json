@@ -1,0 +1,10 @@
+{
+	"type": "code",
+	"name": "CustomMeshMod",
+	"modid": "custommeshmod",
+	"description" : "Allows modders to load in custom meshes for blocks.",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}

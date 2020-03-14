@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using OpenTK.Graphics.OpenGL;
 
-namespace SwingingDoor
+namespace CustomMeshMod
 {
     public partial class GltfType
     {

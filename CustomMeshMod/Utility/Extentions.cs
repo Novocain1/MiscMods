@@ -4,7 +4,7 @@ using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 
-namespace SwingingDoor
+namespace CustomMeshMod
 {
     public static class Extentions
     {

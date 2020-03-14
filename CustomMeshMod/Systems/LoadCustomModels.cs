@@ -12,7 +12,7 @@ using System.IO;
 using Vintagestory.Client.NoObf;
 using Vintagestory.API.Config;
 
-namespace SwingingDoor
+namespace CustomMeshMod
 {
     public class LoadCustomModels : ModSystem
     {
@@ -21,7 +21,7 @@ namespace SwingingDoor
         public Dictionary<AssetLocation, GltfType> gltfs = new Dictionary<AssetLocation, GltfType>();
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
-        public Dictionary<AssetLocation, TextureAtlasPosition> gltfTextures = new Dictionary<AssetLocation, TextureAtlasPosition>();
+        public Dictionary<AssetLocation, TextureAtlasPosition> customMeshTextures = new Dictionary<AssetLocation, TextureAtlasPosition>();
 
         public MeshRenderer testrenderer;
 
@@ -176,7 +176,7 @@ namespace SwingingDoor
                     BitmapExternal bitmap = capi.Render.BitmapCreateFromPng(texbytes);
                     capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position);
                     Size2i size = capi.BlockTextureAtlas.Size;
-                    gltfTextures.Add(gltf.Key, position);
+                    customMeshTextures.Add(gltf.Key, position);
                 }
 
                 meshes.Add(gltf.Key, mesh);
@@ -215,9 +215,8 @@ namespace SwingingDoor
             for (int i = vertices.Count; i > 0; i--)
             {
                 Vec3f vec = vertices.Dequeue();
-                
-                mesh.AddVertexWithFlags(vec.X, vec.Y, vec.Z, 0, 0, (int)color, 0, 0);
-                if (i % 4 == 0)
+                mesh.AddVertex(vec.X, vec.Y, vec.Z, (int)color);
+                if (i % 3 == 0)
                 {
                     mesh.AddXyzFace(-1);
                     mesh.AddRenderPass(-1);
@@ -231,13 +230,17 @@ namespace SwingingDoor
             }
 
             int pNcount = packedNormals.Count;
+            mesh.Flags = new int[pNcount];
+
             for (int i = 0; i < pNcount; i++)
             {
-                mesh.Flags[i] |= packedNormals.Dequeue();
+                int nrm = packedNormals.Dequeue();
+                mesh.Flags[i] |= nrm;
             }
 
             mesh.Uv = packedUVs.ToArray();
             mesh.VerticesPerFace = 3;
+            mesh.Rgba2 = null;
         }
 
         private void ConvertToObj(MeshData mesh, string filename = "object", bool fixuv = true)
@@ -366,6 +369,7 @@ namespace SwingingDoor
                     }
                     ApplyQueues(normals, vertices, vertexUvs, vertexIndices, ref mesh);
                     meshes.Add(val.Location, mesh);
+                    if (capi != null) customMeshTextures.Add(val.Location, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿namespace SwingingDoor
+﻿namespace CustomMeshMod
 {
     static class ComponentMap
     {

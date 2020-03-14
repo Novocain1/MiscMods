@@ -17,7 +17,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 
-namespace SwingingDoor
+namespace CustomMeshMod
 {
     class SwingingDoorMod : ModSystem
     {
