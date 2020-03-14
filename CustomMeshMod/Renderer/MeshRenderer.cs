@@ -6,12 +6,13 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using OpenTK.Graphics.OpenGL;
 
 namespace CustomMeshMod
 {
     public enum EnumNormalShading
     {
-        flat, smooth
+        Flat, Smooth
     }
 
     public class MeshRenderer : IRenderer
@@ -25,9 +26,10 @@ namespace CustomMeshMod
         Vec3f rotation;
         Vec3f scale;
         EnumNormalShading shading;
+        TextureMagFilter interpolation;
         bool backfaceCulling;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null, EnumNormalShading shading = EnumNormalShading.flat, bool backfaceCulling = true)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null, EnumNormalShading shading = EnumNormalShading.Flat, bool backfaceCulling = true, TextureMagFilter interpolation = TextureMagFilter.Nearest)
         {
             failed = false;
             try
@@ -45,6 +47,7 @@ namespace CustomMeshMod
                 this.meshRef = meshRef ?? capi.Render.UploadMesh(mesh);
                 this.shading = shading;
                 this.backfaceCulling = backfaceCulling;
+                this.interpolation = interpolation;
             }
             catch (Exception)
             {
@@ -74,11 +77,14 @@ namespace CustomMeshMod
 
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             prog.NormalShaded = 1;
+            
             if (models.customMeshTextures.TryGetValue(location, out TextureAtlasPosition tex))
             {
                 prog.Tex2D = tex.atlasTextureId;
             }
             else prog.Tex2D = 0;
+            if (interpolation != TextureMagFilter.Nearest) GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)interpolation);
+
             prog.Uniform("shading", (int)shading);
 
             prog.ModelMatrix = ModelMat.Identity()
@@ -92,6 +98,8 @@ namespace CustomMeshMod
             prog.Stop();
             activeShader?.Use();
             if (backfaceCulling) render.GlDisableCullFace();
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         }
     }
 }

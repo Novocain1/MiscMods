@@ -19,14 +19,14 @@ namespace CustomMeshMod
             {
                 customMesh = Attributes["customMesh"].AsObject<CustomMesh>();
                 customMesh.Texture?.Bake(api.Assets);
-                mesh = customModels.meshes[customMesh.fullPath].Clone().Translate(0.5f, 0.5f, 0.5f).Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 
-                    GameMath.DEG2RAD * customMesh.rotateX, 
-                    GameMath.DEG2RAD * customMesh.rotateY, 
-                    GameMath.DEG2RAD * customMesh.rotateZ
+                mesh = customModels.meshes[customMesh.FullPath].Clone().Translate(0.5f, 0.5f, 0.5f).Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 
+                    GameMath.DEG2RAD * customMesh.RotateX, 
+                    GameMath.DEG2RAD * customMesh.RotateY, 
+                    GameMath.DEG2RAD * customMesh.RotateZ
                     );
                 mesh = customMesh.Texture != null ? 
                     mesh.WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[customMesh.Texture.Base]) : 
-                    mesh.WithTexPos(customModels.customMeshTextures[customMesh.fullPath]);
+                    mesh.WithTexPos(customModels.customMeshTextures[customMesh.FullPath]);
                 meshRef = (api as ICoreClientAPI).Render.UploadMesh(mesh);
             }
         }
@@ -51,7 +51,7 @@ namespace CustomMeshMod
             }
             else
             {
-                rndColors = customModels.customMeshTextures[customMesh.fullPath].RndColors;
+                rndColors = customModels.customMeshTextures[customMesh.FullPath].RndColors;
             }
 
             return rndColors[(int)Math.Round(capi.World.Rand.NextDouble() * (rndColors.Length - 1))];

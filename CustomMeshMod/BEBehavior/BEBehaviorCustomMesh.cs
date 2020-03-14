@@ -21,7 +21,7 @@ namespace CustomMeshMod
             var c = blockCustomMesh.customMesh;
             capi = api as ICoreClientAPI;
 
-            if (capi != null) myRenderer = new MeshRenderer(capi, Blockentity.Pos, c.fullPath, new Vec3f(), new Vec3f(1.0f, 1.0f, 1.0f), out bool failed, blockCustomMesh.meshRef, c.shading, c.BackFaceCulling);
+            if (capi != null) myRenderer = new MeshRenderer(capi, Blockentity.Pos, c.FullPath, new Vec3f(), new Vec3f(1.0f, 1.0f, 1.0f), out bool failed, blockCustomMesh.meshRef, c.NormalShading, c.BackFaceCulling, c.Interpolation);
             capi?.Event.RegisterRenderer(myRenderer, EnumRenderStage.Opaque);
         }
 

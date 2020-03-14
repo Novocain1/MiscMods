@@ -13,7 +13,8 @@
             "base": "game:shapes/gltf/pumpkin",
             "meshType": "gltf",
             "texture": null,
-            "shadingByType": { "*-smooth": "smooth", "*-flat": "flat" }
+            "normalshadingByType": { "*-smooth": "smooth", "*-flat": "flat" },
+            "interpolationByType": { "*-smooth": "linear", "*-flat": "nearest" }
         }
     },
     "creativeinventory": { "general": [ "*" ] },

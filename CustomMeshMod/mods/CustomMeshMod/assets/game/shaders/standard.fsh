@@ -73,4 +73,5 @@ void main () {
 	if (outColor.a < alphaTest) discard;
 	
 	outGlow = vec4(glowLevel, extraGodray - fogAmount, 0, outColor.a);
+	//outColor = smoothstep(outColor, outColor, outColor);
 }
