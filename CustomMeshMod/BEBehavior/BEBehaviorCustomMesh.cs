@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 
 namespace CustomMeshMod
 {
@@ -20,7 +21,7 @@ namespace CustomMeshMod
             var c = blockCustomMesh.customMesh;
             capi = api as ICoreClientAPI;
 
-            if (capi != null) myRenderer = new MeshRenderer(capi, Blockentity.Pos, c.fullPath, c.rot, c.scale, out bool failed, blockCustomMesh.meshRef);
+            if (capi != null) myRenderer = new MeshRenderer(capi, Blockentity.Pos, c.fullPath, new Vec3f(), new Vec3f(1.0f, 1.0f, 1.0f), out bool failed, blockCustomMesh.meshRef, c.shading, c.BackFaceCulling);
             capi?.Event.RegisterRenderer(myRenderer, EnumRenderStage.Opaque);
         }
 

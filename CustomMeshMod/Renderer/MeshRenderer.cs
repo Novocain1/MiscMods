@@ -9,6 +9,11 @@ using Vintagestory.API.Util;
 
 namespace CustomMeshMod
 {
+    public enum EnumNormalShading
+    {
+        flat, smooth
+    }
+
     public class MeshRenderer : IRenderer
     {
         private ICoreClientAPI capi;
@@ -19,8 +24,10 @@ namespace CustomMeshMod
         AssetLocation location;
         Vec3f rotation;
         Vec3f scale;
+        EnumNormalShading shading;
+        bool backfaceCulling;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null, EnumNormalShading shading = EnumNormalShading.flat, bool backfaceCulling = true)
         {
             failed = false;
             try
@@ -36,6 +43,8 @@ namespace CustomMeshMod
                     mesh = mesh.WithTexPos(tPos);
                 }
                 this.meshRef = meshRef ?? capi.Render.UploadMesh(mesh);
+                this.shading = shading;
+                this.backfaceCulling = backfaceCulling;
             }
             catch (Exception)
             {
@@ -60,9 +69,9 @@ namespace CustomMeshMod
             render.GlToggleBlend(true, EnumBlendMode.Standard);
             IShaderProgram activeShader = render.CurrentActiveShader;
             if (meshRef == null || meshRef.Disposed) return;
-
             activeShader?.Stop();
-            
+            if (backfaceCulling) render.GlEnableCullFace();
+
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             prog.NormalShaded = 1;
             if (models.customMeshTextures.TryGetValue(location, out TextureAtlasPosition tex))
@@ -70,6 +79,7 @@ namespace CustomMeshMod
                 prog.Tex2D = tex.atlasTextureId;
             }
             else prog.Tex2D = 0;
+            prog.Uniform("shading", (int)shading);
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
@@ -81,6 +91,7 @@ namespace CustomMeshMod
             capi.Render.RenderMesh(meshRef);
             prog.Stop();
             activeShader?.Use();
+            if (backfaceCulling) render.GlDisableCullFace();
         }
     }
 }

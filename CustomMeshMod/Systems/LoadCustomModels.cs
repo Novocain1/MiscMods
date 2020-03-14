@@ -36,6 +36,7 @@ namespace CustomMeshMod
         {
             this.capi = api;
             api.Event.BlockTexturesLoaded += LoadRawMeshes;
+            api.Event.LevelFinalize += () => api.Shader.ReloadShaders();
 
             api.RegisterCommand("testrender", "", "", (p, a) =>
             {

@@ -9,6 +9,8 @@ namespace CustomMeshMod
     {
         public string Base { get; set; } = "";
         public MeshType meshType { get; set; }
+        public EnumNormalShading shading { get; set; } = EnumNormalShading.flat;
+        public bool BackFaceCulling { get; set; } = true;
         public CompositeTexture Texture { get; set; }
         public AssetLocation fullPath { get => new AssetLocation(Base + "." + (meshType == MeshType.meshdata ? "json" : Enum.GetName(typeof(MeshType), meshType))); }
         public float rotateX { get; set; } = 0;

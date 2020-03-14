@@ -19,7 +19,11 @@ namespace CustomMeshMod
             {
                 customMesh = Attributes["customMesh"].AsObject<CustomMesh>();
                 customMesh.Texture?.Bake(api.Assets);
-                mesh = customModels.meshes[customMesh.fullPath].Translate(0.5f, 0.5f, 0.5f);
+                mesh = customModels.meshes[customMesh.fullPath].Clone().Translate(0.5f, 0.5f, 0.5f).Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 
+                    GameMath.DEG2RAD * customMesh.rotateX, 
+                    GameMath.DEG2RAD * customMesh.rotateY, 
+                    GameMath.DEG2RAD * customMesh.rotateZ
+                    );
                 mesh = customMesh.Texture != null ? 
                     mesh.WithTexPos((api as ICoreClientAPI).BlockTextureAtlas[customMesh.Texture.Base]) : 
                     mesh.WithTexPos(customModels.customMeshTextures[customMesh.fullPath]);

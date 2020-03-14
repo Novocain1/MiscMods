@@ -1,0 +1,49 @@
+{
+    "code": "slope",
+    "class": "BlockCustomMesh",
+    "entityClass": "Generic",
+    "behaviors": [ 
+        { 
+            "name": "OmniRotatable",
+            "properties": {
+				"rotateH": true,
+				"rotateV": true
+			}
+        } 
+    ],
+    "entityBehaviors": [
+        { "name": "CustomMesh" }
+    ],
+    "variantgroups": [
+		{ "code": "wood", "states": ["aged"], "loadFromProperties": "block/wood" },
+		{ "loadFromProperties": "abstract/verticalorientation" },
+		{ "loadFromProperties": "abstract/horizontalorientation" }
+	],
+    "attributes": {
+        "customMesh": {
+            "base": "game:shapes/gltf/slope",
+            "meshType": "gltf",
+            "texture": {
+                "base": "game:block/wood/planks/{wood}1"
+            },
+            "rotateXByType": {
+                "*-down-east": 180,
+                "*-down-west": 180
+            },
+            "rotateYByType": {
+                "*-north": 270,
+                "*-west": 0,
+                "*-south": 90,
+                "*-east": 180
+            },
+            "rotateZByType": {
+                "*-down-north": 180,
+                "*-down-south": 180
+            }
+        }
+    },
+    "creativeinventory": { "general": [ "*-north" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0
+}

@@ -5,13 +5,15 @@
     "entityBehaviors": [
         { "name": "CustomMesh" }
     ],
+    "variantgroups": [
+		{ "code": "shading", "states": ["flat", "smooth" ] }
+    ],
     "attributes": {
         "customMesh": {
-            "base": "game:shapes/gltf/sphere",
+            "base": "game:shapes/gltf/pumpkin",
             "meshType": "gltf",
-            "texture": {
-                "base": "game:block/stone/rock/granite1"
-            }
+            "texture": null,
+            "shadingByType": { "*-smooth": "smooth", "*-flat": "flat" }
         }
     },
     "creativeinventory": { "general": [ "*" ] },
