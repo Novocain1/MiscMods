@@ -38,29 +38,6 @@ namespace CustomMeshMod
             api.Event.BlockTexturesLoaded += LoadRawMeshes;
             api.Event.LevelFinalize += () => api.Shader.ReloadShaders();
 
-            api.RegisterCommand("testrender", "", "", (p, a) =>
-            {
-                string l = a.PopWord();
-                Vec3d rot = a.PopVec3d() ?? new Vec3d();
-                Vec3d scale = a.PopVec3d() ?? new Vec3d(1, 1, 1);
-
-                AssetLocation loc = l != null ? new AssetLocation(l) : new AssetLocation("game:shapes/obj/mesh.obj");
-                BlockPos pos = api.World.Player?.CurrentBlockSelection?.Position?.UpCopy();
-                if (testrenderer != null)
-                {
-                    api.Event.UnregisterRenderer(testrenderer, EnumRenderStage.Opaque);
-                    testrenderer.Dispose();
-                }
-                if (pos != null && loc != null)
-                {
-                    testrenderer = new MeshRenderer(api, api.World.Player.CurrentBlockSelection.Position.UpCopy(), loc,
-                        new Vec3f((float)rot.X, (float)rot.Y, (float)rot.Z), 
-                        new Vec3f((float)scale.X, (float)scale.Y, (float)scale.Z), out bool failed);
-                    if (failed) return;
-                    api.Event.RegisterRenderer(testrenderer, EnumRenderStage.Opaque);
-                }
-            });
-
             api.RegisterCommand("obj", "", "", (p, a) => 
             {
                 var bs = api.World.Player.CurrentBlockSelection;
@@ -185,7 +162,7 @@ namespace CustomMeshMod
                         customMeshTextures.Add(gltf.Key, position);
                     }
                 }
-                else
+                else if (capi != null)
                 {
                     customMeshTextures.Add(gltf.Key, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
                 }

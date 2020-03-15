@@ -19,39 +19,29 @@ namespace CustomMeshMod
     {
         private ICoreClientAPI capi;
         private BlockPos pos;
-        private MeshRef meshRef;
         public Matrixf ModelMat = new Matrixf();
         public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
-        AssetLocation location;
-        Vec3f rotation;
-        Vec3f scale;
-        EnumNormalShading shading;
-        TextureMagFilter interpolation;
-        bool backfaceCulling;
+        CustomMesh customMesh;
+        MeshRef meshRef;
+        int texID;
 
-        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, AssetLocation location, Vec3f rotation, Vec3f scale, out bool failed, MeshRef meshRef = null, EnumNormalShading shading = EnumNormalShading.Flat, bool backfaceCulling = true, TextureMagFilter interpolation = TextureMagFilter.Nearest)
+        public MeshRenderer(ICoreClientAPI capi, BlockPos pos, CustomMesh customMesh, MeshRef meshRef)
         {
-            failed = false;
             try
             {
                 this.capi = capi;
                 this.pos = pos;
-                this.rotation = rotation;
-                this.location = location;
-                this.scale = scale;
-                MeshData mesh = models.meshes[location];
-                if (models.customMeshTextures.TryGetValue(location, out TextureAtlasPosition tPos))
+                this.customMesh = customMesh;
+                this.meshRef = meshRef;
+                texID = 0;
+
+                if (models.customMeshTextures.TryGetValue(customMesh.FullPath, out TextureAtlasPosition tPos))
                 {
-                    mesh = mesh.WithTexPos(tPos);
+                    texID = tPos.atlasTextureId;
                 }
-                this.meshRef = meshRef ?? capi.Render.UploadMesh(mesh);
-                this.shading = shading;
-                this.backfaceCulling = backfaceCulling;
-                this.interpolation = interpolation;
             }
             catch (Exception)
             {
-                failed = true;
                 Dispose();
             }
         }
@@ -73,31 +63,25 @@ namespace CustomMeshMod
             IShaderProgram activeShader = render.CurrentActiveShader;
             if (meshRef == null || meshRef.Disposed) return;
             activeShader?.Stop();
-            if (backfaceCulling) render.GlEnableCullFace();
+            if (customMesh.BackFaceCulling) render.GlEnableCullFace();
 
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             prog.NormalShaded = 1;
-            
-            if (models.customMeshTextures.TryGetValue(location, out TextureAtlasPosition tex))
-            {
-                prog.Tex2D = tex.atlasTextureId;
-            }
-            else prog.Tex2D = 0;
-            if (interpolation != TextureMagFilter.Nearest) GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)interpolation);
+            prog.Tex2D = texID;
 
-            prog.Uniform("shading", (int)shading);
+            if (customMesh.Interpolation != TextureMagFilter.Nearest) GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)customMesh.Interpolation);
+
+            prog.Uniform("shading", (int)customMesh.NormalShading);
 
             prog.ModelMatrix = ModelMat.Identity()
                 .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
-                .RotateDeg(rotation)
-                .Scale(scale.X, scale.Y, scale.Z)
                 .Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
             capi.Render.RenderMesh(meshRef);
             prog.Stop();
             activeShader?.Use();
-            if (backfaceCulling) render.GlDisableCullFace();
+            if (customMesh.BackFaceCulling) render.GlDisableCullFace();
 
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         }
