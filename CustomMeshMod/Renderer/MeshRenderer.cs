@@ -73,9 +73,7 @@ namespace CustomMeshMod
 
             prog.Uniform("shading", (int)customMesh.NormalShading);
 
-            prog.ModelMatrix = ModelMat.Identity()
-                .Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
-                .Values;
+            prog.ModelMatrix = ModelMat.Identity().Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z).Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;
             prog.ProjectionMatrix = render.CurrentProjectionMatrix;
             capi.Render.RenderMesh(meshRef);

@@ -22,6 +22,7 @@ namespace CustomMeshMod
         public List<IAsset> objs = new List<IAsset>();
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, TextureAtlasPosition> customMeshTextures = new Dictionary<AssetLocation, TextureAtlasPosition>();
+        public Dictionary<AssetLocation, TextureAtlasPosition> customMeshPBRs = new Dictionary<AssetLocation, TextureAtlasPosition>();
 
         public MeshRenderer testrenderer;
 
@@ -99,12 +100,28 @@ namespace CustomMeshMod
                 {
                     foreach (var mat in gltfType.Materials)
                     {
-                        if (mat?.PbrMetallicRoughness?.BaseColorTexture?.Index == null) continue;
-                        color = mat.PbrMetallicRoughness.BaseColorFactor;
-
                         Dictionary<string, long> dict = new Dictionary<string, long>();
-                        dict.Add("basecolor", gltfType.Images[mat.PbrMetallicRoughness.BaseColorTexture.Index].BufferView);
+                        if (mat?.PbrMetallicRoughness != null)
+                        {
+                            var pbr = mat.PbrMetallicRoughness;
+                            if (pbr.BaseColorTexture?.Index != null)
+                            {
+                                color = mat.PbrMetallicRoughness.BaseColorFactor;
+                                dict.Add("basecolor", gltfType.Images[pbr.BaseColorTexture.Index].BufferView);
+                            }
+                            if (pbr.MetallicRoughnessTexture?.Index != null)
+                            {
+                                dict.Add("pbr", gltfType.Images[pbr.MetallicRoughnessTexture.Index].BufferView);
+                            }
+                        }
+
+                        if (mat?.NormalTexture?.Index != null)
+                        {
+                            dict.Add("normaltexture", gltfType.Images[mat.NormalTexture.Index].BufferView);
+                        }
+
                         accvalues.Add(dict);
+                        break;
                     }
                 }
 
@@ -148,28 +165,36 @@ namespace CustomMeshMod
                 ApplyQueues(normals, positions, uv, indices, ref mesh, colorint);
 
                 //texture
-                if (capi != null && buffdat.ContainsKey("basecolor"))
+                if (capi != null)
                 {
-                    byte[] texbytes = buffdat["basecolor"]?.ToArray();
-                    BitmapExternal bitmap = capi.Render.BitmapCreateFromPng(texbytes);
-                    if (!capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position))
-                    {
-                        capi.World.Logger.Debug("Failed adding baked in gltf texture to atlas from: {0}, texture probably too large.", gltf.Key);
-                        customMeshTextures.Add(gltf.Key, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
-                    }
-                    else
-                    {
-                        customMeshTextures.Add(gltf.Key, position);
-                    }
+                    AddTextures(ref buffdat, ref customMeshTextures, gltf.Key, "basecolor");
+                    AddTextures(ref buffdat, ref customMeshPBRs, gltf.Key, "pbr");
                 }
-                else if (capi != null)
-                {
-                    customMeshTextures.Add(gltf.Key, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
-                }
+
 
                 meshes.Add(gltf.Key, mesh);
             }
 
+        }
+
+        public bool AddTextures(ref Dictionary<string, Queue<byte>> buffdat, ref Dictionary<AssetLocation, TextureAtlasPosition> texMapping, AssetLocation meshKey, string bufferKey)
+        {
+            if (buffdat.ContainsKey(bufferKey))
+            {
+                byte[] texbytes = buffdat[bufferKey]?.ToArray();
+                BitmapExternal bitmap = capi.Render.BitmapCreateFromPng(texbytes);
+                if (!capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position))
+                {
+                    capi.World.Logger.Debug("Failed adding baked in gltf texture to atlas from: {0}, texture probably too large.", meshKey);
+                    texMapping.Add(meshKey, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
+                }
+                else
+                {
+                    texMapping.Add(meshKey, position);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public MeshData GetWithTexPos(AssetLocation assetLocation, TextureAtlasPosition pos)

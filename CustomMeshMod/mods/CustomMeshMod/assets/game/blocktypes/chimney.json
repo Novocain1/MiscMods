@@ -1,0 +1,21 @@
+{
+    "code": "gltfchimney",
+    "class": "BlockCustomMesh",
+    "entityClass": "Generic",
+    "entityBehaviors": [
+        { "name": "CustomMesh" }
+    ],
+    "attributes": {
+        "customMesh": {
+            "base": "game:shapes/gltf/chimney",
+            "meshType": "gltf",
+            "texture": null,
+            "normalshading": "smooth",
+            "interpolation": "nearest"
+        }
+    },
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0
+}
