@@ -175,9 +175,19 @@ namespace CustomMeshMod
                 {
                     byte[] texbytes = buffdat["basecolor"]?.ToArray();
                     BitmapExternal bitmap = capi.Render.BitmapCreateFromPng(texbytes);
-                    capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position);
-                    Size2i size = capi.BlockTextureAtlas.Size;
-                    customMeshTextures.Add(gltf.Key, position);
+                    if (!capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position))
+                    {
+                        capi.World.Logger.Debug("Failed adding baked in gltf texture to atlas from: {0}, texture probably too large.", gltf.Key);
+                        customMeshTextures.Add(gltf.Key, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
+                    }
+                    else
+                    {
+                        customMeshTextures.Add(gltf.Key, position);
+                    }
+                }
+                else
+                {
+                    customMeshTextures.Add(gltf.Key, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
                 }
 
                 meshes.Add(gltf.Key, mesh);
