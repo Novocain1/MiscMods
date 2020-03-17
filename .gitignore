@@ -276,3 +276,4 @@ __pycache__/
 
 !/SwingingDoorMod/mods/SwingingDoorMod/assets/game/shapes/obj/*
 /SwingingDoorMod/mods/SwingingDoorMod/assets/game/shapes/gltf/tent.gltf
+/CustomMeshMod/mods/CustomMeshMod/assets/game/shapes/gltf/tent.gltf
