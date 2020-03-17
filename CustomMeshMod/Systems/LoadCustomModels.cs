@@ -23,6 +23,7 @@ namespace CustomMeshMod
         public Dictionary<AssetLocation, MeshData> meshes = new Dictionary<AssetLocation, MeshData>();
         public Dictionary<AssetLocation, TextureAtlasPosition> customMeshTextures = new Dictionary<AssetLocation, TextureAtlasPosition>();
         public Dictionary<AssetLocation, TextureAtlasPosition> customMeshPBRs = new Dictionary<AssetLocation, TextureAtlasPosition>();
+        public Dictionary<AssetLocation, TextureAtlasPosition> customNormalTextures = new Dictionary<AssetLocation, TextureAtlasPosition>();
 
         public MeshRenderer testrenderer;
 
@@ -169,6 +170,7 @@ namespace CustomMeshMod
                 {
                     AddTextures(ref buffdat, ref customMeshTextures, gltf.Key, "basecolor");
                     AddTextures(ref buffdat, ref customMeshPBRs, gltf.Key, "pbr");
+                    AddTextures(ref buffdat, ref customNormalTextures, gltf.Key, "normaltexture");
                 }
 
 
@@ -186,11 +188,11 @@ namespace CustomMeshMod
                 if (!capi.BlockTextureAtlas.InsertTexture(bitmap, out int id, out TextureAtlasPosition position))
                 {
                     capi.World.Logger.Debug("Failed adding baked in gltf texture to atlas from: {0}, texture probably too large.", meshKey);
-                    texMapping.Add(meshKey, capi.BlockTextureAtlas[new AssetLocation("unknown")]);
+                    texMapping[meshKey] = capi.BlockTextureAtlas[new AssetLocation("unknown")];
                 }
                 else
                 {
-                    texMapping.Add(meshKey, position);
+                    texMapping[meshKey] = position;
                     return true;
                 }
             }

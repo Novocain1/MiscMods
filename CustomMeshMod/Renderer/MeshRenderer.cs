@@ -12,7 +12,7 @@ namespace CustomMeshMod
 {
     public enum EnumNormalShading
     {
-        Flat, Smooth
+        None, Flat, Smooth
     }
 
     public class MeshRenderer : IRenderer
@@ -23,7 +23,9 @@ namespace CustomMeshMod
         public LoadCustomModels models { get => capi.ModLoader.GetModSystem<LoadCustomModels>(); }
         CustomMesh customMesh;
         MeshRef meshRef;
-        int texID;
+        TextureAtlasPosition texPos;
+        TextureAtlasPosition normalPos;
+        TextureAtlasPosition pbrPos;
 
         public MeshRenderer(ICoreClientAPI capi, BlockPos pos, CustomMesh customMesh, MeshRef meshRef)
         {
@@ -33,12 +35,20 @@ namespace CustomMeshMod
                 this.pos = pos;
                 this.customMesh = customMesh;
                 this.meshRef = meshRef;
-                texID = 0;
 
                 if (models.customMeshTextures.TryGetValue(customMesh.FullPath, out TextureAtlasPosition tPos))
                 {
-                    texID = tPos.atlasTextureId;
+                    texPos = tPos;
                 }
+                if (models.customNormalTextures.TryGetValue(customMesh.FullPath, out tPos))
+                {
+                    normalPos = tPos;
+                }
+                if (models.customMeshPBRs.TryGetValue(customMesh.FullPath, out tPos))
+                {
+                    pbrPos = tPos;
+                }
+                
             }
             catch (Exception)
             {
@@ -67,11 +77,15 @@ namespace CustomMeshMod
 
             IStandardShaderProgram prog = render.PreparedStandardShader(pos.X, pos.Y, pos.Z);
             prog.NormalShaded = 1;
-            prog.Tex2D = texID;
+            prog.Tex2D = texPos?.atlasTextureId ?? 0;
 
             if (customMesh.Interpolation != TextureMagFilter.Nearest) GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)customMesh.Interpolation);
-
+            
             prog.Uniform("shading", (int)customMesh.NormalShading);
+
+            prog.Uniform("baseUVin", new Vec2f(texPos?.x1 ?? 0, texPos?.y1 ?? 0));
+            prog.Uniform("nrmUVin", new Vec2f(normalPos?.x1 ?? 0, normalPos?.y1 ?? 0));
+            prog.Uniform("pbrUVin", new Vec2f(pbrPos?.x1 ?? 0, pbrPos?.y1 ?? 0));
 
             prog.ModelMatrix = ModelMat.Identity().Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z).Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;

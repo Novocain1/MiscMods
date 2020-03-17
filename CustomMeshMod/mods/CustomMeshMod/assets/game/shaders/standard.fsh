@@ -17,6 +17,10 @@ uniform float overlayOpacity;
 uniform vec2 overlayTextureSize;
 uniform vec2 baseTextureSize;
 uniform vec2 baseUvOrigin;
+
+in vec2 normalUV;
+in vec2 pbrUV;
+
 uniform int normalShaded;
 uniform int shading;
 
@@ -29,9 +33,11 @@ in vec4 rgbaGlow;
 flat in int renderFlags;
 in vec3 normal;
 flat in vec3 flatNormal;
+in vec3 vertexPosition;
 
 
 #include fogandlight.fsh
+#include noise3d.ash
 
 void main () {
 	if (overlayOpacity > 0) {
@@ -53,6 +59,8 @@ void main () {
 	} else {
 		outColor = texture(tex, uv) * color;
 	}
+	vec4 pbr = texture(tex, pbrUV);
+	vec3 nrm = normalize(texture(tex, normalUV) * 2.0 - 1.0).rgb;
 
 #if BLOOM == 0
 	outColor.rgb *= 1 + glowLevel;
@@ -60,7 +68,7 @@ void main () {
 
 	if (normalShaded > 0) {
 		float b;
-		if (shading == 1) b = min(1, getBrightnessFromNormal(normal, 1, 0.45) + glowLevel);
+		if (shading == 2) b = min(1, getBrightnessFromNormal(normal, 1, 0.45) + glowLevel);
 		else b = min(1, getBrightnessFromNormal(flatNormal, 1, 0.45) + glowLevel);
 		outColor *= vec4(b, b, b, 1);
 	}

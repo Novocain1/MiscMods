@@ -25,10 +25,19 @@ uniform int addRenderFlags;
 uniform float extraZOffset;
 
 out vec2 uv;
+
+uniform vec2 baseUVin;
+uniform vec2 nrmUVin;
+uniform vec2 pbrUVin;
+
+out vec2 normalUV;
+out vec2 pbrUV;
+
 out vec4 color;
 out vec4 rgbaFog;
 out vec4 rgbaGlow;
 out float fogAmount;
+out vec3 vertexPosition;
 
 flat out int renderFlags;
 out vec3 normal;
@@ -46,10 +55,14 @@ void main(void)
 	if (dontWarpVertices == 0) {
 		worldPos = applyVertexWarping(flags | addRenderFlags, worldPos);
 	}
+	vertexPosition = worldPos.xyz;
 	
 	vec4 camPos = viewMatrix * worldPos;
 	
 	uv = uvIn;
+	normalUV = nrmUVin + (uv - baseUVin);
+	pbrUV = pbrUVin + (uv - baseUVin);
+
 	int glow = min(255, extraGlow + (flags & 0xff));
 	renderFlags = glow | (flags & ~0xff);
 	rgbaGlow = rgbaGlowIn;
