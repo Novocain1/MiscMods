@@ -393,5 +393,8 @@ namespace VSHUD
             }
             return thismesh.Clone();
         }
+
+        //public static void UnregisterDialog(this IClientWorldAccessor world, GuiDialog dialog) => (world as _GNOiZepshQPekcjnYBEc2hMXvRC)._SZsnwRyJl33k1uUAageExrQjmEA(dialog);
+        //public static void RegisterDialog(this IClientWorldAccessor world, params GuiDialog[] dialogs) => (world as _GNOiZepshQPekcjnYBEc2hMXvRC)._HxNwYrndQ0qY1vijJMv1xhBL05g(dialogs);
     }
 }

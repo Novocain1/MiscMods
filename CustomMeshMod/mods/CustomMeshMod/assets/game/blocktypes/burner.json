@@ -1,0 +1,23 @@
+{
+    "code": "burner",
+    "class": "BlockCustomMesh",
+    "entityClass": "Generic",
+    "entityBehaviors": [
+        { "name": "CustomMesh" }
+    ],
+    "attributes": {
+        "customMesh": {
+            "base": "game:shapes/gltf/burner",
+            "meshType": "gltf",
+            "texture": {
+                "base": "game:block/stone/rock/granite1"
+            },
+            "normalshading": "smooth"
+        }
+    },
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0,
+    "collisionSelectionBox": { "x1": -2, "y1": 0, "z1": -2, "x2": 3, "y2": 7, "z2": 3 }
+}

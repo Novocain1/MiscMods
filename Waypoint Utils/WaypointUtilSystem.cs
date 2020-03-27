@@ -28,6 +28,7 @@ namespace VSHUD
         public WaypointMapLayer WPLayer { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
 
         public Dictionary<string, LoadedTexture> texturesByIcon;
+        string[] iconKeys { get => texturesByIcon.Keys.ToArray(); }
 
         public void PopulateTextures()
         {
@@ -53,10 +54,12 @@ namespace VSHUD
         }
 
         public List<Waypoint> Waypoints { get => WPLayer.ownWaypoints; }
-        public List<WaypointRelative> WaypointsRel {
+        public WaypointRelative[] WaypointsRelSorted { get => WaypointsRel.OrderBy(wp => wp.DistanceFromPlayer).ToArray(); }
+        public WaypointRelative[] WaypointsRel {
             get
             {
-                List<WaypointRelative> rel = new List<WaypointRelative>();
+                Queue<WaypointRelative> rel = new Queue<WaypointRelative>();
+                int i = 0;
                 foreach (var val in Waypoints)
                 {
                     WaypointRelative relative = new WaypointRelative(capi)
@@ -66,11 +69,14 @@ namespace VSHUD
                         OwningPlayerUid = val.OwningPlayerUid,
                         Position = val.Position,
                         Text = val.Text,
-                        Title = val.Title
+                        Title = val.Title,
+                        Icon = val.Icon,
+                        Index = i
                     };
-                    rel.Add(relative);
+                    rel.Enqueue(relative);
+                    i++;
                 }
-                return rel;
+                return rel.ToArray();
             }
         }
 
@@ -90,7 +96,6 @@ namespace VSHUD
             capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
             capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
-            capi.Input.SetHotKeyHandler("culldeathwaypoints", CullDeathWaypoints);
             capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
 
@@ -107,20 +112,28 @@ namespace VSHUD
 
                     if (player.WatchedAttributes["entityDead"].ToString() == "1")
                     {
-                        capi.SendChatMessage(string.Format("/waypoint addati {5} ={0} ={1} ={2} #{3} {4}", 
-                            player.Pos.X, player.Pos.Y, player.Pos.Z, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "*Player Death Waypoint*", "rocks", null));
+                        string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", "rocks", player.Pos.X, player.Pos.Y, player.Pos.Z, true, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "Player Death Waypoint");
+
+                        capi.SendChatMessage(str);
                     }
                 });
 
                 RepopulateDialogs();
                 capi.Event.RegisterCallback(dt => Update(), 100);
             };
-            capi.Event.RegisterGameTickListener(dt => Update(), 500);
+            updateID = capi.Event.RegisterGameTickListener(dt => Update(), 30);
+            capi.Event.MouseDown += (a) =>
+            {
+                foreach (var val in WaypointElements)
+                {
+                    val.OnMouseDown(a);
+                }
+            };
         }
+        long updateID;
 
         private void CmdWaypointConfig(int groupId, CmdArgs args)
         {
-            bool repop = true;
             string arg = args.PopWord();
             switch (arg)
             {
@@ -140,7 +153,10 @@ namespace VSHUD
                     capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
                     break;
                 case "pdw":
-                    CullDeathWaypoints(new KeyCombination());
+                    PurgeWaypointsByStrings("Player Death Waypoint", "*Player Death Waypoint*");
+                    break;
+                case "plt":
+                    PurgeWaypointsByStrings("Limits Test");
                     break;
                 case "open":
                     ViewWaypoints(new KeyCombination());
@@ -166,7 +182,6 @@ namespace VSHUD
                 case "save":
                     break;
                 case "export":
-                    repop = false;
                     using (TextWriter tw = new StreamWriter("waypoints.json"))
                     {
                         tw.Write(JsonConvert.SerializeObject(WaypointsRel, Formatting.Indented));
@@ -174,49 +189,90 @@ namespace VSHUD
                     }
                     break;
                 case "testlimits":
-                    for (int i = 0; i < 130; i++)
+                    bulkProcessing = true;
+                    int amount = args.PopInt() ?? 30;
+                    int maxY = args.PopInt() ?? 10;
+                    double radius = (args.PopInt() ?? 1000);
+
+                    int i = amount;
+
+                    bulkActionID = capi.Event.RegisterGameTickListener(dt =>
                     {
-                        capi.SendChatMessage("/waypoint add blue test");
-                    }
+                        double
+                            x = (capi.World.Rand.NextDouble() - 0.5) * radius,
+                            y = (capi.World.Rand.NextDouble() - 0.5) * maxY,
+                            z = (capi.World.Rand.NextDouble() - 0.5) * radius;
+
+                        double r = x * x + z * z;
+                        if (r <= (radius * 0.5) * (radius * 0.5))
+                        {
+                            Vec3d pos = capi.World.Player.Entity.Pos.XYZ.AddCopy(new Vec3d(x, y, z));
+                            bool deathWaypoint = capi.World.Rand.NextDouble() > 0.8;
+
+                            string icon = deathWaypoint ? "rocks" : iconKeys[(int)(capi.World.Rand.NextDouble() * (iconKeys.Length - 1))];
+                            string title = deathWaypoint ? "Limits Test Player Death Waypoint" : "Limits Test Waypoint";
+
+                            string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", icon, pos.X, pos.Y, pos.Z, deathWaypoint, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), title);
+
+                            capi.SendChatMessage(str);
+                            i--;
+                        }
+                        else return;
+
+                        if (i < 1)
+                        {
+                            capi.Event.UnregisterGameTickListener(bulkActionID);
+                            firstOpen = true;
+                            bulkProcessing = false;
+                            bulkActionID = 0;
+                        }
+                    }, 1);
                     break;
                 default:
                     capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]"));
                     break;
             }
             cL.SaveConfig();
-            if (repop) RepopulateDialogs();
         }
 
         
         private bool ViewWaypoints(KeyCombination t1)
         {
-            capi.Settings.Bool["floatywaypoints"] = !capi.Settings.Bool["floatywaypoints"];
+            firstOpen = Config.FloatyWaypoints = !Config.FloatyWaypoints;
             return true;
         }
+        bool firstOpen = true;
+        public bool bulkProcessing = false;
 
         public void Update()
         {
-            //capi.ShowChatMessage("U" + capi.World.Rand.Next());
-            if (WaypointElements.Count == 0) RepopulateDialogs();
-            if (WaypointElements.Count > 0)
+            if (bulkActionID != 0 || bulkProcessing) return;
+
+            if (Config.FloatyWaypoints)
             {
-                if (Waypoints.Count != WaypointElements.Count)
+                bool repopped;
+
+                if (repopped = WaypointElements.Count == 0) RepopulateDialogs();
+                if (Waypoints.Count > 0 && (Waypoints.Count != WaypointElements.Count || firstOpen))
                 {
-                    RepopulateDialogs();
-                }
-                if (capi.Settings.Bool["floatywaypoints"])
-                {
+                    if (!repopped) RepopulateDialogs();
+
                     foreach (var val in WaypointElements)
                     {
-                        if (val.IsOpened() && (val.distance > Config.DotRange || Config.DisabledColors.Contains(val.color)) && !val.DialogTitle.Contains("*")) val.TryClose();
-                        else if (!val.IsOpened() && (val.distance < Config.DotRange && !Config.DisabledColors.Contains(val.color)) || val.DialogTitle.Contains("*")) val.TryOpen();
+                        if (val.IsOpened() && (val.distance > Config.DotRange || Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryClose();
+                        else if (!val.IsOpened() && (val.distance < Config.DotRange && !Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryOpen();
                     }
+                    firstOpen = false;
                 }
-                else
+                ManageZDepth();
+            }
+            else
+            {
+                foreach (var val in WaypointElements)
                 {
-                    foreach (var val in WaypointElements)
+                    if (val.IsOpened())
                     {
-                        if (val.IsOpened()) val.TryClose();
+                        val.TryClose();
                     }
                 }
             }
@@ -227,26 +283,35 @@ namespace VSHUD
             foreach (var val in WaypointElements)
             {
                 val.TryClose();
-                val.Dispose();
+            }
+            int elem = WaypointElements.Count;
+            for (int i = 0; i < elem; i++)
+            {
+                WaypointElements[i] = null;
             }
             WaypointElements.Clear();
 
-            int i = 0;
-            foreach (var val in Waypoints)
+            foreach (var val in WaypointsRel)
             {
-                HudElementWaypoint waypoint = new HudElementWaypoint(capi, val, i);
+                HudElementWaypoint waypoint = new HudElementWaypoint(capi, val);
                 waypoint.OnOwnPlayerDataReceived();
 
                 WaypointElements.Add(waypoint);
-                i++;
             }
         }
 
-        public bool CullDeathWaypoints(KeyCombination t1)
+        public bool PurgeWaypointsByStrings(params string[] containsStrings)
         {
-            for (int i = Waypoints.Count; i-- > 0;)
+            int i = Waypoints.Count - 1;
+            bulkProcessing = true;
+            bulkActionID = capi.Event.RegisterGameTickListener(dt =>
             {
-                if (Waypoints[i].Title.Contains("*Player Death Waypoint*"))
+                bool contains = false;
+                foreach (var contained in containsStrings)
+                {
+                    if (contains = Waypoints[i].Title.Contains(contained)) break;
+                }
+                if (contains)
                 {
                     capi.SendChatMessage("/waypoint remove " + i);
                     BlockPos rel = Waypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
@@ -257,23 +322,64 @@ namespace VSHUD
                     File.AppendAllText(info.FullName, builder.ToString());
                     capi.Logger.Event(str);
                 }
-            }
-            RepopulateDialogs();
+                if (i < 1)
+                {
+                    capi.Event.UnregisterGameTickListener(bulkActionID);
+                    firstOpen = true;
+                    bulkProcessing = false;
+                    bulkActionID = 0;
+                }
+                else i--;
+            }, 1);
+
             return true;
         }
 
+        long bulkActionID;
         private void Purge()
         {
-            for (int i = Waypoints.Count; i-- > 0;)
+            bulkProcessing = true;
+            int i = Waypoints.Count;
+            bulkActionID = capi.Event.RegisterGameTickListener(dt =>
             {
-                capi.SendChatMessage("/waypoint remove " + 0);
+                capi.SendChatMessage("/waypoint remove 0");
+                i--;
+                if (i < 1)
+                {
+                    capi.Event.UnregisterGameTickListener(bulkActionID);
+                    firstOpen = true;
+                    bulkProcessing = false;
+                    bulkActionID = 0;
+                }
+            }, 1);
+        }
+
+        public void ManageZDepth()
+        {
+            var ordered = WaypointElements.OrderBy(wp => wp.DistanceFromPlayer).ToArray();
+            float ZDepth = 0;
+            for (int i = 0; i < ordered.Count(); i++)
+            {
+                float size = ordered[i].Focused ? 0 : ZDepth;
+                ordered[i].ZDepth = size;
+                ordered[i].order = i;
+                ZDepth += 0.00001f;
             }
-            RepopulateDialogs();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            capi.World.UnregisterGameTickListener(updateID);
+            capi.World.UnregisterGameTickListener(bulkActionID);
         }
     }
 
     public class WaypointRelative : Waypoint
     {
+        public WaypointMapLayer WPLayer { get => api.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
+        public List<Waypoint> Waypoints { get => WPLayer.ownWaypoints; }
+
         ICoreAPI api;
         public WaypointRelative(ICoreAPI api)
         {
@@ -281,5 +387,9 @@ namespace VSHUD
         }
 
         public Vec3d RelativeToSpawn { get => Position.SubCopy(api.World.DefaultSpawnPosition.XYZ); }
+        public double? DistanceFromPlayer { get => (api as ICoreClientAPI)?.World.Player.Entity.Pos.DistanceTo(Position); }
+        public int Index { get; set; }
+        public int OwnColor { get => OwnWaypoint?.Color ?? 0; }
+        public Waypoint OwnWaypoint { get => Index > Waypoints.Count - 1 ? null : Waypoints[Index]; }
     }
 }
