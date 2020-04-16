@@ -188,6 +188,24 @@ namespace VSHUD
                         tw.Close();
                     }
                     break;
+                case "import":
+                    using (TextReader reader = new StreamReader("waypoints.json"))
+                    {
+                        WaypointRelative[] relative = JsonConvert.DeserializeObject<WaypointRelative[]>(reader.ReadToEnd());
+                        foreach (var val in relative)
+                        {
+                            if (WaypointsRel.Any(w => 
+                            val.Position.AsBlockPos.X == w.Position.AsBlockPos.X &&
+                            val.Position.AsBlockPos.Y == w.Position.AsBlockPos.Y &&
+                            val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
+                            )) continue;
+
+                            string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), val.Title);
+
+                            capi.SendChatMessage(str);
+                        }
+                    }
+                    break;
                 case "testlimits":
                     bulkProcessing = true;
                     int amount = args.PopInt() ?? 30;
