@@ -197,19 +197,29 @@ namespace VSHUD
                         {
                             bulkProcessing = true;
                             DummyWaypoint[] relative = JsonConvert.DeserializeObject<DummyWaypoint[]>(reader.ReadToEnd(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore});
-                            foreach (var val in relative)
+                            int j = relative.Length;
+                            bulkActionID = capi.Event.RegisterGameTickListener(dt => 
                             {
+                                j--;
+                                if (j < 0)
+                                {
+                                    capi.Event.UnregisterGameTickListener(bulkActionID);
+                                    firstOpen = true;
+                                    bulkProcessing = false;
+                                    bulkActionID = 0;
+                                    return;
+                                }
+
+                                var val = relative[j];
                                 if (WaypointsRel.Any(w =>
                                 val.Position.AsBlockPos.X == w.Position.AsBlockPos.X &&
                                 val.Position.AsBlockPos.Y == w.Position.AsBlockPos.Y &&
                                 val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
-                                )) continue;
+                                )) return;
 
                                 string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
-
                                 capi.SendChatMessage(str);
-                            }
-                            bulkProcessing = false;
+                            }, 1);
                         }
                     }
                     break;
