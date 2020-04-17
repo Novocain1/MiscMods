@@ -182,27 +182,34 @@ namespace VSHUD
                 case "save":
                     break;
                 case "export":
-                    using (TextWriter tw = new StreamWriter("waypoints.json"))
+                    string path = (args.PopWord() ?? "waypoints") + ".json";
+                    using (TextWriter tw = new StreamWriter(path))
                     {
                         tw.Write(JsonConvert.SerializeObject(WaypointsRel, Formatting.Indented));
                         tw.Close();
                     }
                     break;
                 case "import":
-                    using (TextReader reader = new StreamReader("waypoints.json"))
+                    string path1 = (args.PopWord() ?? "waypoints") + ".json";
+                    if (File.Exists(path1))
                     {
-                        WaypointRelative[] relative = JsonConvert.DeserializeObject<WaypointRelative[]>(reader.ReadToEnd());
-                        foreach (var val in relative)
+                        using (TextReader reader = new StreamReader(path1))
                         {
-                            if (WaypointsRel.Any(w => 
-                            val.Position.AsBlockPos.X == w.Position.AsBlockPos.X &&
-                            val.Position.AsBlockPos.Y == w.Position.AsBlockPos.Y &&
-                            val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
-                            )) continue;
+                            bulkProcessing = true;
+                            DummyWaypoint[] relative = JsonConvert.DeserializeObject<DummyWaypoint[]>(reader.ReadToEnd(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore});
+                            foreach (var val in relative)
+                            {
+                                if (WaypointsRel.Any(w =>
+                                val.Position.AsBlockPos.X == w.Position.AsBlockPos.X &&
+                                val.Position.AsBlockPos.Y == w.Position.AsBlockPos.Y &&
+                                val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
+                                )) continue;
 
-                            string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), val.Title);
+                                string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
 
-                            capi.SendChatMessage(str);
+                                capi.SendChatMessage(str);
+                            }
+                            bulkProcessing = false;
                         }
                     }
                     break;
@@ -247,7 +254,7 @@ namespace VSHUD
                     }, 1);
                     break;
                 default:
-                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]"));
+                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export]"));
                     break;
             }
             cL.SaveConfig();
@@ -409,5 +416,14 @@ namespace VSHUD
         public int Index { get; set; }
         public int OwnColor { get => OwnWaypoint?.Color ?? 0; }
         public Waypoint OwnWaypoint { get => Index > Waypoints.Count - 1 ? null : Waypoints[Index]; }
+    }
+
+    public class DummyWaypoint
+    {
+        public string Icon { get; set; }
+        public Vec3d Position { get; set; }
+        public bool Pinned { get; set; }
+        public int Color { get; set; }
+        public string Title { get; set; }
     }
 }
