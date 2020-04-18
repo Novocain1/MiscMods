@@ -220,6 +220,7 @@ namespace VSHUD
                                 string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
                                 capi.SendChatMessage(str);
                             }, 1);
+                            reader.Close();
                         }
                     }
                     break;
