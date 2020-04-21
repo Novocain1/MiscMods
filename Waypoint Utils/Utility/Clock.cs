@@ -57,7 +57,7 @@ namespace VSHUD
         {
             base.OnOwnPlayerDataReceived();
 
-            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 512, 256);
+            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 256, 256);
 
             double[] stroke = new double[] { 0, 0, 0, 1 };
 
