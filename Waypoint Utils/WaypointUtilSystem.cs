@@ -17,6 +17,7 @@ using System.IO;
 using Cairo;
 using Vintagestory.API.Util;
 using Path = System.IO.Path;
+using System.Globalization;
 
 namespace VSHUD
 {
@@ -46,7 +47,7 @@ namespace VSHUD
                     cr.Paint();
                     cr.Operator = (Operator)2;
                     capi.Gui.Icons.DrawIcon(cr, "wp" + text.UcFirst(), 1.0, 1.0, 32.0, 32.0, ColorUtil.WhiteArgbDouble);
-                    texturesByIcon[text] = new LoadedTexture(capi, capi.Gui.LoadCairoTexture(surface, false), 20, 20);
+                    texturesByIcon[text] = new LoadedTexture(capi, capi.Gui.LoadCairoTexture(surface, true), 20, 20);
                 }
                 cr.Dispose();
                 surface.Dispose();
@@ -87,6 +88,7 @@ namespace VSHUD
             base.StartClientSide(api);
             capi = api;
             PopulateTextures();
+            HudElementWaypoint.quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
 
             cL = capi.ModLoader.GetModSystem<ConfigLoader>();
             Config = cL.Config;
@@ -109,12 +111,14 @@ namespace VSHUD
                 player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
                 {
                     if (player?.WatchedAttributes?["entityDead"] == null) return;
+                    Vec3d playerPos = player.Pos.XYZ;
 
                     if (player.WatchedAttributes.GetInt("entityDead") == 1)
                     {
-                        string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", "rocks", player.Pos.X, player.Pos.Y, player.Pos.Z, true, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "Player Death Waypoint");
+                        string str = string.Format(CultureInfo.InvariantCulture, "/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", "rocks", playerPos.X, playerPos.Y, playerPos.Z, true, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "Player Death Waypoint");
 
                         capi.SendChatMessage(str);
+                        if (Config.DebugDeathWaypoints) capi.ShowChatMessage("DEBUG: Sent Command: " + str);
                     }
                 });
 
@@ -122,13 +126,20 @@ namespace VSHUD
                 capi.Event.RegisterCallback(dt => Update(), 100);
             };
             updateID = capi.Event.RegisterGameTickListener(dt => Update(), 30);
-            capi.Event.MouseDown += (a) =>
+
+            capi.Input.RegisterHotKey("editfloatywaypoint", "Edit Floaty Waypoint", GlKeys.R, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("editfloatywaypoint", (k) =>
             {
                 foreach (var val in WaypointElements)
                 {
-                    val.OnMouseDown(a);
+                    if (val.isAligned)
+                    {
+                        val.OpenEditDialog();
+                        return true;
+                    }
                 }
-            };
+                return false;
+            });
         }
         long updateID;
 
@@ -137,6 +148,10 @@ namespace VSHUD
             string arg = args.PopWord();
             switch (arg)
             {
+                case "deathdebug":
+                    Config.DebugDeathWaypoints = args.PopBool() ?? !Config.DebugDeathWaypoints;
+                    capi.ShowChatMessage(string.Format("Death waypoint debbuging set to {0}", Config.DebugDeathWaypoints));
+                    break;
                 case "dotrange":
                     double? dr = args.PopDouble();
                     Config.DotRange = dr != null ? (double)dr : Config.DotRange;
@@ -217,7 +232,7 @@ namespace VSHUD
                                 val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
                                 )) return;
 
-                                string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
+                                string str = string.Format(CultureInfo.InvariantCulture, "/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
                                 capi.SendChatMessage(str);
                             }, 1);
                             reader.Close();
@@ -248,7 +263,7 @@ namespace VSHUD
                             string icon = deathWaypoint ? "rocks" : iconKeys[(int)(capi.World.Rand.NextDouble() * (iconKeys.Length - 1))];
                             string title = deathWaypoint ? "Limits Test Player Death Waypoint" : "Limits Test Waypoint";
 
-                            string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", icon, pos.X, pos.Y, pos.Z, deathWaypoint, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), title);
+                            string str = string.Format(CultureInfo.InvariantCulture, "/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", icon, pos.X, pos.Y, pos.Z, deathWaypoint, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), title);
 
                             capi.SendChatMessage(str);
                             i--;

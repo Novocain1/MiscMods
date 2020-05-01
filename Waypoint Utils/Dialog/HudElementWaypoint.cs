@@ -28,7 +28,7 @@ namespace VSHUD
         GuiDialogEditWayPoint waypointEditDialog;
 
         public Dictionary<string, LoadedTexture> texturesByIcon { get => system.texturesByIcon; }
-        public MeshRef quadModel;
+        public static MeshRef quadModel;
         private Matrixf mvMat = new Matrixf();
         CairoFont font;
         public bool isAligned;
@@ -45,7 +45,6 @@ namespace VSHUD
             absolutePos = waypoint.Position.Clone();
             this.waypointID = waypoint.Index;
             config = capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
-            quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
             waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
             
             waypointEditDialog.OnClosed += () =>
@@ -126,9 +125,20 @@ namespace VSHUD
             WaypointUtilConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
             Vec3d pos = MatrixToolsd.Project(waypointPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
 
-            if (dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned) pos.X = GameMath.Clamp(pos.X, capi.Render.FrameWidth * 0.05, capi.Render.FrameWidth * 0.95); pos.Y = GameMath.Clamp(pos.Y, capi.Render.FrameHeight * 0.05, capi.Render.FrameHeight * 0.95);
-            
-            //capi.ShowChatMessage(pos.ToString());
+            double[] clamps = new double[]
+            {
+                capi.Render.FrameWidth * 0.007, capi.Render.FrameWidth * 1.001,
+                capi.Render.FrameHeight * -0.05, capi.Render.FrameHeight * 0.938
+            };
+
+            if (dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)
+            {
+                pos.X = GameMath.Clamp(pos.X, clamps[0], clamps[1]);
+                pos.Y = GameMath.Clamp(pos.Y, clamps[2], clamps[3]);
+            }
+
+            bool isClamped = pos.X == clamps[0] || pos.X == clamps[1] || pos.Y == clamps[2] || pos.Y == clamps[3];
+
             if (pos.Z < 0 || (distance > config.DotRange && (!dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)))
             {
                 SingleComposer.GetDynamicText("text").SetNewText("");
@@ -146,10 +156,12 @@ namespace VSHUD
             double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
-            isAligned = ((yBounds > 0.49 && yBounds < 0.51) && (xBounds > 0.49 && xBounds < 0.51)) && !system.WaypointElements.Any(ui => ui.isAligned && ui != this);
+            isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !system.WaypointElements.Any(ui => ui.isAligned && ui != this);
 
             if (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
             else SingleComposer.GetDynamicText("text").SetNewText("");
+
+            if (isClamped) SingleComposer.GetDynamicText("text").SetNewText("");
 
             if (texturesByIcon != null)
             {
@@ -161,13 +173,13 @@ namespace VSHUD
                 engineShader.Uniform("extraGlow", 0);
                 engineShader.Uniform("applyColor", 0);
                 engineShader.Uniform("noTexture", 0.0f);
-                float scale = isAligned ? 0.8f : 0.5f;
+                float scale = isAligned || isClamped ? 0.8f : 0.5f;
 
                 LoadedTexture loadedTexture;
                 if (!texturesByIcon.TryGetValue(waypoint.OwnWaypoint.Icon, out loadedTexture)) return;
                 engineShader.BindTexture2D("tex2d", texturesByIcon[waypoint.Icon].TextureId, 0);
                 mvMat.Set(capi.Render.CurrentModelviewMatrix)
-                    .Translate(SingleComposer.Bounds.absFixedX + 125, SingleComposer.Bounds.absFixedY + 30, ZSize)
+                    .Translate(SingleComposer.Bounds.absFixedX + 125, SingleComposer.Bounds.absFixedY, ZSize)
                     .Scale(loadedTexture.Width, loadedTexture.Height, 0.0f)
                     .Scale(scale, scale, 0.0f);
                 engineShader.UniformMatrix("projectionMatrix", capi.Render.CurrentProjectionMatrix);
@@ -187,8 +199,6 @@ namespace VSHUD
         {
             base.Dispose();
             capi.Event.UnregisterGameTickListener(id);
-            quadModel?.Dispose();
-            quadModel = null;
             SingleComposer.Dispose();
         }
 
@@ -197,18 +207,14 @@ namespace VSHUD
         public override void OnGuiOpened()
         {
             base.OnGuiOpened();
-            if (quadModel?.Disposed ?? true) quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
             RegisterDialogUpdate();
         }
 
-        public override void OnMouseDown(MouseEvent args)
+        public void OpenEditDialog()
         {
-            if (isAligned && args.Button == EnumMouseButton.Right)
-            {
-                waypointEditDialog.TryOpen();
-                waypointEditDialog.Focus();
-            }
-            base.OnMouseDown(args);
+            waypointEditDialog.ignoreNextKeyPress = true;
+            waypointEditDialog.TryOpen();
+            waypointEditDialog.Focus();
         }
     }
 }

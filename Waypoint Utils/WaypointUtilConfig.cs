@@ -17,6 +17,7 @@ namespace VSHUD
         public bool WaypointPrefix { get; set; } = true;
         public bool WaypointID { get; set; } = true;
         public bool FloatyWaypoints { get; set; } = true;
+        public bool DebugDeathWaypoints { get; set; } = false;
 
         public bool LightLevels { get; set; } = false;
         public EnumLightLevelType LightLevelType { get; set; } = EnumLightLevelType.OnlyBlockLight;
