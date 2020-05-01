@@ -216,6 +216,6 @@ vec3 Shade2()
 
 void main () 
 {
-	outColor = vec4(Color.rgb, 1.0);
+	outColor = vec4(FakeInfrared(Color.rgb), 1.0);
 	//outColor = vec4(Color.rgb, 1);
 }

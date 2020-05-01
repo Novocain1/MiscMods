@@ -11,6 +11,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.Client.NoObf;
+using Vintagestory.API.Common.Entities;
 
 namespace ShaderTestMod
 {
@@ -197,7 +198,7 @@ namespace ShaderTestMod
             prog.Uniform("iResolution", new Vec2f(capi.Render.FrameWidth, capi.Render.FrameHeight));
             prog.Uniform("iMouse", new Vec2f(capi.Input.MouseX, capi.Input.MouseY));
             prog.Uniform("iCamera", new Vec2f(capi.World.Player.CameraPitch, capi.World.Player.CameraYaw));
-            prog.Uniform("iCameraPos", new Vec3f());
+            prog.Uniform("iCameraPos", EntityPos.GetViewVector(capi.Input.MousePitch, capi.Input.MouseYaw));
 
             prog.Uniform("iControls1", new Vec4f(controls[0], controls[1], controls[2], controls[3]));
             prog.Uniform("iControls2", new Vec4f(controls[4], controls[5], controls[6], controls[7]));

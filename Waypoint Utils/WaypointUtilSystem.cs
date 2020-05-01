@@ -108,9 +108,9 @@ namespace VSHUD
 
                 player.WatchedAttributes.RegisterModifiedListener("entityDead", () =>
                 {
-                    if (player.WatchedAttributes == null || player.WatchedAttributes["entityDead"] == null) return;
+                    if (player?.WatchedAttributes?["entityDead"] == null) return;
 
-                    if (player.WatchedAttributes["entityDead"].ToString() == "1")
+                    if (player.WatchedAttributes.GetInt("entityDead") == 1)
                     {
                         string str = string.Format("/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", "rocks", player.Pos.X, player.Pos.Y, player.Pos.Z, true, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), "Player Death Waypoint");
 
