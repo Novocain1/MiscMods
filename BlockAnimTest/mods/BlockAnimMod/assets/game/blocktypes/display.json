@@ -1,0 +1,14 @@
+{
+    "code": "display",
+    "entityClass": "Display",
+    "shape": {
+        "base": "block/basic/cube"
+    },
+    "textures": {
+		"all": { "base": "block/stone/rock/granite1" }
+	},
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "lightAbsorption": 0
+}

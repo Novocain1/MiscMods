@@ -1,0 +1,8 @@
+{
+	"type": "code",
+	"name": "TestMod",
+	"modid": "testmod",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0"
+}

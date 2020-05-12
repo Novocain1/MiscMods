@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepOreBits", "DeepOreBits\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomMeshMod", "CustomMeshMod\CustomMeshMod.csproj", "{D115FFCA-A7B7-4A6D-8080-E79A7223FBCB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockAnimTest", "BlockAnimTest\BlockAnimTest.csproj", "{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{D115FFCA-A7B7-4A6D-8080-E79A7223FBCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D115FFCA-A7B7-4A6D-8080-E79A7223FBCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D115FFCA-A7B7-4A6D-8080-E79A7223FBCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
