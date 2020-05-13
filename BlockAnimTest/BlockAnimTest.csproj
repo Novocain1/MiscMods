@@ -130,8 +130,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="BlockEntityDisplay.cs" />
+    <Compile Include="BlockAnimMod.cs" />
+    <Compile Include="DisplayRenderer.cs" />
+    <Compile Include="DisplayShaderProgram.cs" />
+    <Compile Include="IDisplayShaderProgram.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextureAnimation.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
