@@ -136,6 +136,7 @@
     <Compile Include="DisplayShaderProgram.cs" />
     <Compile Include="IDisplayShaderProgram.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Statics.cs" />
     <Compile Include="TextureAnimation.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

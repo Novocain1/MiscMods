@@ -10,79 +10,14 @@ namespace BlockAnimTest
         ICoreClientAPI capi;
         Vec2i resolution;
 
-        TextureAnimation testAnimation = new TextureAnimation()
-        {
-            Frames = new Vec2f[][]
-            {
-                new Vec2f[]
-                {
-                    new Vec2f(0, 0),
-                },
-                new Vec2f[]
-                {
-                    new Vec2f(0, 0),
-                    new Vec2f(0.25f, 0.25f),
-                },
-                new Vec2f[]
-                {
-                    new Vec2f(0, 0),
-                    new Vec2f(0.25f, 0.25f),
-                    new Vec2f(0.50f, 0.50f),
-                },
-                new Vec2f[]
-                {
-                    new Vec2f(0, 0),
-                    new Vec2f(0.25f, 0.25f),
-                    new Vec2f(0.50f, 0.50f),
-                    new Vec2f(0.75f, 0.75f),
-                },
-                new Vec2f[]
-                {
-                    new Vec2f(0, 0),
-                    new Vec2f(0.25f, 0.25f),
-                    new Vec2f(0.50f, 0.50f),
-                    new Vec2f(0.75f, 0.75f),
-                    new Vec2f(1, 1),
-                }
-            },
-            Colors = new Vec3f[][]
-            {
-                new Vec3f[]
-                {
-                    new Vec3f(0, 1, 0),
-                },
-                new Vec3f[]
-                {
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                },
-                new Vec3f[]
-                {
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                },
-                new Vec3f[]
-                {
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                },
-                new Vec3f[]
-                {
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                    new Vec3f(0, 1, 0),
-                }
-            }
-        };
+        public TextureAnimation OwnAnimation { get; set; }
 
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
+            
+            OwnAnimation = Statics.TestAnimation;
+
             resolution = new Vec2i(32, 32);
             if (api.Side.IsClient())
             {
@@ -117,7 +52,7 @@ namespace BlockAnimTest
 
         public void UpdateDisplay(float dt)
         {
-            var val = testAnimation.Frames[frame];
+            var val = OwnAnimation.Frames[frame];
 
             if (LastPixels != null)
             {
@@ -136,14 +71,14 @@ namespace BlockAnimTest
                 LastPixels[i].X = GameMath.Clamp((int)(val[i].X * resolution.X), 0, resolution.X - 1);
                 LastPixels[i].Y = GameMath.Clamp((int)(val[i].Y * resolution.Y), 0, resolution.Y - 1);
 
-                int colorR = (int)(testAnimation.Colors[frame][i].R * 255);
-                int colorG = (int)(testAnimation.Colors[frame][i].G * 255);
-                int colorB = (int)(testAnimation.Colors[frame][i].B * 255);
+                int colorR = (int)(OwnAnimation.Colors[frame][i].R * 255);
+                int colorG = (int)(OwnAnimation.Colors[frame][i].G * 255);
+                int colorB = (int)(OwnAnimation.Colors[frame][i].B * 255);
 
                 SetPixel(LastPixels[i].X, LastPixels[i].Y, ColorUtil.ToRgba(255, colorR, colorG, colorB));
             }
             
-            if (frame < testAnimation.Frames.Length - 1) frame++;
+            if (frame < OwnAnimation.Frames.Length - 1) frame++;
             else frame = 0;
 
             ownRenderer.MarkDirty();
