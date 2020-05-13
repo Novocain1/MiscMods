@@ -64,23 +64,96 @@ namespace BlockAnimTest
 
     public class TextureAnimation
     {
-        public TextureAtlasPosition[] Frames { get; set; }
+        public Vec2f[][] Frames { get; set; }
+        public Vec3f[][] Colors { get; set; }
     }
 
     class BlockEntityDisplay : BlockEntity
     {
         DisplayRenderer ownRenderer;
         ICoreClientAPI capi;
+        Vec2i resolution;
+
+        TextureAnimation testAnimation = new TextureAnimation()
+        {
+            Frames = new Vec2f[][]
+            {
+                new Vec2f[]
+                {
+                    new Vec2f(0, 0),
+                },
+                new Vec2f[]
+                {
+                    new Vec2f(0, 0),
+                    new Vec2f(0.25f, 0.25f),
+                },
+                new Vec2f[]
+                {
+                    new Vec2f(0, 0),
+                    new Vec2f(0.25f, 0.25f),
+                    new Vec2f(0.50f, 0.50f),
+                },
+                new Vec2f[]
+                {
+                    new Vec2f(0, 0),
+                    new Vec2f(0.25f, 0.25f),
+                    new Vec2f(0.50f, 0.50f),
+                    new Vec2f(0.75f, 0.75f),
+                },
+                new Vec2f[]
+                {
+                    new Vec2f(0, 0),
+                    new Vec2f(0.25f, 0.25f),
+                    new Vec2f(0.50f, 0.50f),
+                    new Vec2f(0.75f, 0.75f),
+                    new Vec2f(1, 1),
+                }
+            },
+            Colors = new Vec3f[][]
+            {
+                new Vec3f[]
+                {
+                    new Vec3f(0, 1, 0),
+                },
+                new Vec3f[]
+                {
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                },
+                new Vec3f[]
+                {
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                },
+                new Vec3f[]
+                {
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                },
+                new Vec3f[]
+                {
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                    new Vec3f(0, 1, 0),
+                }
+            }
+        };
 
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
+            resolution = new Vec2i(32, 32);
             if (api.Side.IsClient())
             {
                 capi = (ICoreClientAPI)api;
-                ownRenderer = new DisplayRenderer(capi, Pos, Block, 32, 32, 1000 / 144);
+                ownRenderer = new DisplayRenderer(capi, Pos, Block, resolution.X, resolution.Y, 1000 / 144);
                 capi.Event.RegisterRenderer(ownRenderer, EnumRenderStage.Opaque);
-                RegisterGameTickListener(UpdateDisplay, 1000 / 144);
+                RegisterGameTickListener(UpdateDisplay, 1000 / 15);
             }
             MarkDirty(true);
         }
@@ -97,16 +170,47 @@ namespace BlockAnimTest
             }
         }
 
+        public void SetPixel(int x, int y, int color)
+        {
+            int index = MapUtil.Index2d(x, y, resolution.X);
+            ownRenderer.ScreenColors[index] = color;
+        }
+
+        int frame = 0;
+        Vec2i[] LastPixels;
+
         public void UpdateDisplay(float dt)
         {
-            for (int i = 0; i < ownRenderer.ScreenColors.Length; i++)
-            {
-                Vec2i xy = new Vec2i();
-                MapUtil.PosInt2d(i, 32, xy);
-                double sign = Math.Abs(Math.Sin(capi.World.Calendar.TotalHours * 16 * xy.X * xy.Y));
+            var val = testAnimation.Frames[frame];
 
-                ownRenderer.ScreenColors[i] = ColorUtil.ToRgba(255, 0, (int)(255 * sign), 0);
+            if (LastPixels != null)
+            {
+                for (int i = 0; i < LastPixels.Length; i++)
+                {
+                    if (LastPixels[i] == null) continue;
+                    SetPixel(LastPixels[i].X, LastPixels[i].Y, ColorUtil.ToRgba(255, 0, 0, 0));
+                }
             }
+
+            LastPixels = new Vec2i[val.Length];
+
+            for (int i = 0; i < val.Length; i++)
+            {
+                LastPixels[i] = new Vec2i();
+                LastPixels[i].X = GameMath.Clamp((int)(val[i].X * resolution.X), 0, resolution.X - 1);
+                LastPixels[i].Y = GameMath.Clamp((int)(val[i].Y * resolution.Y), 0, resolution.Y - 1);
+
+                int colorR = (int)(testAnimation.Colors[frame][i].R * 255);
+                int colorG = (int)(testAnimation.Colors[frame][i].G * 255);
+                int colorB = (int)(testAnimation.Colors[frame][i].B * 255);
+
+                SetPixel(LastPixels[i].X, LastPixels[i].Y, ColorUtil.ToRgba(255, colorR, colorG, colorB));
+            }
+            
+            if (frame < testAnimation.Frames.Length - 1) frame++;
+            else frame = 0;
+
+            ownRenderer.MarkDirty();
         }
 
         public override void OnBlockUnloaded()
@@ -172,8 +276,7 @@ namespace BlockAnimTest
             
             capi.Render.LoadOrUpdateTextureFromRgba(ScreenColors, false, 0, ref display);
             capi.Tesselator.TesselateBlock(block, out mesh);
-            meshRef = capi.Render.UploadMesh(CubeMeshUtil.GetCube().Scale(new Vec3f(1f, 1f, 1f), 0.5f, 0.5f, 0.5f));
-            refresher = capi.Event.RegisterGameTickListener(Refresh, refreshTime);
+            meshRef = capi.Render.UploadMesh(CubeMeshUtil.GetCube(0.5f, 0.5f, new Vec3f(0.5f,0.5f,0.5f)));
         }
 
         public int XRes { get; set; }
@@ -191,8 +294,7 @@ namespace BlockAnimTest
             meshRef?.Dispose();
             display?.Dispose();
         }
-
-        void Refresh(float dt)
+        public void MarkDirty()
         {
             capi.Render.LoadOrUpdateTextureFromRgba(ScreenColors, false, 0, ref display);
         }
