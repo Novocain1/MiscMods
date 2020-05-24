@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomMeshMod", "CustomMesh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlockAnimTest", "BlockAnimTest\BlockAnimTest.csproj", "{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JarLoaderTest", "JarLoaderTest\JarLoaderTest.csproj", "{633EB38F-A404-4477-83B3-7111868D149B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0F22F7F-1CF2-4B97-B147-F14DA6C2AB32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{633EB38F-A404-4477-83B3-7111868D149B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{633EB38F-A404-4477-83B3-7111868D149B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{633EB38F-A404-4477-83B3-7111868D149B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{633EB38F-A404-4477-83B3-7111868D149B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,11 @@
+{
+    "code": "testhc",
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "shape": { "base": "block/basic/cube" },
+    "lightAbsorption": 0,
+    "textures": {
+		"all": { "base": "harvestcraft:block/honeycomb" }
+	}
+}

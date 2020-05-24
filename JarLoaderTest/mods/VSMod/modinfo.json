@@ -1,0 +1,10 @@
+{
+	"type": "code",
+	"name": "VSMod",
+	"modid": "vsmod",
+	"description" : "",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}
