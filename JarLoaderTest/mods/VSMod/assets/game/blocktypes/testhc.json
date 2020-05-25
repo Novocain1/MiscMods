@@ -3,7 +3,7 @@
     "creativeinventory": { "general": [ "*" ] },
     "sidesolid": { "all": false },
     "sideopaque": { "all": false },
-    "shape": { "base": "harvestcraft:block/crops/agave_stage_*" },
+    "shape": { "base": "harvestcraft:block/crops/agave_stage_3" },
     "renderpass": "OpaqueNoCull",
     "lightAbsorption": 0
 }

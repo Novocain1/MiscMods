@@ -103,7 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VSMod.cs" />
+    <Compile Include="JarLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mods\VSMod\modinfo.json" />
