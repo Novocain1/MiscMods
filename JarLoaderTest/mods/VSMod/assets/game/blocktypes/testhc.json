@@ -3,9 +3,7 @@
     "creativeinventory": { "general": [ "*" ] },
     "sidesolid": { "all": false },
     "sideopaque": { "all": false },
-    "shape": { "base": "harvestcraft:block/candledeco1" },
-    "lightAbsorption": 0,
-    "textures": {
-		"all": { "base": "harvestcraft:block/candledeco1" }
-	}
+    "shape": { "base": "harvestcraft:block/crops/agave_stage_*" },
+    "renderpass": "OpaqueNoCull",
+    "lightAbsorption": 0
 }
