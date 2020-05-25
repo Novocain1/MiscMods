@@ -155,7 +155,10 @@ namespace VSMod
                                             if (VSEquivelentShapes.ContainsKey(shape.Parent))
                                             {
                                                 Shape parentShape = api.Assets.TryGet(VSEquivelentShapes[shape.Parent])?.ToObject<Shape>();
-                                                if (parentShape != null) shape.Elements = parentShape.Elements;
+                                                if (parentShape != null) {
+                                                    List<ShapeElement> psElements = new List<ShapeElement>(parentShape?.Elements ?? new ShapeElement[] { });
+                                                    shape.Elements = psElements.ToArray();
+                                                }
                                             }
                                             else shape.Elements = api.Assets.TryGet(VSEquivelentShapes["block/cube"])?.ToObject<Shape>().Elements;
                                         }
@@ -168,7 +171,8 @@ namespace VSMod
                                                 {
                                                     string oData = odShapeReader.ReadToEnd();
                                                     Shape parentShape = JsonConvert.DeserializeObject<DummyForgeModel>(oData);
-                                                    shape.Elements = parentShape.Elements;
+                                                    List<ShapeElement> psElements = new List<ShapeElement>(parentShape?.Elements ?? new ShapeElement[] { });
+                                                    shape.Elements = psElements.ToArray();
                                                     odShapeReader.Close();
                                                 }
                                             }

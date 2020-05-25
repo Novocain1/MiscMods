@@ -1,0 +1,8 @@
+{
+    "code": "testae",
+    "creativeinventory": { "general": [ "*" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "shape": { "base": "appliedenergistics2:block/controller/controller_block_online" },
+    "lightAbsorption": 0
+}
