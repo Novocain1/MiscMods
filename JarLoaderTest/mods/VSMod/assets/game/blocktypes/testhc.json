@@ -3,9 +3,9 @@
     "creativeinventory": { "general": [ "*" ] },
     "sidesolid": { "all": false },
     "sideopaque": { "all": false },
-    "shape": { "base": "block/basic/cube" },
+    "shape": { "base": "harvestcraft:block/candledeco1" },
     "lightAbsorption": 0,
     "textures": {
-		"all": { "base": "harvestcraft:block/honeycomb" }
+		"all": { "base": "harvestcraft:block/candledeco1" }
 	}
 }

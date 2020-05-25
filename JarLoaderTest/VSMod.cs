@@ -31,14 +31,17 @@ namespace VSMod
 
         public override void Start(ICoreAPI api)
         {
+        }
+
+        public override void StartPre(ICoreAPI api)
+        {
             this.api = api;
             capi = api as ICoreClientAPI;
             sapi = api as ICoreServerAPI;
-            
-            if (capi != null) capi.Event.BlockTexturesLoaded += () => LoadForgeJars();
-            if (sapi != null) sapi.Event.SaveGameLoaded += () => LoadForgeJars();
+
+            LoadForgeJars();
         }
-        
+
         public void LoadForgeJars()
         {
             DirectoryInfo info = new DirectoryInfo(Path.Combine(GamePaths.Binaries, "ForgeMods"));
@@ -51,61 +54,44 @@ namespace VSMod
 
                 try
                 {
+                    string assetsPath = Path.Combine(folderPath, "assets");
+                    DirectoryInfo domainInfo = new DirectoryInfo(assetsPath);
+
                     if (!Directory.Exists(folderPath))
                     {
-                        api.World.Logger.StoryEvent("Caching jar: \'", jar.Name + "\'...");
+                        api.World.Logger.StoryEvent("Caching jar: '{0}'...", jar.Name);
                         fastZip.ExtractZip(jar.FullName, folderPath, "");
-                    }
 
-                    if (api.Side.IsClient())
-                    {
-                        string assetsPath = Path.Combine(folderPath, "assets");
-                        DirectoryInfo domainInfo = new DirectoryInfo(assetsPath);
+                        api.World.Logger.StoryEvent("Converting jar asset paths...");
                         foreach (var domain in domainInfo.EnumerateDirectories())
                         {
                             string texturesPath = Path.Combine(domain.FullName, "textures");
-                            
-                            string blockTexPath = Path.Combine(texturesPath, "blocks");
-                            string itemTexPath = Path.Combine(texturesPath, "items");
+                            string origBlocksPath = Path.Combine(texturesPath, "blocks");
+                            string origItemsPath = Path.Combine(texturesPath, "items");
 
-                            IEnumerable<string> blockTextures = Directory.EnumerateFiles(blockTexPath, "*.png", SearchOption.AllDirectories);
-                            IEnumerable<string> itemTextures = Directory.EnumerateFiles(itemTexPath, "*.png", SearchOption.AllDirectories);
+                            string origModelsPath = Path.Combine(domain.FullName, "models");
+                            string origRecipesPath = Path.Combine(domain.FullName, "recipes");
+                            string origLangPath = Path.Combine(domain.FullName, "lang");
 
-                            LoadTextures(blockTextures, capi.BlockTextureAtlas, domain.Name, "block");
-                            LoadTextures(itemTextures, capi.ItemTextureAtlas, domain.Name, "item");
+                            if (Directory.Exists(origBlocksPath)) Directory.Move(origBlocksPath, Path.Combine(texturesPath, "block"));
+                            if (Directory.Exists(origItemsPath)) Directory.Move(origItemsPath, Path.Combine(texturesPath, "item"));
+                            if (Directory.Exists(origModelsPath)) Directory.Move(origModelsPath, Path.Combine(domain.FullName, "shapes"));
+
+                            if (Directory.Exists(origRecipesPath)) Directory.Move(origRecipesPath, Path.Combine(domain.FullName, "forgerecipes"));
+                            if (Directory.Exists(origLangPath)) Directory.Move(origLangPath, Path.Combine(domain.FullName, "forgelang"));
                         }
+                    }
+
+                    foreach (var domain in domainInfo.EnumerateDirectories())
+                    {
+                        api.World.Logger.StoryEvent("Adding path origin '{0}'...", domain.Name);
+                        api.Assets.AddPathOrigin(domain.Name, domain.FullName);
                     }
                 }
                 catch (Exception ex)
                 {
                     api.World.Logger.Notification("Failed loading jar with the name \'", jar.Name, "\' Exception thrown: ", ex);
                 }
-            }
-        }
-
-        public void LoadTextures(IEnumerable<string> paths, ITextureAtlasAPI textureAtlas, string domain, string type)
-        {
-            foreach (var texPath in paths)
-            {
-                FileInfo fileInfo = new FileInfo(texPath);
-
-                using (StreamReader reader = new StreamReader(texPath))
-                {
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        reader.BaseStream.Position = 0;
-                        reader.BaseStream.CopyTo(ms);
-                        byte[] bytes = ms.ToArray();
-                        BitmapExternal bitmapExternal = capi.Render.BitmapCreateFromPng(bytes);
-                        AssetLocation loc = new AssetLocation(domain, type + "/" + fileInfo.Name);
-
-                        textureAtlas.InsertTextureCached(loc, bitmapExternal, out int texId, out TextureAtlasPosition texPos);
-
-                        ms.Close();
-                    }
-                    reader.Close();
-                }
-
             }
         }
 
