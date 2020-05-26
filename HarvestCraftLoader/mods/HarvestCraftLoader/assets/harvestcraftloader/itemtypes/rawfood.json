@@ -1,0 +1,119 @@
+{
+    "code": "rawfood",
+    "variantgroups": [
+        {
+            "code": "plant",
+            "loadFromProperties": "harvestcraftloader:block/plants"
+        }
+    ],
+    "creativeinventory": {
+        "general": [
+            "*"
+        ],
+        "items": [
+            "*"
+        ]
+    },
+    "nutritionPropsByType": {
+        "*-agave": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-amaranth": { "satiety": 30, "foodcategory": "Grain" },
+        "*-arrowroot": { "satiety": 30, "foodcategory": "Grain" },
+        "*-artichoke": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-asparagus": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-bambooshoot": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-barley": { "satiety": 30, "foodcategory": "Grain" },
+        "*-bean": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-beet": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-bellpepper": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-blackberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-blueberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-broccoli": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-brusselsprout": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-cabbage": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-cactusfruit": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-candleberry": null,
+        "*-cantaloupe": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-cassava": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-cauliflower": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-celery": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-chickpea": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-chilipepper": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-coffee": null,
+        "*-corn": { "satiety": 30, "foodcategory": "Grain" },
+        "*-cotton": null,
+        "*-cranberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-cucumber": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-curryleaf": null,
+        "*-eggplant": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-elderberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-flax": { "satiety": 30, "foodcategory": "Grain" },
+        "*-garlic": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-gigapickle": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-ginger": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-grape": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-greengrape": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-huckleberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-jicama": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-juniperberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-jute": null,
+        "*-kale": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-kenaf": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-kiwi": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-kohlrabi": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-leek": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-lentil": { "satiety": 30, "foodcategory": "Protein" },
+        "*-lettuce": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-millet": { "satiety": 30, "foodcategory": "Grain" },
+        "*-mulberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-mustard": null,
+        "*-oats": { "satiety": 30, "foodcategory": "grain" },
+        "*-okra": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-onion": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-parsnip": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-peanut": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-peas": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-pineapple": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-quinoa": { "satiety": 30, "foodcategory": "Grain" },
+        "*-radish": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-raspberry": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-rhubarb": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-rice": { "satiety": 30, "foodcategory": "Grain" },
+        "*-rotten": null,
+        "*-rutabaga": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-rye": { "satiety": 30, "foodcategory": "Grain" },
+        "*-scallion": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-seaweed": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-sesameseeds": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-sisal": null,
+        "*-soybean": { "satiety": 30, "foodcategory": "Protein" },
+        "*-spiceleaf": null,
+        "*-spinach": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-strawberry": { "satiety": 30, "foodcategory": "Fruit" },
+        "*-sunflower": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-sweetpotato": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-taro": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-tea": null,
+        "*-tomatillo": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-tomato": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-turnip": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-waterchestnut": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-whitemushroom": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-wintersquash": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-zucchini": { "satiety": 30, "foodcategory": "Vegetable" }
+    },
+    "maxStackSize": 64,
+    "textureByType": {
+        "*-sunflower": {
+            "base": "harvestcraft:item/sunflowerseeditem"
+        },
+        "*-mustard": {
+            "base": "harvestcraft:item/mustardseeditem"
+        },
+        "*-coffee": {
+            "base": "harvestcraft:item/coffeebeanitem"
+        },
+        "*": {
+            "base": "harvestcraft:item/{plant}item"
+        }
+    }
+}

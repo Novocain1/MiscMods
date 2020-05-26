@@ -1,0 +1,70 @@
+{
+    "code": "crops",
+    "class": "BlockCropHC",
+    "behaviors": [
+        {
+            "name": "Unstable"
+        }
+    ],
+    "variantgroups": [
+        { "code": "plant", "loadFromProperties": "harvestcraftloader:block/plants" },
+        { "code": "stage", "states": [ "0", "1", "2", "3" ] }
+    ],
+    "creativeinventory": { "general": [ "" ], "plants": [ "" ] },
+    "renderpass": "OpaqueNoCull",
+    "shape": {
+        "base": "harvestcraft:block/crops/{plant}_stage_{stage}"
+    },
+    "blockmaterial": "Plant",
+    "attributes": {
+        "butterflyFeedByType": { "*-0": false, "*-3": false, "*": true },
+        "beeFeedByType": { "*-0": false, "*-3": false, "*": true },
+        "sitHeight": 0.55,
+        "tickGrowthProbability": 0.05,
+        "handbook": { "include": true }
+    },
+    "sideopaque": { "all": false },
+    "sidesolid": { "all": false },
+    "replaceable": 3000,
+    "lightAbsorption": 0,
+    "resistance": 0.5,
+    "sounds": {
+        "place": "game:block/plant",
+        "break": "game:block/plant",
+        "hit": "game:block/plant"
+    },
+    "rainPermeable": false,
+    "dropsByType": {
+        "*-3": [
+            {
+                "type": "item",
+                "code": "seed-{plant}",
+                "quantity": { "avg": 1.05 }
+            },
+            {
+                "type": "item",
+                "code": "rawfood-{plant}",
+                "quantity": { "avg": 3, "var": 1 }
+            }
+        ],
+        "*": [
+            {
+                "type": "item",
+                "code": "seed-{plant}",
+                "quantity": { "avg": 0.7 }
+            }
+        ]
+    },
+    "cropProps": {
+        "___comment": "Generated using noise, not realistic at all.",
+        "requiredNutrientByType":{"*-agave-*":"P","*-amaranth-*":"P","*-arrowroot-*":"K","*-artichoke-*":"P","*-asparagus-*":"P","*-bambooshoot-*":"P","*-barley-*":"N","*-bean-*":"P","*-beet-*":"K","*-bellpepper-*":"P","*-blackberry-*":"P","*-blueberry-*":"P","*-broccoli-*":"K","*-brusselsprout-*":"K","*-cabbage-*":"N","*-cactusfruit-*":"P","*-candleberry-*":"P","*-cantaloupe-*":"P","*-cassava-*":"K","*-cauliflower-*":"N","*-celery-*":"P","*-chickpea-*":"P","*-chilipepper-*":"K","*-coffee-*":"P","*-corn-*":"P","*-cotton-*":"P","*-cranberry-*":"P","*-cucumber-*":"P","*-curryleaf-*":"P","*-eggplant-*":"N","*-elderberry-*":"K","*-flax-*":"P","*-garlic-*":"P","*-gigapickle-*":"P","*-ginger-*":"P","*-grape-*":"P","*-greengrape-*":"K","*-huckleberry-*":"N","*-jicama-*":"N","*-juniperberry-*":"P","*-jute-*":"P","*-kale-*":"P","*-kenaf-*":"P","*-kiwi-*":"P","*-kohlrabi-*":"P","*-leek-*":"P","*-lentil-*":"P","*-lettuce-*":"P","*-millet-*":"P","*-mulberry-*":"P","*-mustard-*":"P","*-oats-*":"P","*-okra-*":"N","*-onion-*":"P","*-parsnip-*":"P","*-peanut-*":"P","*-peas-*":"K","*-pineapple-*":"P","*-quinoa-*":"P","*-radish-*":"P","*-raspberry-*":"K","*-rhubarb-*":"K","*-rice-*":"N","*-rotten-*":"P","*-rutabaga-*":"N","*-rye-*":"P","*-scallion-*":"K","*-seaweed-*":"P","*-sesameseeds-*":"N","*-sisal-*":"P","*-soybean-*":"P","*-spiceleaf-*":"N","*-spinach-*":"N","*-strawberry-*":"P","*-sunflower-*":"P","*-sweetpotato-*":"P","*-taro-*":"P","*-tea-*":"N","*-tomatillo-*":"P","*-tomato-*":"P","*-turnip-*":"P","*-waterchestnut-*":"P","*-whitemushroom-*":"P","*-wintersquash-*":"P","*-zucchini-*":"P"},
+        "nutrientConsumption": 50,
+        "growthStages": 4,
+        "totalGrowthDays": 4.2
+    },
+    "collisionbox": null,
+    "selectionbox": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.25, "z2": 0.9375 },
+    "materialDensity": 200,
+    "vertexFlags": { "grassWindwave": true },
+    "combustibleProps": { "burnTemperature": 600, "burnDuration": 10 }
+}

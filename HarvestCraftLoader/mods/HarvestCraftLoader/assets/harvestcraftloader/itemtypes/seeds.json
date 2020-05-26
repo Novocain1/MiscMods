@@ -1,0 +1,8 @@
+{
+    "code": "seed",
+    "class": "ItemPlantableSeedHC",
+    "variantgroups": [ { "code": "plant", "loadFromProperties": "harvestcraftloader:block/plants" } ],
+    "creativeinventory": { "general": ["*"], "items": ["*"] },
+    "texture": { "base": "harvestcraft:item/{plant}seeditem" },
+    "maxStackSize": 64,
+}

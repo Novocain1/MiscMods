@@ -1,0 +1,260 @@
+{
+  "Code": "plants",
+  "Variants": [
+    {
+      "Code": "agave"
+    },
+    {
+      "Code": "amaranth"
+    },
+    {
+      "Code": "arrowroot"
+    },
+    {
+      "Code": "artichoke"
+    },
+    {
+      "Code": "asparagus"
+    },
+    {
+      "Code": "bambooshoot"
+    },
+    {
+      "Code": "barley"
+    },
+    {
+      "Code": "bean"
+    },
+    {
+      "Code": "beet"
+    },
+    {
+      "Code": "bellpepper"
+    },
+    {
+      "Code": "blackberry"
+    },
+    {
+      "Code": "blueberry"
+    },
+    {
+      "Code": "broccoli"
+    },
+    {
+      "Code": "brusselsprout"
+    },
+    {
+      "Code": "cabbage"
+    },
+    {
+      "Code": "cactusfruit"
+    },
+    {
+      "Code": "candleberry"
+    },
+    {
+      "Code": "cantaloupe"
+    },
+    {
+      "Code": "cassava"
+    },
+    {
+      "Code": "cauliflower"
+    },
+    {
+      "Code": "celery"
+    },
+    {
+      "Code": "chickpea"
+    },
+    {
+      "Code": "chilipepper"
+    },
+    {
+      "Code": "coffee"
+    },
+    {
+      "Code": "corn"
+    },
+    {
+      "Code": "cotton"
+    },
+    {
+      "Code": "cranberry"
+    },
+    {
+      "Code": "cucumber"
+    },
+    {
+      "Code": "curryleaf"
+    },
+    {
+      "Code": "eggplant"
+    },
+    {
+      "Code": "elderberry"
+    },
+    {
+      "Code": "flax"
+    },
+    {
+      "Code": "garlic"
+    },
+    {
+      "Code": "gigapickle"
+    },
+    {
+      "Code": "ginger"
+    },
+    {
+      "Code": "grape"
+    },
+    {
+      "Code": "greengrape"
+    },
+    {
+      "Code": "huckleberry"
+    },
+    {
+      "Code": "jicama"
+    },
+    {
+      "Code": "juniperberry"
+    },
+    {
+      "Code": "jute"
+    },
+    {
+      "Code": "kale"
+    },
+    {
+      "Code": "kenaf"
+    },
+    {
+      "Code": "kiwi"
+    },
+    {
+      "Code": "kohlrabi"
+    },
+    {
+      "Code": "leek"
+    },
+    {
+      "Code": "lentil"
+    },
+    {
+      "Code": "lettuce"
+    },
+    {
+      "Code": "millet"
+    },
+    {
+      "Code": "mulberry"
+    },
+    {
+      "Code": "mustard"
+    },
+    {
+      "Code": "oats"
+    },
+    {
+      "Code": "okra"
+    },
+    {
+      "Code": "onion"
+    },
+    {
+      "Code": "parsnip"
+    },
+    {
+      "Code": "peanut"
+    },
+    {
+      "Code": "peas"
+    },
+    {
+      "Code": "pineapple"
+    },
+    {
+      "Code": "quinoa"
+    },
+    {
+      "Code": "radish"
+    },
+    {
+      "Code": "raspberry"
+    },
+    {
+      "Code": "rhubarb"
+    },
+    {
+      "Code": "rice"
+    },
+    {
+      "Code": "rotten"
+    },
+    {
+      "Code": "rutabaga"
+    },
+    {
+      "Code": "rye"
+    },
+    {
+      "Code": "scallion"
+    },
+    {
+      "Code": "seaweed"
+    },
+    {
+      "Code": "sesameseeds"
+    },
+    {
+      "Code": "sisal"
+    },
+    {
+      "Code": "soybean"
+    },
+    {
+      "Code": "spiceleaf"
+    },
+    {
+      "Code": "spinach"
+    },
+    {
+      "Code": "strawberry"
+    },
+    {
+      "Code": "sunflower"
+    },
+    {
+      "Code": "sweetpotato"
+    },
+    {
+      "Code": "taro"
+    },
+    {
+      "Code": "tea"
+    },
+    {
+      "Code": "tomatillo"
+    },
+    {
+      "Code": "tomato"
+    },
+    {
+      "Code": "turnip"
+    },
+    {
+      "Code": "waterchestnut"
+    },
+    {
+      "Code": "whitemushroom"
+    },
+    {
+      "Code": "wintersquash"
+    },
+    {
+      "Code": "zucchini"
+    }
+  ]
+}
