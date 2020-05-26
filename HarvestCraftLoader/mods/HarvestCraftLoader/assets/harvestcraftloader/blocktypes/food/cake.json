@@ -6,10 +6,41 @@
         { "code": "cakes", "states": [ "cherrycheese", "carrot", "cheese", "holiday", "lamington", "pavlova", "pineappleupsidedown", "pumpkincheese", "redvelvet"] },
         { "code": "eaten", "states": [ "uneaten", "slice1", "slice2", "slice3", "slice4", "slice5", "slice6" ] }
     ],
+    "attributes": {
+        "MultiPropFood":{
+            "Division": 16,
+            "NutritionPropertiesByType": {
+                "*-cherrycheese-*": [ { "saturation": 50, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Fruit" }, { "saturation": 150, "foodcategory": "Dairy" }, { "saturation": 25, "foodcategory": "Protein" } ],
+                "*-carrot-*": [ { "saturation": 150, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Vegetable" }, { "saturation": 25, "foodcategory": "Protein" } ],
+                "*-cheese-*": [ { "saturation": 50, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Dairy" }, { "saturation": 25, "foodcategory": "Protein" } ],
+                "*-holiday-*": [ { "saturation": 150, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Fruit" }, { "saturation": 50, "foodcategory": "Protein" } ],
+                "*-lamington-*": [ { "saturation": 150, "foodcategory": "Grain" }, { "saturation": 25, "foodcategory": "Fruit" }, { "saturation": 50, "foodcategory": "Protein" } ],
+                "*-pavlova-*": [ { "saturation": 50, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Dairy" }, { "saturation": 180, "foodcategory": "Fruit" }, { "saturation": 15, "foodcategory": "Protein" } ],
+                "*-pineappleupsidedown-*": [ { "saturation": 50, "foodcategory": "Grain" }, { "saturation": 156, "foodcategory": "Fruit" }, { "saturation": 15, "foodcategory": "Protein" } ],
+                "*-pumpkincheese-*": [ { "saturation": 150, "foodcategory": "Grain" }, { "saturation": 150, "foodcategory": "Vegetable" }, { "saturation": 162, "foodcategory": "Dairy" }, { "saturation": 25, "foodcategory": "Protein" } ],
+                "*-redvelvet-*": [ { "saturation": 190, "foodcategory": "Grain" }, { "saturation": 170, "foodcategory": "Dairy" }, { "saturation": 40, "foodcategory": "Protein" }, { "saturation": 25, "foodcategory": "Vegetable" } ]
+            }
+        }
+    },
     "creativeinventory": { "general": [ "*-uneaten" ] },
     "sidesolid": { "all": false },
     "sideopaque": { "all": false },
     "shape": { "base": "harvestcraft:block/{cakes}cake_{eaten}" },
     "lightAbsorption": 0,
-    "collisionSelectionBox": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 }
+    "resistance": 0.25,
+    "collisionSelectionBoxByType": { 
+        "*-uneaten": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice1": { "x1": 0.1875, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice2": { "x1": 0.3125, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice3": { "x1": 0.4375, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice4": { "x1": 0.5625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice5": { "x1": 0.6875, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 },
+        "*-slice6": { "x1": 0.8125, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 }
+    },
+    "sounds": {
+		"place": "game:block/cloth",
+		"break": "game:block/cloth",
+		"hit": "game:block/cloth",
+		"walk": "game:walk/cloth"
+	}
 }
