@@ -1,0 +1,11 @@
+{
+	"type": "code",
+	"name": "HarvestCraft Loader",
+	"modid": "harvestcraftloader",
+	"description" : "Reimplimation of assets from HarvestCraft in vintage story. (Requires JarLoader, and Pams Harvestcraft)",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+		"jarloader": "1.0.0"
+	}
+}

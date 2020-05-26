@@ -1,0 +1,15 @@
+{
+    "code": "cake",
+    "class": "BlockCake",
+    "entityClass": "Cake",
+    "variantgroups":[
+        { "code": "cakes", "states": [ "cherrycheese", "carrot", "cheese", "holiday", "lamington", "pavlova", "pineappleupsidedown", "pumpkincheese", "redvelvet"] },
+        { "code": "eaten", "states": [ "uneaten", "slice1", "slice2", "slice3", "slice4", "slice5", "slice6" ] }
+    ],
+    "creativeinventory": { "general": [ "*-uneaten" ] },
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "shape": { "base": "harvestcraft:block/{cakes}cake_{eaten}" },
+    "lightAbsorption": 0,
+    "collisionSelectionBox": { "x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 0.9375, "y2": 0.5, "z2": 0.9375 }
+}
