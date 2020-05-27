@@ -3,6 +3,16 @@
     "class": "ItemPlantableSeedHC",
     "variantgroups": [ { "code": "plant", "loadFromProperties": "harvestcraftloader:block/plants" } ],
     "creativeinventory": { "general": ["*"], "items": ["*"] },
-    "texture": { "base": "harvestcraft:item/{plant}seeditem" },
-    "maxStackSize": 64,
+    "textureByType": { 
+        "*-potato": {
+            "base": "harvestcraft:item/sweetpotatoseeditem" 
+        },
+        "*-wheat": {
+            "base": "harvestcraft:item/ryeseeditem" 
+        },
+        "*": {
+            "base": "harvestcraft:item/{plant}seeditem" 
+        }
+    },
+    "maxStackSize": 64
 }

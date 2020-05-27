@@ -98,12 +98,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HackerMan.cs" />
+    <Compile Include="BlockEntities\BlockEntityCake.cs" />
+    <Compile Include="Blocks\BlockCake.cs" />
+    <Compile Include="Blocks\BlockCropHC.cs" />
+    <Compile Include="Enums\EnumCakeEatenState.cs" />
+    <Compile Include="Util\MultiPropFood.cs" />
+    <Compile Include="Util\HackerMan.cs" />
+    <Compile Include="Items\ItemPlantableSeedHC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HarvestCraftLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mods\HarvestCraftLoader\modinfo.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

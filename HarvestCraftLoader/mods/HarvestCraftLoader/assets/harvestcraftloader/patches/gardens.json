@@ -1,0 +1,73 @@
+[
+    {
+        "op": "add",
+        "path": "/patches",
+        "file": "game:worldgen/blockpatches.json",
+        "value": [
+            {
+                "comment": "Small patches of arid gardens",
+                "blockCodes": ["harvestcraftloader:gardens-arid"],
+                "minTemp": 20,
+                "minRain": 0,
+                "maxRain": 0.25,
+                "minForest": 0,
+                "maxForest": 1,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.0325
+            },
+            {
+                "comment": "Small patches of frost gardens",
+                "blockCodes": ["harvestcraftloader:gardens-frost"],
+                "minTemp": 0,
+                "maxTemp": 5,
+                "minRain": 0.3,
+                "maxRain": 0.8,
+                "minForest": 0,
+                "maxForest": 0.7,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.03
+            },
+            {
+                "comment": "Small patches of shaded gardens",
+                "blockCodes": ["harvestcraftloader:gardens-shaded"],
+                "minTemp": 10,
+                "maxTemp": 20,
+                "minRain": 0.3,
+                "maxRain": 0.8,
+                "minForest": 0.7,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.0365
+            },
+            {
+                "comment": "Small patches of soggy gardens",
+                "blockCodes": ["harvestcraftloader:gardens-soggy"],
+                "minTemp": 3,
+                "maxTemp": 23,
+                "minRain": 0.4,
+                "maxRain": 1,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.035,
+                "placement": "NearWater"
+            },
+            {
+                "comment": "Small patches of tropical gardens",
+                "blockCodes": ["harvestcraftloader:gardens-tropical"],
+                "minTemp": 24,
+                "minRain": 0.33,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.05
+            },
+            {
+                "comment": "Small patches of windy gardens",
+                "blockCodes": ["harvestcraftloader:gardens-windy"],
+                "minTemp": 5,
+                "maxTemp": 28,
+                "minRain": 0.35,
+                "maxRain": 0.75,
+                "maxForest": 0.8,
+                "quantity": { "avg": 5, "var": 5 },
+                "chance": 0.0335
+            }
+        ]
+    }
+]

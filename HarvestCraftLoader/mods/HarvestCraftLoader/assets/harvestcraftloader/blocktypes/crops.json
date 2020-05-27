@@ -12,8 +12,22 @@
     ],
     "creativeinventory": { "general": [ "" ], "plants": [ "" ] },
     "renderpass": "OpaqueNoCull",
-    "shape": {
-        "base": "harvestcraft:block/crops/{plant}_stage_{stage}"
+    "shapeByType": {
+        "*-potato-*":{
+            "base": "game:block/plant/crop/default1"
+        },
+        "*-wheat-*":{
+            "base": "game:block/plant/crop/default1"
+        },
+        "*": { "base": "harvestcraft:block/crops/{plant}_stage_{stage}" }
+    },
+    "textureByType": {
+        "*-potato-*": {
+            "base": "harvestcraft:block/crops/rye_stage_{stage}"
+        },
+        "*-wheat-*": {
+            "base": "harvestcraft:block/crops/rye_stage_{stage}"
+        }
     },
     "blockmaterial": "Plant",
     "attributes": {
@@ -57,7 +71,7 @@
     },
     "cropProps": {
         "___comment": "Generated using noise, not realistic at all.",
-        "requiredNutrientByType":{"*-agave-*":"P","*-amaranth-*":"P","*-arrowroot-*":"K","*-artichoke-*":"P","*-asparagus-*":"P","*-bambooshoot-*":"P","*-barley-*":"N","*-bean-*":"P","*-beet-*":"K","*-bellpepper-*":"P","*-blackberry-*":"P","*-blueberry-*":"P","*-broccoli-*":"K","*-brusselsprout-*":"K","*-cabbage-*":"N","*-cactusfruit-*":"P","*-candleberry-*":"P","*-cantaloupe-*":"P","*-cassava-*":"K","*-cauliflower-*":"N","*-celery-*":"P","*-chickpea-*":"P","*-chilipepper-*":"K","*-coffee-*":"P","*-corn-*":"P","*-cotton-*":"P","*-cranberry-*":"P","*-cucumber-*":"P","*-curryleaf-*":"P","*-eggplant-*":"N","*-elderberry-*":"K","*-flax-*":"P","*-garlic-*":"P","*-gigapickle-*":"P","*-ginger-*":"P","*-grape-*":"P","*-greengrape-*":"K","*-huckleberry-*":"N","*-jicama-*":"N","*-juniperberry-*":"P","*-jute-*":"P","*-kale-*":"P","*-kenaf-*":"P","*-kiwi-*":"P","*-kohlrabi-*":"P","*-leek-*":"P","*-lentil-*":"P","*-lettuce-*":"P","*-millet-*":"P","*-mulberry-*":"P","*-mustard-*":"P","*-oats-*":"P","*-okra-*":"N","*-onion-*":"P","*-parsnip-*":"P","*-peanut-*":"P","*-peas-*":"K","*-pineapple-*":"P","*-quinoa-*":"P","*-radish-*":"P","*-raspberry-*":"K","*-rhubarb-*":"K","*-rice-*":"N","*-rotten-*":"P","*-rutabaga-*":"N","*-rye-*":"P","*-scallion-*":"K","*-seaweed-*":"P","*-sesameseeds-*":"N","*-sisal-*":"P","*-soybean-*":"P","*-spiceleaf-*":"N","*-spinach-*":"N","*-strawberry-*":"P","*-sunflower-*":"P","*-sweetpotato-*":"P","*-taro-*":"P","*-tea-*":"N","*-tomatillo-*":"P","*-tomato-*":"P","*-turnip-*":"P","*-waterchestnut-*":"P","*-whitemushroom-*":"P","*-wintersquash-*":"P","*-zucchini-*":"P"},
+        "requiredNutrientByType":{"*-agave-*":"P","*-amaranth-*":"P","*-arrowroot-*":"K","*-artichoke-*":"P","*-asparagus-*":"P","*-bambooshoot-*":"P","*-barley-*":"N","*-bean-*":"P","*-beet-*":"K","*-bellpepper-*":"P","*-blackberry-*":"P","*-blueberry-*":"P","*-broccoli-*":"K","*-brusselsprout-*":"K","*-cabbage-*":"N","*-cactusfruit-*":"P","*-candleberry-*":"P","*-cantaloupe-*":"P","*-cassava-*":"K","*-cauliflower-*":"N","*-celery-*":"P","*-chickpea-*":"P","*-chilipepper-*":"K","*-coffee-*":"P","*-corn-*":"P","*-cotton-*":"P","*-cranberry-*":"P","*-cucumber-*":"P","*-curryleaf-*":"P","*-eggplant-*":"N","*-elderberry-*":"K","*-flax-*":"P","*-garlic-*":"P","*-gigapickle-*":"P","*-ginger-*":"P","*-grape-*":"P","*-greengrape-*":"K","*-huckleberry-*":"N","*-jicama-*":"N","*-juniperberry-*":"P","*-jute-*":"P","*-kale-*":"P","*-kenaf-*":"P","*-kiwi-*":"P","*-kohlrabi-*":"P","*-leek-*":"P","*-lentil-*":"P","*-lettuce-*":"P","*-millet-*":"P","*-mulberry-*":"P","*-mustard-*":"P","*-oats-*":"P","*-okra-*":"N","*-onion-*":"P","*-parsnip-*":"P","*-peanut-*":"P","*-peas-*":"K","*-pineapple-*":"P","*-quinoa-*":"P","*-radish-*":"P","*-raspberry-*":"K","*-rhubarb-*":"K","*-rice-*":"N","*-rotten-*":"P","*-rutabaga-*":"N","*-rye-*":"P","*-scallion-*":"K","*-seaweed-*":"P","*-sesameseeds-*":"N","*-sisal-*":"P","*-soybean-*":"P","*-spiceleaf-*":"N","*-spinach-*":"N","*-strawberry-*":"P","*-sunflower-*":"P","*-sweetpotato-*":"P","*-taro-*":"P","*-tea-*":"N","*-tomatillo-*":"P","*-tomato-*":"P","*-turnip-*":"P","*-waterchestnut-*":"P","*-whitemushroom-*":"P","*-wintersquash-*":"P","*-zucchini-*":"P", "*-wheat-*":"K", "*-potato-*":"K"},
         "nutrientConsumption": 50,
         "growthStages": 4,
         "totalGrowthDays": 4.2

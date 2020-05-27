@@ -34,8 +34,8 @@ namespace VSMod
 
         public static readonly Dictionary<string, string> VSEquivelentShapes = new Dictionary<string, string>()
         {
-            { "minecraft:block/cross", "game:shapes/block/basic/cross.json" },
-            { "block/cross", "game:shapes/block/basic/cross.json" },
+            { "minecraft:block/cross", "game:shapes/block/basic/shortcross.json" },
+            { "block/cross", "game:shapes/block/basic/shortcross.json" },
             { "block/cube", "game:shapes/block/basic/cube.json" },
             { "block/cube_all", "game:shapes/block/basic/cube.json" },
             { "minecraft:block/cube", "game:shapes/block/basic/cube.json" },

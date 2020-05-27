@@ -69,6 +69,7 @@
         "*-oats": { "satiety": 30, "foodcategory": "grain" },
         "*-okra": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-onion": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-potato": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-parsnip": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-peanut": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-peas": { "satiety": 30, "foodcategory": "Vegetable" },
@@ -99,12 +100,18 @@
         "*-waterchestnut": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-whitemushroom": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-wintersquash": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*-wheat": { "satiety": 30, "foodcategory": "Grain" },
         "*-zucchini": { "satiety": 30, "foodcategory": "Vegetable" }
     },
     "maxStackSize": 64,
+    "shapeByType": {
+        "*-rotten": {
+            "base": "game:item/rot"
+        }
+    },
     "textureByType": {
         "*-sunflower": {
-            "base": "harvestcraft:item/sunflowerseeditem"
+            "base": "harvestcraft:item/sunflowerseedsitem"
         },
         "*-mustard": {
             "base": "harvestcraft:item/mustardseeditem"
@@ -112,8 +119,54 @@
         "*-coffee": {
             "base": "harvestcraft:item/coffeebeanitem"
         },
+        "*-tea":{
+            "base": "harvestcraft:item/tealeafitem"
+        },
+        "*-wheat":{
+            "base": "harvestcraft:item/ryeitem"
+        },
+        "*-potato":{
+            "base": "harvestcraft:item/sweetpotatoitem"
+        },
+        "*-rotten": {
+            "base": "game:item/resource/rot/rot-solids"
+        },
         "*": {
             "base": "harvestcraft:item/{plant}item"
         }
-    }
+    },
+    "transitionableProps": [
+        {
+			"type": "Perish",
+			"freshHours": { "avg": 672 },
+			"transitionHours": { "avg": 120 },
+			"transitionedStack": { "type": "item", "code": "game:rot" },
+			"transitionRatio": 0.5
+		}
+    ],
+
+    "guiTransformByType": { 
+        "*-rotten": {
+            "translation": { "x": 4, "y": 0, "z": 0 },
+            "rotation": { "x": 142, "y": 36, "z": 0 },
+            "origin": { "x": 0.45, "y": 0.09, "z": 0.5 },
+            "scale": 2.8
+        }
+	},
+	"fpHandTransformByType": {
+        "*-rotten": {
+            "translation": { "x": -0.1, "y": 0, "z": 0 },
+            "rotation": { "x": 4, "y": 9, "z": 9 },
+            "origin": { "x": 0.5, "y": 0.4, "z": 0.5 },
+            "scale": 1.58
+        }
+	},
+	"groundTransformByType": {
+        "*-rotten": {
+            "translation": { "x": 0, "y": 0, "z": 0 },
+            "rotation": { "x": 4, "y": 0, "z": 0 },
+            "origin": { "x": 0.5, "y": 0, "z": 0.5 },
+            "scale": 3.64
+        }
+	}
 }

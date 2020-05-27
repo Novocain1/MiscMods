@@ -1,0 +1,4 @@
+{
+    "code": "gardens",
+    "variants": [ { "code": "arid" }, { "code": "frost" }, { "code": "shaded" }, { "code": "soggy" }, { "code": "tropical" }, { "code": "windy" } ]
+}
