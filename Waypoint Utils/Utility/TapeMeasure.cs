@@ -172,6 +172,7 @@ namespace VSHUD
 
         public void CmdMeasuringTape(int groupId, CmdArgs args)
         {
+            WaypointUtilSystem wUtil = capi.ModLoader.GetModSystem<WaypointUtilSystem>();
             string arg = args.PopWord();
             switch (arg)
             {
@@ -192,6 +193,24 @@ namespace VSHUD
                         MakeHighlights();
                     }
                     else capi.ShowChatMessage("Please look at a block.");
+                    break;
+                case "startwp":
+                    int? swpID = args.PopInt();
+                    if (swpID != null)
+                    {
+                        start = wUtil.Waypoints[(int)swpID].Position.AsBlockPos;
+                        MakeHighlights();
+                    }
+                    else capi.ShowChatMessage("Please enter a waypoint id.");
+                    break;
+                case "endwp":
+                    int? ewpID = args.PopInt();
+                    if (ewpID != null)
+                    {
+                        end = wUtil.Waypoints[(int)ewpID].Position.AsBlockPos;
+                        MakeHighlights();
+                    }
+                    else capi.ShowChatMessage("Please enter a waypoint id.");
                     break;
                 case "calc":
                     string type = args.PopWord();
