@@ -1,0 +1,16 @@
+{
+    "code": "cookingtool",
+    "attributes": {
+        "rackable": true
+    },
+    "variantgroups": [
+        {
+            "code": "tool",
+            "loadFromProperties": "harvestcraftloader:block/tools"
+        }
+    ],
+    "durability": 800,
+    "damagedby": ["blockbreaking", "attacking"],
+    "creativeinventory": { "general": ["*"], "items": ["*"], "tools": ["*"] },
+    "texture": { "base": "harvestcraft:item/{tool}item" }
+}

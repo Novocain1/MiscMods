@@ -1,0 +1,12 @@
+{
+    "code": "tools",
+    "variants":[
+        { "code": "mortarandpestle" },
+        { "code": "juicer" },
+        { "code": "saucepan" },
+        { "code": "pot" },
+        { "code": "bakeware" },
+        { "code": "skillet" },
+        { "code": "cuttingboard" }
+    ]
+}
