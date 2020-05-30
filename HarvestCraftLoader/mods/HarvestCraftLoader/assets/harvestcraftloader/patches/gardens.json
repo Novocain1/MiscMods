@@ -30,11 +30,12 @@
             {
                 "comment": "Small patches of shaded gardens",
                 "blockCodes": ["harvestcraftloader:gardens-shaded"],
-                "minTemp": 10,
+                "minTemp": 5,
                 "maxTemp": 20,
                 "minRain": 0.3,
                 "maxRain": 0.8,
-                "minForest": 0.7,
+                "minForest": 0.65,
+                "maxForest": 1,
                 "quantity": { "avg": 5, "var": 5 },
                 "chance": 0.0365
             },
