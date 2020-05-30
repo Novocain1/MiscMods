@@ -5,10 +5,10 @@
     "creativeinventory": { "general": ["*"], "items": ["*"] },
     "textureByType": { 
         "*-potato": {
-            "base": "harvestcraft:item/sweetpotatoseeditem" 
+            "base": "item/seed/potato"
         },
         "*-wheat": {
-            "base": "harvestcraft:item/ryeseeditem" 
+            "base": "item/seed/wheat" 
         },
         "*": {
             "base": "harvestcraft:item/{plant}seeditem" 

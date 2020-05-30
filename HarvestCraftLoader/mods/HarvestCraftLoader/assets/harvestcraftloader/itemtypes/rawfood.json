@@ -123,10 +123,10 @@
             "base": "harvestcraft:item/tealeafitem"
         },
         "*-wheat":{
-            "base": "harvestcraft:item/ryeitem"
+            "base": "item/food/wheat"
         },
         "*-potato":{
-            "base": "harvestcraft:item/sweetpotatoitem"
+            "base": "item/food/potato"
         },
         "*-rotten": {
             "base": "game:item/resource/rot/rot-solids"
