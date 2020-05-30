@@ -1,0 +1,137 @@
+{
+  "Code": "meat",
+  "Variants": [
+    {
+      "Code": "anchovyraw"
+    },
+    {
+      "Code": "bassraw"
+    },
+    {
+      "Code": "calamariraw"
+    },
+    {
+      "Code": "carpraw"
+    },
+    {
+      "Code": "catfishraw"
+    },
+    {
+      "Code": "charrraw"
+    },
+    {
+      "Code": "clamraw"
+    },
+    {
+      "Code": "crabraw"
+    },
+    {
+      "Code": "crayfishraw"
+    },
+    {
+      "Code": "duckraw"
+    },
+    {
+      "Code": "eelraw"
+    },
+    {
+      "Code": "frograw"
+    },
+    {
+      "Code": "grouperraw"
+    },
+    {
+      "Code": "herringraw"
+    },
+    {
+      "Code": "jellyfishraw"
+    },
+    {
+      "Code": "mudfishraw"
+    },
+    {
+      "Code": "musselraw"
+    },
+    {
+      "Code": "muttonraw"
+    },
+    {
+      "Code": "octopusraw"
+    },
+    {
+      "Code": "oysterraw"
+    },
+    {
+      "Code": "perchraw"
+    },
+    {
+      "Code": "rabbitraw"
+    },
+    {
+      "Code": "rawtofabbit"
+    },
+    {
+      "Code": "rawtofacon"
+    },
+    {
+      "Code": "rawtofeak"
+    },
+    {
+      "Code": "rawtofeeg"
+    },
+    {
+      "Code": "rawtofenison"
+    },
+    {
+      "Code": "rawtoficken"
+    },
+    {
+      "Code": "rawtofish"
+    },
+    {
+      "Code": "rawtofuduck"
+    },
+    {
+      "Code": "rawtofurkey"
+    },
+    {
+      "Code": "rawtofutton"
+    },
+    {
+      "Code": "sardineraw"
+    },
+    {
+      "Code": "scallopraw"
+    },
+    {
+      "Code": "shrimpraw"
+    },
+    {
+      "Code": "snailraw"
+    },
+    {
+      "Code": "snapperraw"
+    },
+    {
+      "Code": "tilapiaraw"
+    },
+    {
+      "Code": "troutraw"
+    },
+    {
+      "Code": "tunaraw"
+    },
+    {
+      "Code": "turkeyraw"
+    },
+    {
+      "Code": "turtleraw"
+    },
+    {
+      "Code": "venisonraw"
+    },
+    {
+      "Code": "walleyeraw"
+    }
+  ]
+}

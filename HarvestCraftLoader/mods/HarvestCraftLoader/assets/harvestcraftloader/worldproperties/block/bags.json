@@ -1,0 +1,8 @@
+{
+    "code": "bags",
+    "variants":[
+        { "code": "crop" },
+        { "code": "sapling" },
+        { "code": "seed" }
+    ]
+}

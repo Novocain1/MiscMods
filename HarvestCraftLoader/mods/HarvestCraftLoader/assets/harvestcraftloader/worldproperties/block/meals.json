@@ -1,0 +1,2753 @@
+{
+  "Code": "meal",
+  "Variants": [
+    {
+      "Code": "akutuq"
+    },
+    {
+      "Code": "almondbutter"
+    },
+    {
+      "Code": "anchovypepperonipizza"
+    },
+    {
+      "Code": "applecider"
+    },
+    {
+      "Code": "applefritter"
+    },
+    {
+      "Code": "applejelly"
+    },
+    {
+      "Code": "applejellysandwich"
+    },
+    {
+      "Code": "applejuice"
+    },
+    {
+      "Code": "applepie"
+    },
+    {
+      "Code": "applesauce"
+    },
+    {
+      "Code": "applesmoothie"
+    },
+    {
+      "Code": "applesnow"
+    },
+    {
+      "Code": "appleyogurt"
+    },
+    {
+      "Code": "apricotglazedpork"
+    },
+    {
+      "Code": "apricot"
+    },
+    {
+      "Code": "apricotjelly"
+    },
+    {
+      "Code": "apricotjellysandwich"
+    },
+    {
+      "Code": "apricotjuice"
+    },
+    {
+      "Code": "apricotsmoothie"
+    },
+    {
+      "Code": "apricotyogurt"
+    },
+    {
+      "Code": "asparagusquiche"
+    },
+    {
+      "Code": "asparagussoup"
+    },
+    {
+      "Code": "avocadoburrito"
+    },
+    {
+      "Code": "babaganoush"
+    },
+    {
+      "Code": "baconandeggs"
+    },
+    {
+      "Code": "baconcheeseburger"
+    },
+    {
+      "Code": "baconmushroomburger"
+    },
+    {
+      "Code": "baconpancakes"
+    },
+    {
+      "Code": "baconwrappedchili"
+    },
+    {
+      "Code": "baconwrappeddates"
+    },
+    {
+      "Code": "bakedalaska"
+    },
+    {
+      "Code": "bakedbeans"
+    },
+    {
+      "Code": "bakedbeets"
+    },
+    {
+      "Code": "bakedcactus"
+    },
+    {
+      "Code": "bakedham"
+    },
+    {
+      "Code": "bakedsweetpotato"
+    },
+    {
+      "Code": "bakedturnips"
+    },
+    {
+      "Code": "baklava"
+    },
+    {
+      "Code": "bamboosteamedrice"
+    },
+    {
+      "Code": "bananamilkshake"
+    },
+    {
+      "Code": "banananutbread"
+    },
+    {
+      "Code": "bananasmoothie"
+    },
+    {
+      "Code": "bananasplit"
+    },
+    {
+      "Code": "bananayogurt"
+    },
+    {
+      "Code": "bangersandmash"
+    },
+    {
+      "Code": "battenberg"
+    },
+    {
+      "Code": "batteredsausage"
+    },
+    {
+      "Code": "batter"
+    },
+    {
+      "Code": "bbqchickenbiscuit"
+    },
+    {
+      "Code": "bbqchickenpizza"
+    },
+    {
+      "Code": "bbqjackfruit"
+    },
+    {
+      "Code": "bbqplatter"
+    },
+    {
+      "Code": "bbqpotatochips"
+    },
+    {
+      "Code": "bbqpulledpork"
+    },
+    {
+      "Code": "bbqsauce"
+    },
+    {
+      "Code": "beanburrito"
+    },
+    {
+      "Code": "beansandrice"
+    },
+    {
+      "Code": "beansontoast"
+    },
+    {
+      "Code": "beefjerky"
+    },
+    {
+      "Code": "beefwellington"
+    },
+    {
+      "Code": "beeswax"
+    },
+    {
+      "Code": "beetburger"
+    },
+    {
+      "Code": "beetsalad"
+    },
+    {
+      "Code": "beetsoup"
+    },
+    {
+      "Code": "bentobox"
+    },
+    {
+      "Code": "berrymeringuenest"
+    },
+    {
+      "Code": "berryvinaigrettesalad"
+    },
+    {
+      "Code": "bibimbap"
+    },
+    {
+      "Code": "biscuit"
+    },
+    {
+      "Code": "biscuitsandgravy"
+    },
+    {
+      "Code": "blackberrycobbler"
+    },
+    {
+      "Code": "blackberryjelly"
+    },
+    {
+      "Code": "blackberryjellysandwich"
+    },
+    {
+      "Code": "blackberryjuice"
+    },
+    {
+      "Code": "blackberrysmoothie"
+    },
+    {
+      "Code": "blackberryyogurt"
+    },
+    {
+      "Code": "blackpaella"
+    },
+    {
+      "Code": "blackpepper"
+    },
+    {
+      "Code": "blazingsoup"
+    },
+    {
+      "Code": "blt"
+    },
+    {
+      "Code": "blueberryjelly"
+    },
+    {
+      "Code": "blueberryjellysandwich"
+    },
+    {
+      "Code": "blueberryjuice"
+    },
+    {
+      "Code": "blueberrymuffin"
+    },
+    {
+      "Code": "blueberrypancakes"
+    },
+    {
+      "Code": "blueberrypie"
+    },
+    {
+      "Code": "blueberrysmoothie"
+    },
+    {
+      "Code": "blueberryyogurt"
+    },
+    {
+      "Code": "boiledegg"
+    },
+    {
+      "Code": "bologna"
+    },
+    {
+      "Code": "bolognasandwich"
+    },
+    {
+      "Code": "braisedonions"
+    },
+    {
+      "Code": "bratwurst"
+    },
+    {
+      "Code": "breadedporkchop"
+    },
+    {
+      "Code": "breadfruit"
+    },
+    {
+      "Code": "breakfastburrito"
+    },
+    {
+      "Code": "briochebun"
+    },
+    {
+      "Code": "broccolimac"
+    },
+    {
+      "Code": "broccolindip"
+    },
+    {
+      "Code": "brownie"
+    },
+    {
+      "Code": "bubbletea"
+    },
+    {
+      "Code": "bubblywater"
+    },
+    {
+      "Code": "bulgogi"
+    },
+    {
+      "Code": "buttercookie"
+    },
+    {
+      "Code": "butteredpotato"
+    },
+    {
+      "Code": "butter"
+    },
+    {
+      "Code": "buttertart"
+    },
+    {
+      "Code": "cactusfruitjuice"
+    },
+    {
+      "Code": "cactussoup"
+    },
+    {
+      "Code": "californiaroll"
+    },
+    {
+      "Code": "candiedginger"
+    },
+    {
+      "Code": "candiedlemon"
+    },
+    {
+      "Code": "candiedpecans"
+    },
+    {
+      "Code": "candiedsweetpotatoes"
+    },
+    {
+      "Code": "candiedwalnuts"
+    },
+    {
+      "Code": "candlenut"
+    },
+    {
+      "Code": "cantonesegreens"
+    },
+    {
+      "Code": "cantonesenoodles"
+    },
+    {
+      "Code": "caramelapple"
+    },
+    {
+      "Code": "caramelcupcake"
+    },
+    {
+      "Code": "caramelicecream"
+    },
+    {
+      "Code": "caramel"
+    },
+    {
+      "Code": "carrotcake"
+    },
+    {
+      "Code": "carrotcupcake"
+    },
+    {
+      "Code": "carrotjuice"
+    },
+    {
+      "Code": "carrotsoup"
+    },
+    {
+      "Code": "cashewbutter"
+    },
+    {
+      "Code": "cashewchicken"
+    },
+    {
+      "Code": "cassoulet"
+    },
+    {
+      "Code": "ceasarsalad"
+    },
+    {
+      "Code": "celeryandpeanutbutter"
+    },
+    {
+      "Code": "celerysoup"
+    },
+    {
+      "Code": "ceviche"
+    },
+    {
+      "Code": "chaitea"
+    },
+    {
+      "Code": "chaoscookie"
+    },
+    {
+      "Code": "charsiu"
+    },
+    {
+      "Code": "cheddarandsourcreampotatochips"
+    },
+    {
+      "Code": "cheeseburger"
+    },
+    {
+      "Code": "cheesecake"
+    },
+    {
+      "Code": "cheesedanish"
+    },
+    {
+      "Code": "cheese"
+    },
+    {
+      "Code": "cheeseontoast"
+    },
+    {
+      "Code": "cheesesteak"
+    },
+    {
+      "Code": "cheesyshrimpquinoa"
+    },
+    {
+      "Code": "cheezepuffs"
+    },
+    {
+      "Code": "cherrycheesecake"
+    },
+    {
+      "Code": "cherrycoconutchocolatebar"
+    },
+    {
+      "Code": "cherryicecream"
+    },
+    {
+      "Code": "cherryjelly"
+    },
+    {
+      "Code": "cherryjellysandwich"
+    },
+    {
+      "Code": "cherryjuice"
+    },
+    {
+      "Code": "cherrypie"
+    },
+    {
+      "Code": "cherryslushie"
+    },
+    {
+      "Code": "cherrysmoothie"
+    },
+    {
+      "Code": "cherrysoda"
+    },
+    {
+      "Code": "cherryyogurt"
+    },
+    {
+      "Code": "chestnutbutter"
+    },
+    {
+      "Code": "chestnut"
+    },
+    {
+      "Code": "chickenandwaffles"
+    },
+    {
+      "Code": "chickenbiscuit"
+    },
+    {
+      "Code": "chickencelerycasserole"
+    },
+    {
+      "Code": "chickenchowmein"
+    },
+    {
+      "Code": "chickencordonbleu"
+    },
+    {
+      "Code": "chickencurry"
+    },
+    {
+      "Code": "chickendinner"
+    },
+    {
+      "Code": "chickengumbo"
+    },
+    {
+      "Code": "chickenkatsu"
+    },
+    {
+      "Code": "chickennoodlesoup"
+    },
+    {
+      "Code": "chickenpaella"
+    },
+    {
+      "Code": "chickenparmasan"
+    },
+    {
+      "Code": "chickenpotpie"
+    },
+    {
+      "Code": "chickensandwich"
+    },
+    {
+      "Code": "chikoroll"
+    },
+    {
+      "Code": "chilichocolate"
+    },
+    {
+      "Code": "chilicupcake"
+    },
+    {
+      "Code": "chilidog"
+    },
+    {
+      "Code": "chilidonut"
+    },
+    {
+      "Code": "chili"
+    },
+    {
+      "Code": "chilipoppers"
+    },
+    {
+      "Code": "chimichanga"
+    },
+    {
+      "Code": "chipsanddip"
+    },
+    {
+      "Code": "chipsandsalsa"
+    },
+    {
+      "Code": "chocolatebacon"
+    },
+    {
+      "Code": "chocolatebar"
+    },
+    {
+      "Code": "chocolatecaramelfudge"
+    },
+    {
+      "Code": "chocolatecherry"
+    },
+    {
+      "Code": "chocolatecoconutbar"
+    },
+    {
+      "Code": "chocolatecupcake"
+    },
+    {
+      "Code": "chocolatedonut"
+    },
+    {
+      "Code": "chocolateicecream"
+    },
+    {
+      "Code": "chocolatemilk"
+    },
+    {
+      "Code": "chocolatemilkshake"
+    },
+    {
+      "Code": "chocolateorange"
+    },
+    {
+      "Code": "chocolatepudding"
+    },
+    {
+      "Code": "chocolateroll"
+    },
+    {
+      "Code": "chocolatesprinklecake"
+    },
+    {
+      "Code": "chocolatestrawberry"
+    },
+    {
+      "Code": "chocolateyogurt"
+    },
+    {
+      "Code": "chocovoxels"
+    },
+    {
+      "Code": "chorizo"
+    },
+    {
+      "Code": "chorusfruitsoup"
+    },
+    {
+      "Code": "cinnamonappleoatmeal"
+    },
+    {
+      "Code": "cinnamonbread"
+    },
+    {
+      "Code": "cinnamonroll"
+    },
+    {
+      "Code": "cinnamonsugardonut"
+    },
+    {
+      "Code": "cinnamontoast"
+    },
+    {
+      "Code": "citrussalad"
+    },
+    {
+      "Code": "clamchowder"
+    },
+    {
+      "Code": "cobblestonecobbler"
+    },
+    {
+      "Code": "cocoapowder"
+    },
+    {
+      "Code": "coconutcream"
+    },
+    {
+      "Code": "coconutmilk"
+    },
+    {
+      "Code": "coconutshrimp"
+    },
+    {
+      "Code": "coconutsmoothie"
+    },
+    {
+      "Code": "coconutyogurt"
+    },
+    {
+      "Code": "coffeebean"
+    },
+    {
+      "Code": "coffeeconleche"
+    },
+    {
+      "Code": "coffeecupcake"
+    },
+    {
+      "Code": "colasoda"
+    },
+    {
+      "Code": "coleslawburger"
+    },
+    {
+      "Code": "coleslaw"
+    },
+    {
+      "Code": "combustiblelemon"
+    },
+    {
+      "Code": "cookedgrub"
+    },
+    {
+      "Code": "cookiesandmilk"
+    },
+    {
+      "Code": "cornbread"
+    },
+    {
+      "Code": "cornchips"
+    },
+    {
+      "Code": "corndog"
+    },
+    {
+      "Code": "cornedbeefbreakfast"
+    },
+    {
+      "Code": "cornedbeefhash"
+    },
+    {
+      "Code": "cornedbeef"
+    },
+    {
+      "Code": "cornflakes"
+    },
+    {
+      "Code": "cornishpasty"
+    },
+    {
+      "Code": "cornmeal"
+    },
+    {
+      "Code": "cornonthecob"
+    },
+    {
+      "Code": "cottagepie"
+    },
+    {
+      "Code": "cottoncandy"
+    },
+    {
+      "Code": "crabkimbap"
+    },
+    {
+      "Code": "cracker"
+    },
+    {
+      "Code": "crackersandcheese"
+    },
+    {
+      "Code": "crackers"
+    },
+    {
+      "Code": "cracklins"
+    },
+    {
+      "Code": "cranberrybar"
+    },
+    {
+      "Code": "cranberryjelly"
+    },
+    {
+      "Code": "cranberryjellysandwich"
+    },
+    {
+      "Code": "cranberryjuice"
+    },
+    {
+      "Code": "cranberrysauce"
+    },
+    {
+      "Code": "cranberrysmoothie"
+    },
+    {
+      "Code": "cranberryyogurt"
+    },
+    {
+      "Code": "crawfishetoufee"
+    },
+    {
+      "Code": "crayfishsalad"
+    },
+    {
+      "Code": "creamcookie"
+    },
+    {
+      "Code": "creamedbroccolisoup"
+    },
+    {
+      "Code": "creamedcorn"
+    },
+    {
+      "Code": "creamofavocadosoup"
+    },
+    {
+      "Code": "creepercookie"
+    },
+    {
+      "Code": "creeperwings"
+    },
+    {
+      "Code": "crispyricepuffbars"
+    },
+    {
+      "Code": "crispyricepuffcereal"
+    },
+    {
+      "Code": "croissant"
+    },
+    {
+      "Code": "cucumbersalad"
+    },
+    {
+      "Code": "cucumbersandwich"
+    },
+    {
+      "Code": "cucumbersoup"
+    },
+    {
+      "Code": "curry"
+    },
+    {
+      "Code": "currypowder"
+    },
+    {
+      "Code": "custard"
+    },
+    {
+      "Code": "damper"
+    },
+    {
+      "Code": "dandelionsalad"
+    },
+    {
+      "Code": "dandeliontea"
+    },
+    {
+      "Code": "dango"
+    },
+    {
+      "Code": "datenutbread"
+    },
+    {
+      "Code": "delightedmeal"
+    },
+    {
+      "Code": "deluxecheeseburger"
+    },
+    {
+      "Code": "deluxechickencurry"
+    },
+    {
+      "Code": "deluxenachoes"
+    },
+    {
+      "Code": "deviledegg"
+    },
+    {
+      "Code": "dhal"
+    },
+    {
+      "Code": "dimsum"
+    },
+    {
+      "Code": "donut"
+    },
+    {
+      "Code": "dough"
+    },
+    {
+      "Code": "driedapples"
+    },
+    {
+      "Code": "driedsoup"
+    },
+    {
+      "Code": "driedstrawberries"
+    },
+    {
+      "Code": "durianmilkshake"
+    },
+    {
+      "Code": "durianmuffin"
+    },
+    {
+      "Code": "earlgreytea"
+    },
+    {
+      "Code": "edibleroot"
+    },
+    {
+      "Code": "eggnog"
+    },
+    {
+      "Code": "eggplantparm"
+    },
+    {
+      "Code": "eggroll"
+    },
+    {
+      "Code": "eggsalad"
+    },
+    {
+      "Code": "eggsbenedict"
+    },
+    {
+      "Code": "eggtart"
+    },
+    {
+      "Code": "enchilada"
+    },
+    {
+      "Code": "energydrink"
+    },
+    {
+      "Code": "epicbacon"
+    },
+    {
+      "Code": "epicblt"
+    },
+    {
+      "Code": "escargot"
+    },
+    {
+      "Code": "espresso"
+    },
+    {
+      "Code": "etonmess"
+    },
+    {
+      "Code": "extremechili"
+    },
+    {
+      "Code": "fairybread"
+    },
+    {
+      "Code": "festivalbread"
+    },
+    {
+      "Code": "fiestacornsalad"
+    },
+    {
+      "Code": "figbar"
+    },
+    {
+      "Code": "figjelly"
+    },
+    {
+      "Code": "figjellysandwich"
+    },
+    {
+      "Code": "figjuice"
+    },
+    {
+      "Code": "figsmoothie"
+    },
+    {
+      "Code": "figyogurt"
+    },
+    {
+      "Code": "firmtofu"
+    },
+    {
+      "Code": "fishandchips"
+    },
+    {
+      "Code": "fishdinner"
+    },
+    {
+      "Code": "fishlettucewrap"
+    },
+    {
+      "Code": "fishsandwich"
+    },
+    {
+      "Code": "fishsticks"
+    },
+    {
+      "Code": "fishtaco"
+    },
+    {
+      "Code": "fishtrapbait"
+    },
+    {
+      "Code": "fivespice"
+    },
+    {
+      "Code": "flour"
+    },
+    {
+      "Code": "footlong"
+    },
+    {
+      "Code": "fortunecookie"
+    },
+    {
+      "Code": "frenchtoast"
+    },
+    {
+      "Code": "freshmilk"
+    },
+    {
+      "Code": "freshwater"
+    },
+    {
+      "Code": "friedbolognasandwich"
+    },
+    {
+      "Code": "friedchicken"
+    },
+    {
+      "Code": "friedegg"
+    },
+    {
+      "Code": "friedfeast"
+    },
+    {
+      "Code": "friedgreentomatoes"
+    },
+    {
+      "Code": "friedonions"
+    },
+    {
+      "Code": "friedpecanokra"
+    },
+    {
+      "Code": "friedpickles"
+    },
+    {
+      "Code": "friedrice"
+    },
+    {
+      "Code": "fries"
+    },
+    {
+      "Code": "froglegstirfry"
+    },
+    {
+      "Code": "frosteddonut"
+    },
+    {
+      "Code": "fruitbait"
+    },
+    {
+      "Code": "fruitcake"
+    },
+    {
+      "Code": "fruitcreamfestivalbread"
+    },
+    {
+      "Code": "fruitcrumble"
+    },
+    {
+      "Code": "fruitpunch"
+    },
+    {
+      "Code": "fruitsalad"
+    },
+    {
+      "Code": "futomaki"
+    },
+    {
+      "Code": "garammasala"
+    },
+    {
+      "Code": "gardensoup"
+    },
+    {
+      "Code": "garlicbread"
+    },
+    {
+      "Code": "garlicchicken"
+    },
+    {
+      "Code": "garliccoin"
+    },
+    {
+      "Code": "garlicmashedpotatoes"
+    },
+    {
+      "Code": "garlicsteak"
+    },
+    {
+      "Code": "generaltsochicken"
+    },
+    {
+      "Code": "gherkin"
+    },
+    {
+      "Code": "gingerbread"
+    },
+    {
+      "Code": "gingerchicken"
+    },
+    {
+      "Code": "gingeredrhubarbtart"
+    },
+    {
+      "Code": "gingersnaps"
+    },
+    {
+      "Code": "gingersoda"
+    },
+    {
+      "Code": "glazedcarrots"
+    },
+    {
+      "Code": "glisteningsalad"
+    },
+    {
+      "Code": "gooseberryicecream"
+    },
+    {
+      "Code": "gooseberryjelly"
+    },
+    {
+      "Code": "gooseberryjellysandwich"
+    },
+    {
+      "Code": "gooseberryjuice"
+    },
+    {
+      "Code": "gooseberrymilkshake"
+    },
+    {
+      "Code": "gooseberrypie"
+    },
+    {
+      "Code": "gooseberrysmoothie"
+    },
+    {
+      "Code": "gooseberrysoda"
+    },
+    {
+      "Code": "gooseberryyogurt"
+    },
+    {
+      "Code": "gourmetbeefburger"
+    },
+    {
+      "Code": "gourmetbeefpatty"
+    },
+    {
+      "Code": "gourmetburger"
+    },
+    {
+      "Code": "gourmetmuttonburger"
+    },
+    {
+      "Code": "gourmetmuttonpatty"
+    },
+    {
+      "Code": "gourmetpatty"
+    },
+    {
+      "Code": "gourmetporkburger"
+    },
+    {
+      "Code": "gourmetporkpatty"
+    },
+    {
+      "Code": "gourmetvenisonburger"
+    },
+    {
+      "Code": "gourmetvenisonpatty"
+    },
+    {
+      "Code": "grainbait"
+    },
+    {
+      "Code": "grapefruitjelly"
+    },
+    {
+      "Code": "grapefruitjellysandwich"
+    },
+    {
+      "Code": "grapefruitjuice"
+    },
+    {
+      "Code": "grapefruitsmoothie"
+    },
+    {
+      "Code": "grapefruitsoda"
+    },
+    {
+      "Code": "grapefruityogurt"
+    },
+    {
+      "Code": "grapejelly"
+    },
+    {
+      "Code": "grapejuice"
+    },
+    {
+      "Code": "grapesalad"
+    },
+    {
+      "Code": "grapesmoothie"
+    },
+    {
+      "Code": "grapesoda"
+    },
+    {
+      "Code": "grapeyogurt"
+    },
+    {
+      "Code": "gravlax"
+    },
+    {
+      "Code": "gravy"
+    },
+    {
+      "Code": "greenbeancasserole"
+    },
+    {
+      "Code": "greeneggsandham"
+    },
+    {
+      "Code": "greenheartfish"
+    },
+    {
+      "Code": "greentea"
+    },
+    {
+      "Code": "grilledasparagus"
+    },
+    {
+      "Code": "grilledcheese"
+    },
+    {
+      "Code": "grilledcheesevegemitetoast"
+    },
+    {
+      "Code": "grilledeggplant"
+    },
+    {
+      "Code": "grilledmushroom"
+    },
+    {
+      "Code": "grilledradish"
+    },
+    {
+      "Code": "grilledskewers"
+    },
+    {
+      "Code": "grits"
+    },
+    {
+      "Code": "groiledcheesesandwich"
+    },
+    {
+      "Code": "groundbeef"
+    },
+    {
+      "Code": "groundchicken"
+    },
+    {
+      "Code": "groundcinnamon"
+    },
+    {
+      "Code": "groundduck"
+    },
+    {
+      "Code": "groundfish"
+    },
+    {
+      "Code": "groundmutton"
+    },
+    {
+      "Code": "groundnutmeg"
+    },
+    {
+      "Code": "groundpork"
+    },
+    {
+      "Code": "groundrabbit"
+    },
+    {
+      "Code": "groundturkey"
+    },
+    {
+      "Code": "groundvenison"
+    },
+    {
+      "Code": "grub"
+    },
+    {
+      "Code": "guacamole"
+    },
+    {
+      "Code": "guava"
+    },
+    {
+      "Code": "guiso"
+    },
+    {
+      "Code": "gumbo"
+    },
+    {
+      "Code": "gummybears"
+    },
+    {
+      "Code": "gyudon"
+    },
+    {
+      "Code": "haggis"
+    },
+    {
+      "Code": "hamandcheesesandwich"
+    },
+    {
+      "Code": "hamandpineapplepizza"
+    },
+    {
+      "Code": "hamburger"
+    },
+    {
+      "Code": "hamsweetpicklesandwich"
+    },
+    {
+      "Code": "hardenedleatherboots"
+    },
+    {
+      "Code": "hardenedleatherchest"
+    },
+    {
+      "Code": "hardenedleatherhelm"
+    },
+    {
+      "Code": "hardenedleather"
+    },
+    {
+      "Code": "hardenedleatherleggings"
+    },
+    {
+      "Code": "harvestpumpkin"
+    },
+    {
+      "Code": "hash"
+    },
+    {
+      "Code": "hazelnut"
+    },
+    {
+      "Code": "heartybreakfast"
+    },
+    {
+      "Code": "heavycream"
+    },
+    {
+      "Code": "herbbutterparsnips"
+    },
+    {
+      "Code": "hoisinsauce"
+    },
+    {
+      "Code": "holidaycake"
+    },
+    {
+      "Code": "homestylelunch"
+    },
+    {
+      "Code": "honeybread"
+    },
+    {
+      "Code": "honeybun"
+    },
+    {
+      "Code": "honeycombchocolatebar"
+    },
+    {
+      "Code": "honeycomb"
+    },
+    {
+      "Code": "honeyglazedcarrots"
+    },
+    {
+      "Code": "honeyglazedham"
+    },
+    {
+      "Code": "honey"
+    },
+    {
+      "Code": "honeylemonlamb"
+    },
+    {
+      "Code": "honeysandwich"
+    },
+    {
+      "Code": "honeysoyribs"
+    },
+    {
+      "Code": "hotandsoursoup"
+    },
+    {
+      "Code": "hotchocolate"
+    },
+    {
+      "Code": "hotcocoa"
+    },
+    {
+      "Code": "hotdishcasserole"
+    },
+    {
+      "Code": "hotdog"
+    },
+    {
+      "Code": "hotsauce"
+    },
+    {
+      "Code": "hotwings"
+    },
+    {
+      "Code": "hummus"
+    },
+    {
+      "Code": "hushpuppies"
+    },
+    {
+      "Code": "icecream"
+    },
+    {
+      "Code": "imagawayaki"
+    },
+    {
+      "Code": "imitationcrabsticks"
+    },
+    {
+      "Code": "ironbrew"
+    },
+    {
+      "Code": "jackfruit"
+    },
+    {
+      "Code": "jaffa"
+    },
+    {
+      "Code": "jambalaya"
+    },
+    {
+      "Code": "jamroll"
+    },
+    {
+      "Code": "jelliedeel"
+    },
+    {
+      "Code": "jellybeans"
+    },
+    {
+      "Code": "jellydonut"
+    },
+    {
+      "Code": "kalechips"
+    },
+    {
+      "Code": "ketchup"
+    },
+    {
+      "Code": "keylimepie"
+    },
+    {
+      "Code": "kimchi"
+    },
+    {
+      "Code": "kiwijelly"
+    },
+    {
+      "Code": "kiwijellysandwich"
+    },
+    {
+      "Code": "kiwijuice"
+    },
+    {
+      "Code": "kiwismoothie"
+    },
+    {
+      "Code": "kiwiyogurt"
+    },
+    {
+      "Code": "kohlundpinkel"
+    },
+    {
+      "Code": "koreandinner"
+    },
+    {
+      "Code": "kungpaochicken"
+    },
+    {
+      "Code": "lambbarleysoup"
+    },
+    {
+      "Code": "lambkebab"
+    },
+    {
+      "Code": "lambwithmintsauce"
+    },
+    {
+      "Code": "lamington"
+    },
+    {
+      "Code": "lasagna"
+    },
+    {
+      "Code": "lavendershortbread"
+    },
+    {
+      "Code": "leafychickensandwich"
+    },
+    {
+      "Code": "leafyfishsandwich"
+    },
+    {
+      "Code": "leekbaconsoup"
+    },
+    {
+      "Code": "lemonaide"
+    },
+    {
+      "Code": "lemonbar"
+    },
+    {
+      "Code": "lemonchicken"
+    },
+    {
+      "Code": "lemoncupcake"
+    },
+    {
+      "Code": "lemondrizzlecake"
+    },
+    {
+      "Code": "lemonjelly"
+    },
+    {
+      "Code": "lemonjellysandwich"
+    },
+    {
+      "Code": "lemonlimesoda"
+    },
+    {
+      "Code": "lemonmeringue"
+    },
+    {
+      "Code": "lemonsmoothie"
+    },
+    {
+      "Code": "lemonyogurt"
+    },
+    {
+      "Code": "limejelly"
+    },
+    {
+      "Code": "limejellysandwich"
+    },
+    {
+      "Code": "limejuice"
+    },
+    {
+      "Code": "limesmoothie"
+    },
+    {
+      "Code": "limeyogurt"
+    },
+    {
+      "Code": "liverandonions"
+    },
+    {
+      "Code": "loadedbakedpotato"
+    },
+    {
+      "Code": "lychee"
+    },
+    {
+      "Code": "lycheetea"
+    },
+    {
+      "Code": "mangochutney"
+    },
+    {
+      "Code": "mangojelly"
+    },
+    {
+      "Code": "mangojellysandwich"
+    },
+    {
+      "Code": "mangojuice"
+    },
+    {
+      "Code": "mangosmoothie"
+    },
+    {
+      "Code": "mangoyogurt"
+    },
+    {
+      "Code": "manjuu"
+    },
+    {
+      "Code": "maplecandiedbacon"
+    },
+    {
+      "Code": "mapleoatmeal"
+    },
+    {
+      "Code": "maplesausage"
+    },
+    {
+      "Code": "maplesyrup"
+    },
+    {
+      "Code": "maplesyruppancakes"
+    },
+    {
+      "Code": "maplesyrupwaffles"
+    },
+    {
+      "Code": "marinatedcucumbers"
+    },
+    {
+      "Code": "marshmellowchicks"
+    },
+    {
+      "Code": "marshmellows"
+    },
+    {
+      "Code": "marzipan"
+    },
+    {
+      "Code": "mashedpotatoeschickenbiscuit"
+    },
+    {
+      "Code": "mashedpotatoes"
+    },
+    {
+      "Code": "mashedsweetpotatoes"
+    },
+    {
+      "Code": "mayo"
+    },
+    {
+      "Code": "mcpam"
+    },
+    {
+      "Code": "meatfeastpizza"
+    },
+    {
+      "Code": "meatloaf"
+    },
+    {
+      "Code": "meatloafsandwich"
+    },
+    {
+      "Code": "meatpie"
+    },
+    {
+      "Code": "meatystew"
+    },
+    {
+      "Code": "meatystirfry"
+    },
+    {
+      "Code": "meesua"
+    },
+    {
+      "Code": "melonjuice"
+    },
+    {
+      "Code": "melonsmoothie"
+    },
+    {
+      "Code": "melonyogurt"
+    },
+    {
+      "Code": "meringuebombe"
+    },
+    {
+      "Code": "meringuebrownie"
+    },
+    {
+      "Code": "meringuecookie"
+    },
+    {
+      "Code": "meringue"
+    },
+    {
+      "Code": "meringueroulade"
+    },
+    {
+      "Code": "merveilleux"
+    },
+    {
+      "Code": "mettbrotchen"
+    },
+    {
+      "Code": "mincepie"
+    },
+    {
+      "Code": "minerstew"
+    },
+    {
+      "Code": "mintchocolatechipicecream"
+    },
+    {
+      "Code": "mintcupcake"
+    },
+    {
+      "Code": "misopaste"
+    },
+    {
+      "Code": "misosoup"
+    },
+    {
+      "Code": "mixedsalad"
+    },
+    {
+      "Code": "mixingbowl"
+    },
+    {
+      "Code": "mobsoup"
+    },
+    {
+      "Code": "mochaicecream"
+    },
+    {
+      "Code": "mochicake"
+    },
+    {
+      "Code": "mochidessert"
+    },
+    {
+      "Code": "mochi"
+    },
+    {
+      "Code": "monsterfrieddumplings"
+    },
+    {
+      "Code": "montecristosandwich"
+    },
+    {
+      "Code": "mozzerellasticks"
+    },
+    {
+      "Code": "museli"
+    },
+    {
+      "Code": "mushroomketchup"
+    },
+    {
+      "Code": "mushroomketchupomelet"
+    },
+    {
+      "Code": "mushroomlasagna"
+    },
+    {
+      "Code": "mushroomrisotto"
+    },
+    {
+      "Code": "mushroomsteak"
+    },
+    {
+      "Code": "mustardseeds"
+    },
+    {
+      "Code": "musubi"
+    },
+    {
+      "Code": "naan"
+    },
+    {
+      "Code": "nachoes"
+    },
+    {
+      "Code": "neapolitanicecream"
+    },
+    {
+      "Code": "netherstartoast"
+    },
+    {
+      "Code": "netherwings"
+    },
+    {
+      "Code": "noodles"
+    },
+    {
+      "Code": "nopalessalad"
+    },
+    {
+      "Code": "nutella"
+    },
+    {
+      "Code": "okrachips"
+    },
+    {
+      "Code": "okracreole"
+    },
+    {
+      "Code": "oldworldveggiesoup"
+    },
+    {
+      "Code": "oliveoil"
+    },
+    {
+      "Code": "omelet"
+    },
+    {
+      "Code": "omurice"
+    },
+    {
+      "Code": "onigiri"
+    },
+    {
+      "Code": "onionhamburger"
+    },
+    {
+      "Code": "onionrings"
+    },
+    {
+      "Code": "onionsoup"
+    },
+    {
+      "Code": "orangechicken"
+    },
+    {
+      "Code": "orangeduck"
+    },
+    {
+      "Code": "orangejelly"
+    },
+    {
+      "Code": "orangejellysandwich"
+    },
+    {
+      "Code": "orangejuice"
+    },
+    {
+      "Code": "orangesmoothie"
+    },
+    {
+      "Code": "orangesoda"
+    },
+    {
+      "Code": "orangeyogurt"
+    },
+    {
+      "Code": "ovenroastedcauliflower"
+    },
+    {
+      "Code": "oystersauce"
+    },
+    {
+      "Code": "padthai"
+    },
+    {
+      "Code": "pambitsbox"
+    },
+    {
+      "Code": "pamscookbook"
+    },
+    {
+      "Code": "pancakes"
+    },
+    {
+      "Code": "paneer"
+    },
+    {
+      "Code": "paneertikkamasala"
+    },
+    {
+      "Code": "papayajelly"
+    },
+    {
+      "Code": "papayajellysandwich"
+    },
+    {
+      "Code": "papayajuice"
+    },
+    {
+      "Code": "papayasmoothie"
+    },
+    {
+      "Code": "papayayogurt"
+    },
+    {
+      "Code": "paradiseburger"
+    },
+    {
+      "Code": "passionfruit"
+    },
+    {
+      "Code": "pastagardenia"
+    },
+    {
+      "Code": "pasta"
+    },
+    {
+      "Code": "patreonpie"
+    },
+    {
+      "Code": "pavlova"
+    },
+    {
+      "Code": "pawpaw"
+    },
+    {
+      "Code": "pbandj"
+    },
+    {
+      "Code": "peaandhamsoup"
+    },
+    {
+      "Code": "peachcobbler"
+    },
+    {
+      "Code": "peachesandcreamoatmeal"
+    },
+    {
+      "Code": "peachjelly"
+    },
+    {
+      "Code": "peachjellysandwich"
+    },
+    {
+      "Code": "peachjuice"
+    },
+    {
+      "Code": "peachsmoothie"
+    },
+    {
+      "Code": "peachyogurt"
+    },
+    {
+      "Code": "peanutbutterbananasandwich"
+    },
+    {
+      "Code": "peanutbuttercookies"
+    },
+    {
+      "Code": "peanutbuttercupcake"
+    },
+    {
+      "Code": "peanutbuttercup"
+    },
+    {
+      "Code": "peanutbutter"
+    },
+    {
+      "Code": "peanutsoup"
+    },
+    {
+      "Code": "pearjelly"
+    },
+    {
+      "Code": "pearjellysandwich"
+    },
+    {
+      "Code": "pearjuice"
+    },
+    {
+      "Code": "pearsmoothie"
+    },
+    {
+      "Code": "pearyogurt"
+    },
+    {
+      "Code": "peasandcelery"
+    },
+    {
+      "Code": "pecanpie"
+    },
+    {
+      "Code": "pekingduck"
+    },
+    {
+      "Code": "pemmican"
+    },
+    {
+      "Code": "pepperjellyandcrackers"
+    },
+    {
+      "Code": "pepperjelly"
+    },
+    {
+      "Code": "peppermint"
+    },
+    {
+      "Code": "pepperoni"
+    },
+    {
+      "Code": "persimmonjelly"
+    },
+    {
+      "Code": "persimmonjellysandwich"
+    },
+    {
+      "Code": "persimmonjuice"
+    },
+    {
+      "Code": "persimmonsmoothie"
+    },
+    {
+      "Code": "persimmonyogurt"
+    },
+    {
+      "Code": "pho"
+    },
+    {
+      "Code": "pickledbeets"
+    },
+    {
+      "Code": "pickledonions"
+    },
+    {
+      "Code": "pickles"
+    },
+    {
+      "Code": "pinacolada"
+    },
+    {
+      "Code": "pineappleham"
+    },
+    {
+      "Code": "pineappleupsidedowncake"
+    },
+    {
+      "Code": "pineappleyogurt"
+    },
+    {
+      "Code": "pinkel"
+    },
+    {
+      "Code": "pistachiobakedsalmon"
+    },
+    {
+      "Code": "pistachiobutter"
+    },
+    {
+      "Code": "pistachioicecream"
+    },
+    {
+      "Code": "pitepalt"
+    },
+    {
+      "Code": "pizza"
+    },
+    {
+      "Code": "pizzaslice"
+    },
+    {
+      "Code": "pizzasoup"
+    },
+    {
+      "Code": "plainyogurt"
+    },
+    {
+      "Code": "ploughmanslunch"
+    },
+    {
+      "Code": "plumjelly"
+    },
+    {
+      "Code": "plumjellysandwich"
+    },
+    {
+      "Code": "plumjuice"
+    },
+    {
+      "Code": "plumsmoothie"
+    },
+    {
+      "Code": "plumyogurt"
+    },
+    {
+      "Code": "poachedpear"
+    },
+    {
+      "Code": "pomegranate"
+    },
+    {
+      "Code": "pomegranatejelly"
+    },
+    {
+      "Code": "pomegranatejellysandwich"
+    },
+    {
+      "Code": "pomegranatejuice"
+    },
+    {
+      "Code": "pomegranatesmoothie"
+    },
+    {
+      "Code": "pomegranateyogurt"
+    },
+    {
+      "Code": "popcorn"
+    },
+    {
+      "Code": "porklettucewrap"
+    },
+    {
+      "Code": "porklomein"
+    },
+    {
+      "Code": "porkrinds"
+    },
+    {
+      "Code": "porksausage"
+    },
+    {
+      "Code": "potatoandcheesepirogi"
+    },
+    {
+      "Code": "potatoandleeksoup"
+    },
+    {
+      "Code": "potatocakes"
+    },
+    {
+      "Code": "potatochips"
+    },
+    {
+      "Code": "potatoesobrien"
+    },
+    {
+      "Code": "potatosalad"
+    },
+    {
+      "Code": "potatoskins"
+    },
+    {
+      "Code": "potatosoup"
+    },
+    {
+      "Code": "potroast"
+    },
+    {
+      "Code": "potstickers"
+    },
+    {
+      "Code": "poutine"
+    },
+    {
+      "Code": "powdereddonut"
+    },
+    {
+      "Code": "pralines"
+    },
+    {
+      "Code": "pumpkinbread"
+    },
+    {
+      "Code": "pumpkincheesecake"
+    },
+    {
+      "Code": "pumpkinmuffin"
+    },
+    {
+      "Code": "pumpkinoatscones"
+    },
+    {
+      "Code": "pumpkinsoup"
+    },
+    {
+      "Code": "pumpkinspicelatte"
+    },
+    {
+      "Code": "pumpkinyogurt"
+    },
+    {
+      "Code": "queenbee"
+    },
+    {
+      "Code": "quesadilla"
+    },
+    {
+      "Code": "rainbowcurry"
+    },
+    {
+      "Code": "raisincookies"
+    },
+    {
+      "Code": "raisins"
+    },
+    {
+      "Code": "rambutan"
+    },
+    {
+      "Code": "ramen"
+    },
+    {
+      "Code": "randomtaco"
+    },
+    {
+      "Code": "raspberryicedtea"
+    },
+    {
+      "Code": "raspberryjelly"
+    },
+    {
+      "Code": "raspberryjellysandwich"
+    },
+    {
+      "Code": "raspberryjuice"
+    },
+    {
+      "Code": "raspberrymilkshake"
+    },
+    {
+      "Code": "raspberrypie"
+    },
+    {
+      "Code": "raspberrysmoothie"
+    },
+    {
+      "Code": "raspberrytrifle"
+    },
+    {
+      "Code": "raspberryyogurt"
+    },
+    {
+      "Code": "redvelvetcake"
+    },
+    {
+      "Code": "redvelvetcupcake"
+    },
+    {
+      "Code": "refriedbeans"
+    },
+    {
+      "Code": "ricecake"
+    },
+    {
+      "Code": "ricepudding"
+    },
+    {
+      "Code": "ricesoup"
+    },
+    {
+      "Code": "rivermudcake"
+    },
+    {
+      "Code": "roastchicken"
+    },
+    {
+      "Code": "roastedchestnut"
+    },
+    {
+      "Code": "roastedpeanut"
+    },
+    {
+      "Code": "roastedpumpkinseeds"
+    },
+    {
+      "Code": "roastedrootveggiemedley"
+    },
+    {
+      "Code": "roastpotatoes"
+    },
+    {
+      "Code": "rootbeerfloat"
+    },
+    {
+      "Code": "rootbeersoda"
+    },
+    {
+      "Code": "rosepetaltea"
+    },
+    {
+      "Code": "roux"
+    },
+    {
+      "Code": "royaljelly"
+    },
+    {
+      "Code": "saladdressing"
+    },
+    {
+      "Code": "salisburysteak"
+    },
+    {
+      "Code": "salmononigiri"
+    },
+    {
+      "Code": "salmonpatties"
+    },
+    {
+      "Code": "salsa"
+    },
+    {
+      "Code": "saltedcaramel"
+    },
+    {
+      "Code": "saltedsunflowerseeds"
+    },
+    {
+      "Code": "salt"
+    },
+    {
+      "Code": "sardinesinhotsauce"
+    },
+    {
+      "Code": "saucedlambkebab"
+    },
+    {
+      "Code": "sauerbraten"
+    },
+    {
+      "Code": "sausagebeanmelt"
+    },
+    {
+      "Code": "sausageinbread"
+    },
+    {
+      "Code": "sausage"
+    },
+    {
+      "Code": "sausageroll"
+    },
+    {
+      "Code": "scallionbakedpotato"
+    },
+    {
+      "Code": "schnitzel"
+    },
+    {
+      "Code": "scrambledegg"
+    },
+    {
+      "Code": "seedenergygel"
+    },
+    {
+      "Code": "seedsoup"
+    },
+    {
+      "Code": "sesameball"
+    },
+    {
+      "Code": "sesameoil"
+    },
+    {
+      "Code": "sesamesnaps"
+    },
+    {
+      "Code": "shepardspie"
+    },
+    {
+      "Code": "shrimpcocktail"
+    },
+    {
+      "Code": "shrimpokrahushpuppies"
+    },
+    {
+      "Code": "shrimptempera"
+    },
+    {
+      "Code": "silkentofu"
+    },
+    {
+      "Code": "slawdog"
+    },
+    {
+      "Code": "slimegummies"
+    },
+    {
+      "Code": "slimepie"
+    },
+    {
+      "Code": "smores"
+    },
+    {
+      "Code": "snickersbar"
+    },
+    {
+      "Code": "sobanoodles"
+    },
+    {
+      "Code": "softpretzelandmustard"
+    },
+    {
+      "Code": "softpretzel"
+    },
+    {
+      "Code": "sourcreamandonionpotatochips"
+    },
+    {
+      "Code": "soursop"
+    },
+    {
+      "Code": "southernstylebreakfast"
+    },
+    {
+      "Code": "soymilk"
+    },
+    {
+      "Code": "soysauce"
+    },
+    {
+      "Code": "spagettiandmeatballs"
+    },
+    {
+      "Code": "spagetti"
+    },
+    {
+      "Code": "spaghettidinner"
+    },
+    {
+      "Code": "spicebun"
+    },
+    {
+      "Code": "spicygreens"
+    },
+    {
+      "Code": "spicymustardpork"
+    },
+    {
+      "Code": "spidereyepie"
+    },
+    {
+      "Code": "spidereyesoup"
+    },
+    {
+      "Code": "spinachpie"
+    },
+    {
+      "Code": "splitpeasoup"
+    },
+    {
+      "Code": "springfieldcashewchicken"
+    },
+    {
+      "Code": "springroll"
+    },
+    {
+      "Code": "springsalad"
+    },
+    {
+      "Code": "sprinklescupcake"
+    },
+    {
+      "Code": "spumoniicecream"
+    },
+    {
+      "Code": "squidinkspaghetti"
+    },
+    {
+      "Code": "starfruitjelly"
+    },
+    {
+      "Code": "starfruitjellysandwich"
+    },
+    {
+      "Code": "starfruitjuice"
+    },
+    {
+      "Code": "starfruitsmoothie"
+    },
+    {
+      "Code": "starfruityogurt"
+    },
+    {
+      "Code": "steakandchips"
+    },
+    {
+      "Code": "steakfajita"
+    },
+    {
+      "Code": "steaktartare"
+    },
+    {
+      "Code": "steamedpeas"
+    },
+    {
+      "Code": "steamedspinach"
+    },
+    {
+      "Code": "stock"
+    },
+    {
+      "Code": "strawberrycupcake"
+    },
+    {
+      "Code": "strawberryicecream"
+    },
+    {
+      "Code": "strawberryjelly"
+    },
+    {
+      "Code": "strawberryjellysandwich"
+    },
+    {
+      "Code": "strawberryjuice"
+    },
+    {
+      "Code": "strawberrymilkshake"
+    },
+    {
+      "Code": "strawberrypie"
+    },
+    {
+      "Code": "strawberryrhubarbpie"
+    },
+    {
+      "Code": "strawberrysalad"
+    },
+    {
+      "Code": "strawberrysmoothie"
+    },
+    {
+      "Code": "strawberrysoda"
+    },
+    {
+      "Code": "strawberrysouffle"
+    },
+    {
+      "Code": "strawberryyogurt"
+    },
+    {
+      "Code": "stuffedchilipeppers"
+    },
+    {
+      "Code": "stuffedduck"
+    },
+    {
+      "Code": "stuffedeggplant"
+    },
+    {
+      "Code": "stuffedmushroom"
+    },
+    {
+      "Code": "stuffedpepper"
+    },
+    {
+      "Code": "stuffing"
+    },
+    {
+      "Code": "suadero"
+    },
+    {
+      "Code": "succotash"
+    },
+    {
+      "Code": "sugarcookie"
+    },
+    {
+      "Code": "summerradishsalad"
+    },
+    {
+      "Code": "summersquashwithradish"
+    },
+    {
+      "Code": "sundayhightea"
+    },
+    {
+      "Code": "sundayroast"
+    },
+    {
+      "Code": "sunflowerbroccolisalad"
+    },
+    {
+      "Code": "sunflowerseeds"
+    },
+    {
+      "Code": "sunflowerwheatrolls"
+    },
+    {
+      "Code": "supremepizza"
+    },
+    {
+      "Code": "surfandturf"
+    },
+    {
+      "Code": "sushi"
+    },
+    {
+      "Code": "swedishmeatballs"
+    },
+    {
+      "Code": "sweetandsourchicken"
+    },
+    {
+      "Code": "sweetandsourmeatballs"
+    },
+    {
+      "Code": "sweetandsoursauce"
+    },
+    {
+      "Code": "sweetpickle"
+    },
+    {
+      "Code": "sweetpotatopie"
+    },
+    {
+      "Code": "sweetpotatosouffle"
+    },
+    {
+      "Code": "sweettea"
+    },
+    {
+      "Code": "szechuaneggplant"
+    },
+    {
+      "Code": "taco"
+    },
+    {
+      "Code": "taffy"
+    },
+    {
+      "Code": "taiyaki"
+    },
+    {
+      "Code": "takoyaki"
+    },
+    {
+      "Code": "tamarind"
+    },
+    {
+      "Code": "tatertots"
+    },
+    {
+      "Code": "tealeaf"
+    },
+    {
+      "Code": "teriyakichicken"
+    },
+    {
+      "Code": "thankfuldinner"
+    },
+    {
+      "Code": "theatrebox"
+    },
+    {
+      "Code": "threebeansalad"
+    },
+    {
+      "Code": "timpano"
+    },
+    {
+      "Code": "timtam"
+    },
+    {
+      "Code": "tiropita"
+    },
+    {
+      "Code": "toadinthehole"
+    },
+    {
+      "Code": "toastedcoconut"
+    },
+    {
+      "Code": "toastedsesameseeds"
+    },
+    {
+      "Code": "toastedwestern"
+    },
+    {
+      "Code": "toast"
+    },
+    {
+      "Code": "toastsandwich"
+    },
+    {
+      "Code": "tomatoherbchicken"
+    },
+    {
+      "Code": "tomatosoup"
+    },
+    {
+      "Code": "tortillachips"
+    },
+    {
+      "Code": "tortilla"
+    },
+    {
+      "Code": "trailmix"
+    },
+    {
+      "Code": "tunafishsandwich"
+    },
+    {
+      "Code": "tunaonigiri"
+    },
+    {
+      "Code": "tunapotato"
+    },
+    {
+      "Code": "tunasalad"
+    },
+    {
+      "Code": "turkishdelight"
+    },
+    {
+      "Code": "turnipsoup"
+    },
+    {
+      "Code": "vanillaconchasbread"
+    },
+    {
+      "Code": "vanillacupcake"
+    },
+    {
+      "Code": "vanillaicecream"
+    },
+    {
+      "Code": "vanilla"
+    },
+    {
+      "Code": "vanillayogurt"
+    },
+    {
+      "Code": "vegemite"
+    },
+    {
+      "Code": "vegemiteontoast"
+    },
+    {
+      "Code": "vegetablesoup"
+    },
+    {
+      "Code": "vegetarianlettucewrap"
+    },
+    {
+      "Code": "veggiebait"
+    },
+    {
+      "Code": "veggiestirfry"
+    },
+    {
+      "Code": "veggiestrips"
+    },
+    {
+      "Code": "vindaloo"
+    },
+    {
+      "Code": "vinegar"
+    },
+    {
+      "Code": "waffles"
+    },
+    {
+      "Code": "walnutraisinbread"
+    },
+    {
+      "Code": "watermelonjelly"
+    },
+    {
+      "Code": "watermelonjellysandwich"
+    },
+    {
+      "Code": "waxcomb"
+    },
+    {
+      "Code": "wax"
+    },
+    {
+      "Code": "weekendpicnic"
+    },
+    {
+      "Code": "wontonsoup"
+    },
+    {
+      "Code": "wovencotton"
+    },
+    {
+      "Code": "yorkshirepudding"
+    },
+    {
+      "Code": "zeppole"
+    },
+    {
+      "Code": "zestyzucchini"
+    },
+    {
+      "Code": "zombiejerky"
+    },
+    {
+      "Code": "zucchinibake"
+    },
+    {
+      "Code": "zucchinibread"
+    },
+    {
+      "Code": "zucchinifries"
+    }
+  ]
+}

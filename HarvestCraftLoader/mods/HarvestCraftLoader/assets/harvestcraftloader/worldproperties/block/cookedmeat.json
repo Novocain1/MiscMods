@@ -1,0 +1,86 @@
+{
+  "Code": "cookedmeat",
+  "Variants": [
+    {
+      "Code": "calamaricooked"
+    },
+    {
+      "Code": "clamcooked"
+    },
+    {
+      "Code": "cookedtofabbit"
+    },
+    {
+      "Code": "cookedtofacon"
+    },
+    {
+      "Code": "cookedtofeak"
+    },
+    {
+      "Code": "cookedtofeeg"
+    },
+    {
+      "Code": "cookedtofenison"
+    },
+    {
+      "Code": "cookedtoficken"
+    },
+    {
+      "Code": "cookedtofish"
+    },
+    {
+      "Code": "cookedtofuduck"
+    },
+    {
+      "Code": "cookedtofurkey"
+    },
+    {
+      "Code": "cookedtofutton"
+    },
+    {
+      "Code": "crabcooked"
+    },
+    {
+      "Code": "crayfishcooked"
+    },
+    {
+      "Code": "duckcooked"
+    },
+    {
+      "Code": "frogcooked"
+    },
+    {
+      "Code": "musselcooked"
+    },
+    {
+      "Code": "muttoncooked"
+    },
+    {
+      "Code": "octopuscooked"
+    },
+    {
+      "Code": "oystercooked"
+    },
+    {
+      "Code": "rabbitcooked"
+    },
+    {
+      "Code": "scallopcooked"
+    },
+    {
+      "Code": "shrimpcooked"
+    },
+    {
+      "Code": "snailcooked"
+    },
+    {
+      "Code": "turkeycooked"
+    },
+    {
+      "Code": "turtlecooked"
+    },
+    {
+      "Code": "venisoncooked"
+    }
+  ]
+}
