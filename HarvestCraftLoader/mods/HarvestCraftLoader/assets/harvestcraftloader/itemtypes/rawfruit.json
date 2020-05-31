@@ -1,0 +1,38 @@
+{
+    "code": "rawfruit",
+    "variantgroups": [
+        {
+            "code": "plant",
+            "loadFromProperties": "harvestcraftloader:block/fruits"
+        }
+    ],
+    "creativeinventory": {
+        "general": [
+            "*"
+        ],
+        "items": [
+            "*"
+        ]
+    },
+    "nutritionPropsByType": {
+        "*": { "satiety": 100, "foodcategory": "Fruit" }
+    },
+    "maxStackSize": 64,
+    "textureByType": {
+        "*-apple":{
+            "base": "harvestcraftloader:item/food/{plant}"
+        },
+        "*": {
+            "base": "harvestcraft:item/{plant}item"
+        }
+    },
+    "transitionableProps": [
+        {
+			"type": "Perish",
+			"freshHours": { "avg": 672 },
+			"transitionHours": { "avg": 120 },
+			"transitionedStack": { "type": "item", "code": "game:rot" },
+			"transitionRatio": 0.5
+		}
+    ]
+}

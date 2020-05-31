@@ -1,5 +1,5 @@
 {
-    "code": "rawfood",
+    "code": "rawplant",
     "variantgroups": [
         {
             "code": "plant",
@@ -66,7 +66,7 @@
         "*-millet": { "satiety": 30, "foodcategory": "Grain" },
         "*-mulberry": { "satiety": 30, "foodcategory": "Fruit" },
         "*-mustard": null,
-        "*-oats": { "satiety": 30, "foodcategory": "grain" },
+        "*-oats": { "satiety": 30, "foodcategory": "Grain" },
         "*-okra": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-onion": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-potato": { "satiety": 30, "foodcategory": "Vegetable" },
@@ -101,7 +101,8 @@
         "*-whitemushroom": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-wintersquash": { "satiety": 30, "foodcategory": "Vegetable" },
         "*-wheat": { "satiety": 30, "foodcategory": "Grain" },
-        "*-zucchini": { "satiety": 30, "foodcategory": "Vegetable" }
+        "*-zucchini": { "satiety": 30, "foodcategory": "Vegetable" },
+        "*": { "satiety": 30, "foodcategory": "Vegetable" }
     },
     "maxStackSize": 64,
     "shapeByType": {
@@ -135,15 +136,18 @@
             "base": "harvestcraft:item/{plant}item"
         }
     },
-    "transitionableProps": [
-        {
-			"type": "Perish",
-			"freshHours": { "avg": 672 },
-			"transitionHours": { "avg": 120 },
-			"transitionedStack": { "type": "item", "code": "game:rot" },
-			"transitionRatio": 0.5
-		}
-    ],
+    "transitionablePropsByType": { 
+        "*": [
+            {
+                "type": "Perish",
+                "freshHours": { "avg": 672 },
+                "transitionHours": { "avg": 120 },
+                "transitionedStack": { "type": "item", "code": "game:rot" },
+                "transitionRatio": 0.5
+            }
+        ],
+        "*-rotten": null
+    },
 
     "guiTransformByType": { 
         "*-rotten": {
