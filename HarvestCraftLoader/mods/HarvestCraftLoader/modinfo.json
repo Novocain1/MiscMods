@@ -6,6 +6,6 @@
 	"authors": ["Novocain"],
 	"version": "1.0.0",
 	"dependencies": {
-		"jarloader": "1.0.0"
+		"jarloader": "1.0.1"
 	}
 }

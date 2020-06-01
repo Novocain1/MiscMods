@@ -1,0 +1,61 @@
+{
+    "code": "fruits",
+    "class": "BlockFruit",
+    "behaviorsByType": {
+        "*-ripe": [
+            {
+                "name": "Harvestable", 
+                "properties": { 
+                    "harvestTime": 0.6, 
+			        "harvestedStack": { "type": "item", "code": "harvestcraftloader:rawfruit-{plant}", "quantity": { "avg": 1 }  },
+                    "harvestedBlockCode": "fruits-{plant}-empty"
+                }
+            }
+        ]
+    },
+    "variantgroups": [
+        { "code": "plant", "loadFromProperties": "harvestcraftloader:block/fruits" },
+        { "code": "stage", "states": [ "empty", "flowering", "ripe" ] }
+    ],
+    "creativeinventory": { "general": [ "*" ], "plants": [ "*" ] },
+    "renderpass": "OpaqueNoCull",
+    "shapeByType": {
+        "*-empty": { "base": "harvestcraft:block/fruits/{plant}_stage_0" },
+        "*-flowering": { "base": "harvestcraft:block/fruits/{plant}_stage_1" },
+        "*-ripe": { "base": "harvestcraft:block/fruits/{plant}_stage_2" }
+    },
+    "blockmaterial": "Plant",
+    "attributes": {
+        "butterflyFeedByType": { "*-empty": false, "*-ripe": false, "*": true },
+        "beeFeedByType": { "*-empty": false, "*-ripe": false, "*": true },
+        "handbook": { "include": true }
+    },
+    "sideopaque": { "all": false },
+    "sidesolid": { "all": false },
+    "replaceable": 3000,
+    "lightAbsorption": 0,
+    "resistance": 0.5,
+    "sounds": {
+        "place": "game:block/plant",
+        "break": "game:block/plant",
+        "hit": "game:block/plant"
+    },
+    "rainPermeable": false,
+    "dropsByType": {
+        "*-ripe": [
+            {
+                "type": "item",
+                "code": "rawfruit-{plant}",
+                "quantity": { "avg": 1 }
+            }
+        ]
+    },
+    "collisionbox": null,
+    "selectionbox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 1, "z2": 1 },
+    "materialDensity": 200,
+    "vertexFlags": { 
+        "zOffset": 4,
+		"leavesWindWave": true
+    },
+    "combustibleProps": { "burnTemperature": 600, "burnDuration": 10 }
+}

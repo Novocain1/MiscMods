@@ -10,6 +10,7 @@ using Cairo;
 using Vintagestory.API.Util;
 using Path = System.IO.Path;
 using System.Globalization;
+using Vintagestory.GameContent;
 
 namespace HarvestCraftLoader
 {
@@ -18,9 +19,15 @@ namespace HarvestCraftLoader
         public override void Start(ICoreAPI api)
         {
             api.RegisterBlockClass("BlockCake", typeof(BlockCake));
+            api.RegisterBlockClass("BlockFruit", typeof(BlockFruit));
             api.RegisterBlockClass("BlockCropHC", typeof(BlockCropHC));
             api.RegisterBlockEntityClass("Cake", typeof(BlockEntityCake));
             api.RegisterItemClass("ItemPlantableSeedHC", typeof(ItemPlantableSeedHC));
         }
+    }
+
+    class BlockFruit : BlockPlant
+    {
+        public bool CanPlantStay() => true;
     }
 }

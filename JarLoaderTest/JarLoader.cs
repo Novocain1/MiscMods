@@ -157,6 +157,18 @@ namespace VSMod
                                                 Shape parentShape = api.Assets.TryGet(VSEquivelentShapes[shape.Parent])?.ToObject<Shape>();
                                                 if (parentShape != null) {
                                                     List<ShapeElement> psElements = new List<ShapeElement>(parentShape?.Elements ?? new ShapeElement[] { });
+                                                    if (shape.Parent == VSEquivelentShapes.ElementAt(0).Key || shape.Parent == VSEquivelentShapes.ElementAt(1).Key)
+                                                    {
+                                                        foreach (var element in psElements)
+                                                        {
+                                                            foreach (var face in element.Faces)
+                                                            {
+                                                                face.Value.Texture = face.Value.Texture == "#-1" ? "#cross" : "#-1";
+                                                            }
+                                                        }
+
+                                                    }
+
                                                     shape.Elements = psElements.ToArray();
                                                 }
                                             }

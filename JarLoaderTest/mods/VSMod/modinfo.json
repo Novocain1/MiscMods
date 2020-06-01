@@ -4,7 +4,7 @@
 	"modid": "jarloader",
 	"description" : "Caches assets from minecraft forge jar mods for use in your own VS mods without your mod distributing the minecraft mod's assets.",
 	"authors": ["Novocain"],
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"dependencies": {
 	}
 }
