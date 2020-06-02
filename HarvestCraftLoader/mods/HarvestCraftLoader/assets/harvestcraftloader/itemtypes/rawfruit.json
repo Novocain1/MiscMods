@@ -20,7 +20,7 @@
     "maxStackSize": 64,
     "textureByType": {
         "*-apple":{
-            "base": "harvestcraftloader:item/food/{plant}"
+            "base": "harvestcraft:block/fruits/apple_stage_2"
         },
         "*": {
             "base": "harvestcraft:item/{plant}item"
