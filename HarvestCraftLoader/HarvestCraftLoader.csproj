@@ -99,6 +99,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlockEntities\BlockEntityCake.cs" />
+    <Compile Include="Blocks\BlockFruit.cs" />
+    <Compile Include="Blocks\BlockPlantFix.cs" />
     <Compile Include="Blocks\BlockCake.cs" />
     <Compile Include="Blocks\BlockCropHC.cs" />
     <Compile Include="Enums\EnumCakeEatenState.cs" />
