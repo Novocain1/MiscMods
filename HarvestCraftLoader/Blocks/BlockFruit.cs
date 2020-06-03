@@ -7,8 +7,9 @@ namespace HarvestCraftLoader
     {
         public override bool CanPlantStay(IBlockAccessor blockAccessor, BlockPos pos)
         {
+            Block cinnamon = blockAccessor.GetBlock(new AssetLocation("harvestcraftloader:fruits-cinnamon-ripe"));
             Block block = blockAccessor.GetBlock(pos.X, pos.Y + 1, pos.Z);
-            return block.BlockMaterial == EnumBlockMaterial.Leaves;
+            return cinnamon.Id == Id ? true : block.BlockMaterial == EnumBlockMaterial.Leaves;
         }
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
