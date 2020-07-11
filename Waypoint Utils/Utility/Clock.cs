@@ -85,7 +85,7 @@ namespace VSHUD
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("Date: " + cal.DayOfYear + "/" + cal.DaysPerYear + ", " + cal.Year)
                 .AppendLine("Time: " + hour + dot + minute)
-                .AppendLine("Global Season: " + cal.Season)
+                .AppendLine("Season: " + cal.GetSeason(entityPos))
                 .AppendLine("Local Temperature: " + Math.Round(climate.Temperature, 3))
                 .AppendLine("Local Rainfall: " + Math.Round(climate.Rainfall, 3))
                 .AppendLine("Local Fertility: " + Math.Round(climate.Fertility, 3))

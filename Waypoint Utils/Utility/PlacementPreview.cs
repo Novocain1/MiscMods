@@ -11,6 +11,7 @@ using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
 using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
+using Vintagestory.API.Datastructures;
 
 namespace VSHUD
 {
@@ -118,8 +119,6 @@ namespace VSHUD
                     mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
                 }
             }
-
-            mesh.AddTintIndex(toBlock.TintIndex);
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
             MeshData rotMesh = mesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, toBlock.GetRotY(playerPos, playerSelection), 0);

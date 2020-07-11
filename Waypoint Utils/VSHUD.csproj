@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\Lib\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="cairo-sharp">
       <HintPath>..\..\..\Lib\cairo-sharp.dll</HintPath>
       <Private>False</Private>

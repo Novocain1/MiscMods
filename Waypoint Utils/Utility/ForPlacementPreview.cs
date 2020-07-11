@@ -104,6 +104,7 @@ namespace VSHUD
 
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block outBlock)
         {
+            blockSel.Position = blockSel.Position.Offset(blockSel.Face);
             Stairs = block;
             BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
 
@@ -116,7 +117,7 @@ namespace VSHUD
                 horVer[1] = blockSel.HitPosition.Y < 0.5 || !hasDownVariant ? BlockFacing.UP : BlockFacing.DOWN;
             }
 
-            AssetLocation blockCode = Stairs.CodeWithParts(horVer[1].Code, horVer[0].Code);
+            AssetLocation blockCode = Stairs.CodeWithVariants(new string[] { "verticalorientation", "horizontalorientation" }, new string[] { horVer[1].Code, horVer[0].Code });
             outBlock = world.BlockAccessor.GetBlock(blockCode);
             if (outBlock == null) return false;
 
@@ -152,6 +153,8 @@ namespace VSHUD
         {
             UpdateProps(block);
             AssetLocation blockCode = null;
+            blockSel.Position = blockSel.Position.Offset(blockSel.Face);
+
             if (rotateSides)
             {
                 // Simple 6 state rotator.
@@ -166,45 +169,45 @@ namespace VSHUD
                         case EnumAxis.X:
                             if (z < 0.3 && y < 0.3)
                             {
-                                blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
                             }
                             else if (z > y)
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.Z < 0.5 ? "north" : "south");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.Z < 0.5 ? "north" : "south");
                             }
                             else
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.Y < 0.5 ? "down" : "up");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.Y < 0.5 ? "down" : "up");
                             }
                             break;
 
                         case EnumAxis.Y:
                             if (z < 0.3 && x < 0.3)
                             {
-                                blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
                             }
                             else if (z > x)
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.Z < 0.5 ? "north" : "south");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.Z < 0.5 ? "north" : "south");
                             }
                             else
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.X < 0.5 ? "west" : "east");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.X < 0.5 ? "west" : "east");
                             }
                             break;
 
                         case EnumAxis.Z:
                             if (x < 0.3 && y < 0.3)
                             {
-                                blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
                             }
                             else if (x > y)
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.X < 0.5 ? "west" : "east");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.X < 0.5 ? "west" : "east");
                             }
                             else
                             {
-                                blockCode = block.CodeWithParts(blockSel.HitPosition.Y < 0.5 ? "down" : "up");
+                                blockCode = block.CodeWithVariant("rot", blockSel.HitPosition.Y < 0.5 ? "down" : "up");
                             }
                             break;
                     }
@@ -213,11 +216,11 @@ namespace VSHUD
                 {
                     if (blockSel.Face.IsVertical)
                     {
-                        blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+                        blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
                     }
                     else
                     {
-                        blockCode = block.CodeWithParts(BlockFacing.HorizontalFromAngle(byPlayer.Entity.Pos.Yaw).Code);
+                        blockCode = block.CodeWithVariant("rot", BlockFacing.HorizontalFromAngle(byPlayer.Entity.Pos.Yaw).Code);
                     }
                 }
             }
@@ -275,15 +278,15 @@ namespace VSHUD
 
                 if (rotateH && rotateV)
                 {
-                    blockCode = block.CodeWithParts(v, h);
+                    blockCode = block.CodeWithVariants(new string[] { "v", "rot" }, new string[] { v, h });
                 }
                 else if (rotateH)
                 {
-                    blockCode = block.CodeWithParts(h);
+                    blockCode = block.CodeWithVariant("rot", h);
                 }
                 else if (rotateV)
                 {
-                    blockCode = block.CodeWithParts(v);
+                    blockCode = block.CodeWithVariant("rot", v);
                 }
             }
 
@@ -323,8 +326,9 @@ namespace VSHUD
 
         public void GetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
         {
-            string orientations = GetOrientations(world, block, blockSel.Position);
-            outBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(orientations));
+            
+            string orientations = GetOrientations(world, block, blockSel.Position.Offset(blockSel.Face));
+            outBlock = world.BlockAccessor.GetBlock(block.CodeWithVariant("type", orientations));
             if (block == null) outBlock = block;
         }
 

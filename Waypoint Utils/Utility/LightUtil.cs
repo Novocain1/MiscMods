@@ -100,7 +100,7 @@ namespace VSHUD
 
         public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
         {
-            pos = pos ?? capi.World.Player.Entity.LocalPos.AsBlockPos.UpCopy();
+            pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
             int rad = config.LightRadius;
             Dictionary<BlockPos, int> colors = new Dictionary<BlockPos, int>();
 
