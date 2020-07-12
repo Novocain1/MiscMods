@@ -104,7 +104,6 @@ namespace VSHUD
 
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block outBlock)
         {
-            blockSel.Position = blockSel.Position.Offset(blockSel.Face);
             Stairs = block;
             BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
 
@@ -153,7 +152,6 @@ namespace VSHUD
         {
             UpdateProps(block);
             AssetLocation blockCode = null;
-            blockSel.Position = blockSel.Position.Offset(blockSel.Face);
 
             if (rotateSides)
             {
@@ -327,7 +325,7 @@ namespace VSHUD
         public void GetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
         {
             
-            string orientations = GetOrientations(world, block, blockSel.Position.Offset(blockSel.Face));
+            string orientations = GetOrientations(world, block, blockSel.Position);
             outBlock = world.BlockAccessor.GetBlock(block.CodeWithVariant("type", orientations));
             if (block == null) outBlock = block;
         }
@@ -571,7 +569,6 @@ namespace VSHUD
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block ownBlock, BlockSelection blockSel, out Block outBlock)
         {
             outBlock = null;
-            BlockPos ajdPos = blockSel.GetRecommendedPos(world.Api, ownBlock);
 
             if (byPlayer.Entity.Controls.Sneak)
             {
@@ -581,7 +578,7 @@ namespace VSHUD
             // Prefer selected block face
             if (blockSel.Face.IsHorizontal || blockSel.Face == BlockFacing.UP)
             {
-                if (TryAttachTo(world, ownBlock, ajdPos, blockSel.Face, out outBlock)) return true;
+                if (TryAttachTo(world, ownBlock, blockSel.Position, blockSel.Face, out outBlock)) return true;
             }
 
             // Otherwise attach to any possible face
@@ -591,7 +588,7 @@ namespace VSHUD
             {
                 if (faces[i] == BlockFacing.DOWN) continue;
 
-                if (TryAttachTo(world, ownBlock, ajdPos, faces[i], out outBlock)) return true;
+                if (TryAttachTo(world, ownBlock, blockSel.Position, faces[i], out outBlock)) return true;
             }
 
             return false;

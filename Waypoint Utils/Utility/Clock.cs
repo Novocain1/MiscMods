@@ -81,17 +81,16 @@ namespace VSHUD
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
             string dot = m % 2 == 0 ? ":" : " ";
             string minute = m < 10 ? "0" + m : "" + m;
+            string time = hour + dot + minute;
 
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine("Date: " + cal.DayOfYear + "/" + cal.DaysPerYear + ", " + cal.Year)
-                .AppendLine("Time: " + hour + dot + minute)
-                .AppendLine("Season: " + cal.GetSeason(entityPos))
-                .AppendLine("Local Temperature: " + Math.Round(climate.Temperature, 3))
-                .AppendLine("Local Rainfall: " + Math.Round(climate.Rainfall, 3))
-                .AppendLine("Local Fertility: " + Math.Round(climate.Fertility, 3))
-                .AppendLine("Local Wind Velocity: " + GlobalConstants.CurrentWindSpeedClient.Sanitize())
-                .AppendLine("Local Temporal Stability: " + Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3))
-                .AppendLine("Player Temporal Stability: " + Math.Round(stability * 100f, 3) + "%");
+            stringBuilder.AppendLine(string.Format("Date: {0} {1}, {2}, {3}", cal.MonthName, cal.DayOfMonth.DisplayWithSuffix(), cal.Year, time))
+                .AppendLine(string.Format("Season: {0}", cal.GetSeason(entityPos)))
+                .AppendLine(string.Format("Temperature: {0}°C", Math.Round(climate.Temperature)))
+                .AppendLine(string.Format("Rainfall: {0}%, Fertility: {1}%", Math.Round(climate.Rainfall, 3) * 100, Math.Round(climate.Fertility, 3) * 100))
+                .AppendLine(string.Format("Wind Velocity: {0}", GlobalConstants.CurrentWindSpeedClient.Sanitize()))
+                .AppendLine(string.Format("Temporal Stability: {0}", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3)))
+                .AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100));
 
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
         }

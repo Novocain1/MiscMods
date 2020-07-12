@@ -147,10 +147,13 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
+            if (playerSelection == null || invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
+            playerSelection.Position = playerSelection.Position.Offset(playerSelection.Face);
+
             toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
             if (toBlock == null) return;
-            BlockPos adjPos = playerSelection.GetRecommendedPos(capi, toBlock);
+            
+            BlockPos adjPos = playerSelection.Position;
 
             UpdateBlockMesh(toBlock, adjPos);
             if (mRef == null) return;

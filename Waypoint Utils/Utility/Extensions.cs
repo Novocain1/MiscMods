@@ -275,36 +275,10 @@ namespace VSHUD
         }
         public static double DistanceTo(this Vec3d start, Vec3d end) => Math.Sqrt(start.SquareDistanceTo(end));
 
-        public static BlockPos GetRecommendedPos(this BlockSelection sel, ICoreAPI api, Block block)
+        public static BlockPos GetRecommendedPos(this BlockSelection sel)
         {
             BlockPos adjPos = sel.Position.Copy();
-            if (!api.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(block))
-            {
-                switch (sel.Face.Code)
-                {
-                    case "up":
-                        adjPos.Up();
-                        break;
-                    case "down":
-                        adjPos.Down();
-                        break;
-                    case "north":
-                        adjPos.West();
-                        break;
-                    case "south":
-                        adjPos.East();
-                        break;
-                    case "east":
-                        adjPos.North();
-                        break;
-                    case "west":
-                        adjPos.South();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return adjPos;
+            return adjPos.Offset(sel.Face);
         }
 
         public static Vec2f GetOffset(this BlockPos pos, Block block)
@@ -396,5 +370,17 @@ namespace VSHUD
 
         //public static void UnregisterDialog(this IClientWorldAccessor world, GuiDialog dialog) => (world as _GNOiZepshQPekcjnYBEc2hMXvRC)._SZsnwRyJl33k1uUAageExrQjmEA(dialog);
         //public static void RegisterDialog(this IClientWorldAccessor world, params GuiDialog[] dialogs) => (world as _GNOiZepshQPekcjnYBEc2hMXvRC)._HxNwYrndQ0qY1vijJMv1xhBL05g(dialogs);
+
+        public static string DisplayWithSuffix(this int num)
+        {
+            string number = num.ToString();
+            if (number.EndsWith("11")) return number + "th";
+            if (number.EndsWith("12")) return number + "th";
+            if (number.EndsWith("13")) return number + "th";
+            if (number.EndsWith("1")) return number + "st";
+            if (number.EndsWith("2")) return number + "nd";
+            if (number.EndsWith("3")) return number + "rd";
+            return number + "th";
+        }
     }
 }
