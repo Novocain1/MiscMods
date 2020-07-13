@@ -105,6 +105,7 @@
     <Compile Include="Utility\ClaimUI.cs" />
     <Compile Include="Utility\Extensions.cs" />
     <Compile Include="Utility\ForPlacementPreview.cs" />
+    <Compile Include="Utility\MacroCommands.cs" />
     <Compile Include="Utility\MeshTools.cs" />
     <Compile Include="Utility\PlacementPreview.cs" />
     <Compile Include="Utility\Clock.cs" />
