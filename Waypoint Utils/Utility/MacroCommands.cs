@@ -14,7 +14,7 @@ namespace VSHUD
     {
         public override void StartClientSide(ICoreClientAPI api)
         {
-            MacroManagerRef macroManager = new MacroManagerRef(AccessTools.Field(typeof(ClientMain), "macroManager").GetValue(api.World as ClientMain) as _cXTKOPod8JhYCVZoOUX1i2ueT4R);
+            MacroManagerRef macroManager = new MacroManagerRef(AccessTools.Field(typeof(ClientMain), "macroManager").GetValue(api.World as ClientMain) as _0Tm6DA0rKiqFcpnbrNpbCC2k62N);
 
             api.RegisterCommand("addmacro", "adds macro from string", ".addmacro alt ctrl shift keycode secondkeycode^first command^second command^nth command", (a, args) =>
             {
@@ -49,27 +49,27 @@ namespace VSHUD
         }
     }
 
-    class Macro : _bXypVAYiLR4HfFEP5fCyZxCLR0g 
+    class Macro : _2W3ASXNTsjoMArf6vsoIsP7Fwjj
     { 
     }
 
     class MacroManagerRef
     {
-        public int MacroCount { get => macroManager._XIFu92E8wDNAUGP5yzDR3XNeEjO.Count; }
+        public int MacroCount { get => macroManager._1lc7UoG0olMZTp2U4kkPPyTxm0C.Count; }
 
-        _cXTKOPod8JhYCVZoOUX1i2ueT4R macroManager;
+        _0Tm6DA0rKiqFcpnbrNpbCC2k62N macroManager;
 
-        public MacroManagerRef(_cXTKOPod8JhYCVZoOUX1i2ueT4R macroManager)
+        public MacroManagerRef(_0Tm6DA0rKiqFcpnbrNpbCC2k62N macroManager)
         {
             this.macroManager = macroManager;   
         }
 
         public void AddMacro(Macro macro)
         {
-            SetMacro(macroManager._XIFu92E8wDNAUGP5yzDR3XNeEjO.Count + 1, macro);
+            SetMacro(macroManager._1lc7UoG0olMZTp2U4kkPPyTxm0C.Count + 1, macro);
         }
 
-        public void SetMacro(int macroIndex, Macro macro) => macroManager._ZBiNv9YDNeVbnsI3cmDISU9QiLJ(macroIndex, macro);
+        public void SetMacro(int macroIndex, Macro macro) => macroManager._9VyhV5EjOJ8EOmzFhkQwsPEyMF(macroIndex, macro);
 
     }
 }

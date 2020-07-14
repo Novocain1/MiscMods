@@ -72,7 +72,7 @@ namespace VSHUD
         public void UpdateText()
         {
             BlockPos entityPos = capi.World.Player.Entity.Pos.AsBlockPos;
-            ClimateCondition climate = capi.World.BlockAccessor.GetClimateAt(entityPos);
+            ClimateCondition climate = capi.World.BlockAccessor.GetClimateAt(entityPos, EnumGetClimateMode.NowValues);
 
             GameCalendar cal = (GameCalendar)capi.World.Calendar;
             float stability = (float)capi.World.Player.Entity.WatchedAttributes.GetDouble("temporalStability", 0.0);
