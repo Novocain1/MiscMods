@@ -51,7 +51,8 @@ namespace VSHUD
         ICoreClientAPI capi;
         IClientPlayer player { get => capi?.World?.Player; }
         ItemStack invStack { get => player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;  }
-        Block invBlock { get => invStack?.Block; }
+        Item invItem { get => invStack?.Item;  }
+        Block invBlock { get => invStack?.Block ?? (invItem is ItemStone ? capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")) : null); }
         BlockSelection playerSelection { get => player?.CurrentBlockSelection; }
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
@@ -140,7 +141,8 @@ namespace VSHUD
                 (
                 (invBlock?.HasBehavior<BlockBehaviorRightClickPickup>() ?? false) ||
                 invBlock is BlockMeal ||
-                invBlock is BlockBucket
+                invBlock is BlockBucket ||
+                invItem is ItemStone
                 )
                 && !player.Entity.Controls.Sneak;
         }
@@ -148,7 +150,7 @@ namespace VSHUD
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             if (playerSelection == null || invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
-            playerSelection.Position = playerSelection.Position.Offset(playerSelection.Face);
+            playerSelection.Position = playerSelection.Position.GetBlock(capi).IsReplacableBy(invBlock) ? playerSelection.Position : playerSelection.Position.Offset(playerSelection.Face);
 
             toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
             if (toBlock == null) return;

@@ -14,90 +14,40 @@ namespace VSHUD
 {
     public class PlacementPreviewHelper
     {
-        private StairsPlacement stairsPlacement;
-        private FencePlacement fencePlacement;
-        private OmniRotatablePlacement omniRotatablePlacement;
-        private OmniAttatchablePlacement omniAttatchablePlacement;
-        private HorizontalAttachablePlacement horizontalAttachablePlacement;
-        private HorizontalOrientablePlacement horizontalOrientablePlacement;
-        private LadderPlacement ladderPlacement;
-        private PillarPlacement pillarPlacement;
-        private TorchPlacement torchPlacement;
-        private NWOrientablePlacement nWOrientablePlacement;
+        public Dictionary<Type, IPlacementPreview> classes = new Dictionary<Type, IPlacementPreview>();
 
         public PlacementPreviewHelper()
         {
-            stairsPlacement = new StairsPlacement();
-            fencePlacement = new FencePlacement();
-            omniRotatablePlacement = new OmniRotatablePlacement();
-            omniAttatchablePlacement = new OmniAttatchablePlacement();
-            horizontalAttachablePlacement = new HorizontalAttachablePlacement();
-            horizontalOrientablePlacement = new HorizontalOrientablePlacement();
-            ladderPlacement = new LadderPlacement();
-            pillarPlacement = new PillarPlacement();
-            torchPlacement = new TorchPlacement();
-            nWOrientablePlacement = new NWOrientablePlacement();
+            classes[typeof(BlockStairs)] = new StairsPlacement();
+            classes[typeof(BlockFence)] = new FencePlacement();
+            classes[typeof(BlockBehaviorOmniRotatable)] = new OmniRotatablePlacement();
+            classes[typeof(BlockBehaviorOmniAttachable)] = new OmniAttatchablePlacement();
+            classes[typeof(BlockBehaviorHorizontalAttachable)] = new HorizontalAttachablePlacement();
+            classes[typeof(BlockBehaviorHorizontalOrientable)] = new HorizontalOrientablePlacement();
+            classes[typeof(BlockBehaviorLadder)] = new LadderPlacement();
+            classes[typeof(BlockBehaviorPillar)] = new PillarPlacement();
+            classes[typeof(BlockTorch)] = new TorchPlacement();
+            classes[typeof(BlockBehaviorNWOrientable)] = new NWOrientablePlacement();
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
         {
-            if (invBlock is BlockStairs)
+            IPlacementPreview preview;
+
+            if (!classes.TryGetValue(invBlock.GetType(), out preview))
             {
-                if (stairsPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block))
+                foreach (var val in invBlock.BlockBehaviors)
                 {
-                    return block;
+                    if (classes.TryGetValue(val.GetType(), out preview)) break;
                 }
             }
-            else if (invBlock is BlockFence)
-            {
-                fencePlacement.GetPlacedBlock(world, invBlock, blockSel, out Block block);
-                return block;
-            }
-            else if (invBlock is BlockTorch)
-            {
-                if (torchPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorNWOrientable>())
-            {
-                if (nWOrientablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorPillar>())
-            {
-                if (pillarPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorOmniAttachable>())
-            {
-                if (omniAttatchablePlacement.TryGetPlacedBlock(world, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorHorizontalAttachable>())
-            {
-                if (horizontalAttachablePlacement.TryGetPlacedBlock(world, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorHorizontalOrientable>())
-            {
-                if (horizontalOrientablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorLadder>())
-            {
-                if (ladderPlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
-            else if (invBlock.HasBehavior<BlockBehaviorOmniRotatable>())
-            {
-                if (omniRotatablePlacement.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out Block block)) return block;
-                else return null;
-            }
+            preview?.TryGetPlacedBlock(world, byPlayer, invBlock, blockSel, out invBlock);
+
             return invBlock;
         }
     }
 
-    public class StairsPlacement
+    public class StairsPlacement : IPlacementPreview
     {
         bool hasDownVariant { get => !(Stairs.Attributes?["noDownVariant"].AsBool() ?? false); }
         public Block Stairs { get; set; }
@@ -124,7 +74,12 @@ namespace VSHUD
         }
     }
 
-    public class OmniRotatablePlacement
+    public interface IPlacementPreview
+    {
+        bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock);
+    }
+
+    public class OmniRotatablePlacement : IPlacementPreview
     {
         private bool rotateH = false;
         private bool rotateV = false;
@@ -299,7 +254,7 @@ namespace VSHUD
         }
     }
 
-    public class FencePlacement
+    public class FencePlacement : IPlacementPreview
     {
         public string GetOrientations(IWorldAccessor world, Block block, BlockPos pos)
         {
@@ -322,12 +277,13 @@ namespace VSHUD
             return "";
         }
 
-        public void GetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
             
             string orientations = GetOrientations(world, block, blockSel.Position);
-            outBlock = world.BlockAccessor.GetBlock(block.CodeWithVariant("type", orientations));
-            if (block == null) outBlock = block;
+            orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithVariant("type", orientations));
+            if (block == null) orientedBlock = block;
+            return block != null;
         }
 
         public bool ShouldConnectAt(IWorldAccessor world, Block fenceblock, BlockPos ownPos, BlockFacing side)
@@ -347,7 +303,7 @@ namespace VSHUD
         }
     }
 
-    public class OmniAttatchablePlacement
+    public class OmniAttatchablePlacement : IPlacementPreview
     {
         public string facingCode = "orientation";
 
@@ -356,7 +312,7 @@ namespace VSHUD
             facingCode = block.GetBehavior<BlockBehaviorOmniAttachable>().properties["facingCode"].AsString("orientation");
         }
 
-        public bool TryGetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block orientatedBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientatedBlock)
         {
             UpdateProps(block);
             if (TryAttachTo(world, block, blockSel.Position, blockSel.Face, out Block block1))
@@ -395,9 +351,9 @@ namespace VSHUD
         }
     }
 
-    public class HorizontalAttachablePlacement
+    public class HorizontalAttachablePlacement : IPlacementPreview
     {
-        public bool TryGetPlacedBlock(IWorldAccessor world, Block block, BlockSelection blockSel, out Block outBlock)
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block outBlock)
         {
             // Prefer selected block face
             if (blockSel.Face.IsHorizontal)
@@ -435,7 +391,7 @@ namespace VSHUD
         }
     }
 
-    public class HorizontalOrientablePlacement
+    public class HorizontalOrientablePlacement : IPlacementPreview
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
@@ -447,7 +403,7 @@ namespace VSHUD
         }
     }
 
-    public class LadderPlacement
+    public class LadderPlacement : IPlacementPreview
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
@@ -518,7 +474,7 @@ namespace VSHUD
         }
     }
 
-    public class PillarPlacement
+    public class PillarPlacement : IPlacementPreview
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
@@ -551,7 +507,7 @@ namespace VSHUD
         }
     }
 
-    public class NWOrientablePlacement
+    public class NWOrientablePlacement : IPlacementPreview
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block ownBlock, BlockSelection blockSel, out Block outBlock)
         {
@@ -564,7 +520,7 @@ namespace VSHUD
         }
     }
 
-    public class TorchPlacement
+    public class TorchPlacement : IPlacementPreview
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block ownBlock, BlockSelection blockSel, out Block outBlock)
         {
