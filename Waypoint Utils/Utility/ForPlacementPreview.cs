@@ -48,6 +48,11 @@ namespace VSHUD
         }
     }
 
+    public interface IPlacementPreview
+    {
+        bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock);
+    }
+
     public class StairsPlacement : IPlacementPreview
     {
         bool hasDownVariant { get => !(Stairs.Attributes?["noDownVariant"].AsBool() ?? false); }
@@ -73,11 +78,6 @@ namespace VSHUD
 
             return true;
         }
-    }
-
-    public interface IPlacementPreview
-    {
-        bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock);
     }
 
     public class OmniRotatablePlacement : IPlacementPreview

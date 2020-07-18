@@ -18,31 +18,61 @@ namespace VSHUD
 
             api.RegisterCommand("addmacro", "adds macro from string", ".addmacro alt ctrl shift keycode secondkeycode^macroname^first command^second command^nth command", (a, args) =>
             {
-                string[] arguments = args.PopAll().Split('^');
-
-                string hotkey = arguments.First();
-                List<string> commands = arguments.ToList();
-                commands.RemoveAt(0);
-                
-                string code = commands.First();
-                commands.RemoveAt(0);
-                
-                CmdArgs newArgs = new CmdArgs(hotkey);
-
-                macroManager.AddMacro(new Macro()
+                try
                 {
-                    Code = code,
-                    Commands = commands.ToArray(),
-                    Index = macroManager.MacroCount + 1,
-                    KeyCombination = new KeyCombination()
+                    string[] arguments = args.PopAll().Split('^');
+
+                    string hotkey = arguments.First();
+                    List<string> commands = arguments.ToList();
+                    commands.RemoveAt(0);
+
+                    string code = commands.First();
+                    commands.RemoveAt(0);
+
+                    CmdArgs newArgs = new CmdArgs(hotkey);
+
+                    macroManager.AddMacro(new Macro()
                     {
-                        Alt = newArgs.PopBool() ?? false,
-                        Ctrl = newArgs.PopBool() ?? false,
-                        Shift = newArgs.PopBool() ?? false,
-                        KeyCode = (int)GetGlKey(ref newArgs),
-                        SecondKeyCode = (int)GetGlKey(ref newArgs),
-                    }
-                });
+                        Code = code,
+                        Commands = commands.ToArray(),
+                        Index = macroManager.MacroCount + 1,
+                        KeyCombination = new KeyCombination()
+                        {
+                            Alt = newArgs.PopBool() ?? false,
+                            Ctrl = newArgs.PopBool() ?? false,
+                            Shift = newArgs.PopBool() ?? false,
+                            KeyCode = (int)GetGlKey(ref newArgs),
+                            SecondKeyCode = (int)GetGlKey(ref newArgs),
+                        }
+                    });
+                }
+                catch (Exception)
+                {
+                    api.World.Player.ShowChatNotification("Syntax: \".addmacro alt ctrl shift keycode secondkeycode^macroname^first command^second command^nth command\"");
+                }
+
+            });
+
+            api.RegisterCommand("deletemacro", "deletes macro with the specified index", ".deletemacro (index)", (a, args) => 
+            {
+                int? index = args.PopInt();
+                if (index != null) macroManager.DeleteMacro((int)index);
+                else api.World.Player.ShowChatNotification("syntax: \".deletemacro (index)\"");
+            });
+
+            api.RegisterCommand("listmacros", "lists registered macros", "", (a, args) =>
+            {
+                StringBuilder stringBuilder = new StringBuilder("Macros:").AppendLine();
+
+                int i = 1;
+
+                foreach (var macro in macroManager.Macros)
+                {
+                    stringBuilder.Append(string.Format("{0}: {1}", macro.Key, macro.Value.Name));
+                    if (i <= macroManager.MacroCount - 1) stringBuilder.AppendLine();
+                    i++;
+                }
+                api.World.Player.ShowChatNotification(stringBuilder.ToString());
             });
         }
 
@@ -60,9 +90,11 @@ namespace VSHUD
     
     class MacroManagerRef
     {
-        public int MacroCount { get => macroManager._SNEd3NpzPkZUgFUVCLqHmctsfiV.Count; }
+        public int MacroCount { get => Macros.Count; }
 
         _suAo3l5BovtveUIy94vGLPBmD2J macroManager;
+        
+        public SortedDictionary<int, _iSjEmi0VJijsTXTcXXnDe18cpjf> Macros { get => macroManager._SNEd3NpzPkZUgFUVCLqHmctsfiV; }
 
         public MacroManagerRef(_suAo3l5BovtveUIy94vGLPBmD2J macroManager)
         {
@@ -73,6 +105,8 @@ namespace VSHUD
         {
             SetMacro(20 + macroManager._SNEd3NpzPkZUgFUVCLqHmctsfiV.Count + 1, macro);
         }
+
+        public void DeleteMacro(int index) => macroManager._bqVapvM2F7yT9poFhboTvocyEC0(index);
 
         public void SetMacro(int macroIndex, Macro macro) => macroManager._UGxjazgbfASmMiXRbAwEgaz0RKBA(macroIndex, macro);
 
