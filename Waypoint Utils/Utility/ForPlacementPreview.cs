@@ -38,9 +38,7 @@ namespace VSHUD
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
         {
-            IPlacementPreview preview;
-
-            if (!classes.TryGetValue(invBlock.GetType(), out preview))
+            if (!classes.TryGetValue(invBlock.GetType(), out IPlacementPreview preview))
             {
                 foreach (var val in invBlock.BlockBehaviors)
                 {
