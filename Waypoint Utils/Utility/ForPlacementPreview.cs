@@ -28,6 +28,7 @@ namespace VSHUD
             classes[typeof(BlockBehaviorPillar)] = new PillarPlacement();
             classes[typeof(BlockTorch)] = new TorchPlacement();
             classes[typeof(BlockBehaviorNWOrientable)] = new NWOrientablePlacement();
+            classes[typeof(BlockFenceGate)] = new FenceGatePlacement();
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
@@ -300,6 +301,69 @@ namespace VSHUD
                 (block.FirstCodePart() == fenceblock.FirstCodePart() || block.FirstCodePart() == fenceblock.FirstCodePart() + "gate")
                 || block.SideSolid[side.GetOpposite().Index];
             ;
+        }
+    }
+
+    public class FenceGatePlacement : IPlacementPreview
+    {
+
+        public bool IsSameDoor(Block ownBlock, Block otherblock)
+        {
+            string[] parts = ownBlock.Code.Path.Split('-');
+            string[] otherParts = otherblock.Code.Path.Split('-');
+            return parts[0] == otherParts[0];
+        }
+
+        public string GetKnobOrientation(Block block)
+        {
+            return block.Variant["knobOrientation"];
+        }
+
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
+        {
+            string failureCode = "";
+            orientedBlock = null;
+
+            if (block.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode))
+            {
+                BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
+
+                string face = (horVer[0] == BlockFacing.NORTH || horVer[0] == BlockFacing.SOUTH) ? "n" : "w";
+
+                string knobOrientation = GetSuggestedKnobOrientation(world.BlockAccessor, block, blockSel.Position, horVer[0]);
+                AssetLocation newCode = block.CodeWithVariants(new string[] { "type", "state", "knobOrientation" }, new string[] { face, "closed", knobOrientation });
+
+                orientedBlock = world.BlockAccessor.GetBlock(newCode);
+            }
+
+            return orientedBlock != null;
+        }
+
+        private string GetSuggestedKnobOrientation(IBlockAccessor ba, Block ownBlock, BlockPos pos, BlockFacing facing)
+        {
+            string leftOrRight = "left";
+
+            Block nBlock1 = ba.GetBlock(pos.AddCopy(facing.GetCCW()));
+            Block nBlock2 = ba.GetBlock(pos.AddCopy(facing.GetCW()));
+
+            bool isDoor1 = IsSameDoor(ownBlock, nBlock1);
+            bool isDoor2 = IsSameDoor(ownBlock, nBlock2);
+            if (isDoor1 && isDoor2)
+            {
+                leftOrRight = "left";
+            }
+            else
+            {
+                if (isDoor1)
+                {
+                    leftOrRight = GetKnobOrientation(nBlock1) == "right" ? "left" : "right";
+                }
+                else if (isDoor2)
+                {
+                    leftOrRight = GetKnobOrientation(nBlock2) == "right" ? "left" : "right";
+                }
+            }
+            return leftOrRight;
         }
     }
 
