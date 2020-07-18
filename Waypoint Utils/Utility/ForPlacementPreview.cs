@@ -18,17 +18,22 @@ namespace VSHUD
 
         public PlacementPreviewHelper()
         {
-            classes[typeof(BlockStairs)] = new StairsPlacement();
-            classes[typeof(BlockFence)] = new FencePlacement();
-            classes[typeof(BlockBehaviorOmniRotatable)] = new OmniRotatablePlacement();
-            classes[typeof(BlockBehaviorOmniAttachable)] = new OmniAttatchablePlacement();
-            classes[typeof(BlockBehaviorHorizontalAttachable)] = new HorizontalAttachablePlacement();
-            classes[typeof(BlockBehaviorHorizontalOrientable)] = new HorizontalOrientablePlacement();
-            classes[typeof(BlockBehaviorLadder)] = new LadderPlacement();
-            classes[typeof(BlockBehaviorPillar)] = new PillarPlacement();
-            classes[typeof(BlockTorch)] = new TorchPlacement();
-            classes[typeof(BlockBehaviorNWOrientable)] = new NWOrientablePlacement();
-            classes[typeof(BlockFenceGate)] = new FenceGatePlacement();
+            RegisterPlacementPreview(typeof(BlockStairs), new StairsPlacement());
+            RegisterPlacementPreview(typeof(BlockFence), new FencePlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorOmniRotatable), new OmniRotatablePlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorOmniAttachable), new OmniAttatchablePlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorHorizontalAttachable), new HorizontalAttachablePlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorHorizontalOrientable), new HorizontalOrientablePlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorLadder), new LadderPlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorPillar), new PillarPlacement());
+            RegisterPlacementPreview(typeof(BlockTorch), new TorchPlacement());
+            RegisterPlacementPreview(typeof(BlockBehaviorNWOrientable), new NWOrientablePlacement());
+            RegisterPlacementPreview(typeof(BlockFenceGate), new FenceGatePlacement());
+        }
+
+        public void RegisterPlacementPreview(Type type, IPlacementPreview preview)
+        {
+            classes[type] = preview;
         }
 
         public Block GetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block invBlock, BlockSelection blockSel)
