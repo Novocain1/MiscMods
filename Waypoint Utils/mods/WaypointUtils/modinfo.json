@@ -5,8 +5,7 @@
 	"modid": "vshud",
 	"description" : "Automatically creates waypoints on player death, floaty waypoints, and other misc client side things",
 	"authors": ["Novocain"],
-	"version": "1.4.7",
+	"version": "1.4.8",
 	"dependencies": {
-		"game": "1.13.0-pre.5"
 	}
 }

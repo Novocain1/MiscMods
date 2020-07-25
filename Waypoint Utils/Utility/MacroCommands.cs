@@ -14,7 +14,7 @@ namespace VSHUD
     {
         public override void StartClientSide(ICoreClientAPI api)
         {
-            MacroManagerRef macroManager = new MacroManagerRef(AccessTools.Field(typeof(ClientMain), "macroManager").GetValue(api.World as ClientMain) as _suAo3l5BovtveUIy94vGLPBmD2J);
+            MacroManagerRef macroManager = new MacroManagerRef(AccessTools.Field(typeof(ClientMain), "macroManager").GetValue(api.World as ClientMain) as MacroManager);
 
             api.RegisterCommand("addmacro", "adds macro from string", ".addmacro alt ctrl shift keycode secondkeycode^macroname^first command^second command^nth command", (a, args) =>
             {
@@ -82,33 +82,28 @@ namespace VSHUD
             return key;
         }
     }
-
-    class Macro : _iSjEmi0VJijsTXTcXXnDe18cpjf
-    {
-
-    }
     
     class MacroManagerRef
     {
         public int MacroCount { get => Macros.Count; }
 
-        _suAo3l5BovtveUIy94vGLPBmD2J macroManager;
+        MacroManager macroManager;
         
-        public SortedDictionary<int, _iSjEmi0VJijsTXTcXXnDe18cpjf> Macros { get => macroManager._SNEd3NpzPkZUgFUVCLqHmctsfiV; }
+        public SortedDictionary<int, Macro> Macros { get => macroManager.MacrosByIndex; }
 
-        public MacroManagerRef(_suAo3l5BovtveUIy94vGLPBmD2J macroManager)
+        public MacroManagerRef(MacroManager macroManager)
         {
             this.macroManager = macroManager;   
         }
 
         public void AddMacro(Macro macro)
         {
-            SetMacro(20 + macroManager._SNEd3NpzPkZUgFUVCLqHmctsfiV.Count + 1, macro);
+            SetMacro(20 + Macros.Count + 1, macro);
         }
 
-        public void DeleteMacro(int index) => macroManager._bqVapvM2F7yT9poFhboTvocyEC0(index);
+        public void DeleteMacro(int index) => macroManager.DeleteMacro(index);
 
-        public void SetMacro(int macroIndex, Macro macro) => macroManager._UGxjazgbfASmMiXRbAwEgaz0RKBA(macroIndex, macro);
+        public void SetMacro(int macroIndex, Macro macro) => macroManager.SetMacro(macroIndex, macro);
 
     }
     

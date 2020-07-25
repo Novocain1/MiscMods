@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,7 @@ namespace VSHUD
             RegisterPlacementPreview(typeof(BlockTorch), new TorchPlacement());
             RegisterPlacementPreview(typeof(BlockBehaviorNWOrientable), new NWOrientablePlacement());
             RegisterPlacementPreview(typeof(BlockFenceGate), new FenceGatePlacement());
+            RegisterPlacementPreview(typeof(BlockChute), new ChutePlacement());
         }
 
         public void RegisterPlacementPreview(Type type, IPlacementPreview preview)
@@ -632,6 +634,85 @@ namespace VSHUD
             }
 
             return outBlock != null;
+        }
+    }
+
+    public class ChutePlacement : IPlacementPreview
+    {
+        public bool CanStay(BlockChute placedBlock, IWorldAccessor world, BlockPos pos) => placedBlock?.CallMethod<bool>("CanStay", world, pos) ?? false;
+
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
+        {
+            orientedBlock = null;
+            string Type = (block as BlockChute).GetProperty<string, BlockChute>("Type");
+            string failureCode = "";
+
+            BlockChute blockToPlace = null;
+
+            if (blockToPlace == null)
+            {
+                BlockFacing[] facings = Block.SuggestedHVOrientation(byPlayer, blockSel);
+
+                if (Type == "elbow" || Type == "3way")
+                {
+                    string vertical = blockSel.Face.IsVertical ? (blockSel.Face == BlockFacing.UP ? "up" : "down") : "down";
+                    AssetLocation code = block.CodeWithVariants(new string[] { "vertical", "side" }, new string[] { vertical, facings[0].Code });
+                    blockToPlace = world.GetBlock(code) as BlockChute;
+
+                    int i = 0;
+                    while (blockToPlace != null && !CanStay(blockToPlace, world, blockSel.Position))
+                    {
+                        if (i >= BlockFacing.ALLFACES.Length) break;
+                        blockToPlace = world.GetBlock(block.CodeWithVariants(new string[] { "vertical", "side" }, new string[] { vertical, BlockFacing.ALLFACES[i++].Code })) as BlockChute;
+                    }
+                }
+
+                if (Type == "t")
+                {
+                    string variant = facings[0].Axis == EnumAxis.X ? "ns" : "we";
+                    if (!blockSel.Face.IsVertical)
+                    {
+                        variant = "ud-" + facings[0].Code[0];
+                    }
+
+                    blockToPlace = world.GetBlock(block.CodeWithVariant("side", variant)) as BlockChute;
+
+                    if (!CanStay(blockToPlace, world, blockSel.Position))
+                    {
+                        blockToPlace = world.GetBlock(block.CodeWithVariant("side", facings[0].Axis == EnumAxis.X ? "we" : "ns")) as BlockChute;
+                    }
+                }
+
+                if (Type == "straight")
+                {
+                    string variant = facings[0].Axis == EnumAxis.X ? "we" : "ns";
+                    if (blockSel.Face.IsVertical)
+                    {
+                        variant = "ud";
+                    }
+                    blockToPlace = world.GetBlock(block.CodeWithVariant("side", variant)) as BlockChute;
+                }
+
+                if (Type == "cross")
+                {
+                    string variant = facings[0].Axis == EnumAxis.X ? "ns" : "we";
+                    if (blockSel.Face.IsVertical)
+                    {
+                        variant = "ground";
+                    }
+                    blockToPlace = world.GetBlock(block.CodeWithVariant("side", variant)) as BlockChute;
+                }
+
+            }
+
+
+            if (blockToPlace != null && blockToPlace.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode) && CanStay(blockToPlace as BlockChute, world, blockSel.Position))
+            {
+                orientedBlock = blockToPlace;
+                return true;
+            }
+
+            return false;
         }
     }
 }

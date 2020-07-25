@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -382,5 +383,12 @@ namespace VSHUD
             if (number.EndsWith("3")) return number + "rd";
             return number + "th";
         }
+    }
+
+    public static class HackMan
+    {
+        public static T GetField<T, K>(this K instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetProperty<T, K>(this K instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
+        public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
     }
 }

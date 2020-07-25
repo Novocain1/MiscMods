@@ -22,6 +22,15 @@ namespace VSHUD
         {
             renderer = new PlacementRenderer(api);
             api.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque);
+            api.Input.RegisterHotKey("placementpreviewtoggle", "Toggle Placement Preview", GlKeys.Quote);
+            api.Input.SetHotKeyHandler("placementpreviewtoggle", (a) => 
+            {
+                WaypointUtilConfig config = api.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
+                config.PRShow = !config.PRShow;
+                api.ModLoader.GetModSystem<ConfigLoader>().SaveConfig();
+                return true;
+            });
+
             api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|textured]", (id, args) =>
             {
                 WaypointUtilConfig config = api.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
