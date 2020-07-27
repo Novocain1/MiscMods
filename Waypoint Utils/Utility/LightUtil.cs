@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,9 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
+using Vintagestory.Client.NoObf;
+using Vintagestory.GameContent;
 
 namespace VSHUD
 {
@@ -44,6 +48,10 @@ namespace VSHUD
                     api.World.UnregisterGameTickListener(id);
                 }
             }, 500);
+
+            var harmony = new Harmony("ModSystem.VSHUD.LightUtil");
+            harmony.PatchAll();
+            capi.Event.LevelFinalize += () => capi.Shader.ReloadShaders();
         }
 
         public void CmdLightUtil(int groupId, CmdArgs args)
@@ -91,8 +99,18 @@ namespace VSHUD
                     else { config.LUShowAbove = !config.LUShowAbove; }
                     capi.ShowChatMessage("Show Above Set To " + config.LUShowAbove);
                     break;
+                case "nutrients":
+                    bool? ac = args.PopBool();
+                    config.Nutrients = ac ?? !config.Nutrients;
+                    capi.ShowChatMessage("Show Farmland Nutrient Set To " + config.Nutrients);
+                    break;
+                case "mxnutrients":
+                    bool? ad = args.PopBool();
+                    config.MXNutrients = ad ?? !config.MXNutrients;
+                    capi.ShowChatMessage(string.Format("Farmland Nutrient Display Set To {0}.", config.MXNutrients ? "Max" : "Min"));
+                    break;
                 default:
-                    capi.ShowChatMessage("Syntax: .lightutil [lightlevel|type|radius|alpha|red|above]");
+                    capi.ShowChatMessage("Syntax: .lightutil [lightlevel|type|radius|alpha|red|above|nutrients(enable farmland nutrient display)|mxnutrients(toggle whether to show the min or max nutrient)]");
                     break;
             }
             configLoader.SaveConfig();
@@ -112,24 +130,51 @@ namespace VSHUD
                     {
                         BlockPos iPos = pos.AddCopy(x, y, z);
                         Block block = capi.World.BlockAccessor.GetBlock(iPos);
-                        BlockPos cPos = config.LUShowAbove ? iPos.UpCopy() : iPos;
+                        BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(iPos) as BlockEntityFarmland;
+
+                        BlockPos cPos = blockEntityFarmland == null && config.LUShowAbove ? iPos.UpCopy() : iPos;
                         int level = capi.World.BlockAccessor.GetLightLevel(cPos, type);
 
-                        bool rep = config.LUSpawning ? capi.World.BlockAccessor.GetBlock(iPos.UpCopy()).IsReplacableBy(block) : true;
-                        bool opq = config.LUOpaque ? block.AllSidesOpaque : true;
+                        bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(iPos.UpCopy()).IsReplacableBy(block) : true;
+                        bool opq = config.LUOpaque ? blockEntityFarmland != null || block.AllSidesOpaque : true;
 
                         if (block.BlockId != 0 && rep && opq && (x * x + y * y + z * z) <= (rad * rad))
                         {
+                            int c = 0;
+
                             float fLevel = level / 32.0f;
                             int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
-                            int c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
+                            if (config.Nutrients && blockEntityFarmland != null)
+                            {
+                                int I = config.MXNutrients ? blockEntityFarmland.Nutrients.IndexOf(blockEntityFarmland.Nutrients.Max()) : blockEntityFarmland.Nutrients.IndexOf(blockEntityFarmland.Nutrients.Min());
+                                var nuti = blockEntityFarmland.Nutrients[I];
+                                int scale = (int)((nuti / 50.0f) * 255.0f);
+                                switch (I)
+                                {
+                                    case 0:
+                                        c = ColorUtil.ToRgba(alpha, 0, 0, scale);
+                                        break;
+                                    case 1:
+                                        c = ColorUtil.ToRgba(alpha, 0, scale, 0);
+                                        break;
+                                    case 2:
+                                        c = ColorUtil.ToRgba(alpha, scale, 0, 0);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
+                            }
 
                             colors.Add(iPos, c);
                         }
                     }
                 }
             }
-            
+
             capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, colors.Keys.ToList(), colors.Values.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
         }
 
@@ -137,5 +182,11 @@ namespace VSHUD
         {
             capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
         }
+    }
+
+    [HarmonyPatch(typeof(ChunkRenderer), "RenderOpaque")]
+    class FastBlockHighlights
+    {
+        //NYI
     }
 }

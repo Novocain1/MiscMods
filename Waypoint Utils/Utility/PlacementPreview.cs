@@ -111,8 +111,8 @@ namespace VSHUD
             else if (toBlock.HasAlternates)
             {
                 long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ?
-                    GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, tesselatormanager.altblockModelDatas[toBlock.Id].Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, tesselatormanager.altblockModelDatas[toBlock.Id].Length);
-                mesh = tesselatormanager.altblockModelDatas[toBlock.Id][alternateIndex];
+                    GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, tesselatormanager.altblockModelDatasLod0[toBlock.Id].Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, tesselatormanager.altblockModelDatasLod0[toBlock.Id].Length);
+                mesh = tesselatormanager.altblockModelDatasLod0[toBlock.Id][alternateIndex];
             }
             else mesh = tesselatormanager.blockModelDatas[toBlock.Id];
 
@@ -120,8 +120,8 @@ namespace VSHUD
             {
                 if (toBlock.BlockMaterial == EnumBlockMaterial.Leaves)
                 {
-                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotationsLeaves.Length);
-                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatricesLeaves[index]);
+                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotations.Length);
+                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
                 }
                 else
                 {
