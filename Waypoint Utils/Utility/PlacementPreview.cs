@@ -86,9 +86,14 @@ namespace VSHUD
 
         public void UpdateBlockMesh(Block toBlock, BlockPos altPos)
         {
-            if (toBlock == null) return;
             MeshData mesh;
             MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
+            var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(toBlock.Id) ? tesselatormanager.blockModelDatasLod0[toBlock.Id] : null;
+            var lod1 = tesselatormanager.blockModelDatas[toBlock.Id];
+
+            var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
+            var lod1alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
+
 
             if (toBlock is BlockMeal)
             {
@@ -108,26 +113,24 @@ namespace VSHUD
                 shouldDispose = false;
                 return;
             }
-            else if (toBlock.HasAlternates)
+            else if (toBlock.HasAlternates && lod1alt != null)
             {
-                long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ?
-                    GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, tesselatormanager.altblockModelDatasLod0[toBlock.Id].Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, tesselatormanager.altblockModelDatasLod0[toBlock.Id].Length);
-                mesh = tesselatormanager.altblockModelDatasLod0[toBlock.Id][alternateIndex];
+                long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, lod1alt.Length);
+                mesh = lod1alt[alternateIndex];
+                
+                //mesh.AddMeshData(lod0alt[alternateIndex]);
             }
-            else mesh = tesselatormanager.blockModelDatas[toBlock.Id];
+            else
+            { 
+                mesh = lod1;
+                
+                //if (lod0 != null) mesh.AddMeshData(lod0);
+            }
 
             if (toBlock.RandomizeRotations)
             {
-                if (toBlock.BlockMaterial == EnumBlockMaterial.Leaves)
-                {
-                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotations.Length);
-                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
-                }
-                else
-                {
-                    int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotations.Length);
-                    mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
-                }
+                int index = GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, JsonTesselator.randomRotations.Length);
+                mesh = mesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
             }
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
@@ -171,7 +174,7 @@ namespace VSHUD
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
-            if (toBlock is BlockPlant) rpi.GlDisableCullFace();
+            if (toBlock is BlockPlant || toBlock is BlockVines) rpi.GlDisableCullFace();
             Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);

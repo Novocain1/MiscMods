@@ -31,6 +31,7 @@ namespace VSHUD
             RegisterPlacementPreview(typeof(BlockBehaviorNWOrientable), new NWOrientablePlacement());
             RegisterPlacementPreview(typeof(BlockFenceGate), new FenceGatePlacement());
             RegisterPlacementPreview(typeof(BlockChute), new ChutePlacement());
+            RegisterPlacementPreview(typeof(BlockVines), new VinePlacement());
         }
 
         public void RegisterPlacementPreview(Type type, IPlacementPreview preview)
@@ -709,6 +710,49 @@ namespace VSHUD
             if (blockToPlace != null && blockToPlace.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode) && CanStay(blockToPlace as BlockChute, world, blockSel.Position))
             {
                 orientedBlock = blockToPlace;
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    public class VinePlacement : IPlacementPreview
+    {
+        public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
+        {
+            orientedBlock = null;
+            string failureCode = "";
+
+            if (!block.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode))
+            {
+                return false;
+            }
+
+            if (blockSel.Face.IsHorizontal)
+            {
+                if (TryAttachTo(world.BlockAccessor, block, blockSel.Position, blockSel.Face, out orientedBlock)) return true;
+            }
+
+            Block upBlock = world.BlockAccessor.GetBlock(blockSel.Position.UpCopy());
+            if (upBlock is BlockVines)
+            {
+                BlockFacing facing = ((BlockVines)upBlock).GetOrientation();
+                orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(facing.Code)) != null ? upBlock : block;
+                return true;
+            }
+
+            return false;
+        }
+
+        bool TryAttachTo(IBlockAccessor blockAccessor, Block block, BlockPos blockpos, BlockFacing onBlockFace, out Block orientedBlock)
+        {
+            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
+            orientedBlock = blockAccessor.GetBlock(blockAccessor.GetBlockId(attachingBlockPos));
+
+            if (orientedBlock.CanAttachBlockAt(blockAccessor, block, attachingBlockPos, onBlockFace))
+            {
+                orientedBlock = blockAccessor.GetBlock(block.CodeWithParts(onBlockFace.Code));
                 return true;
             }
 
