@@ -117,14 +117,15 @@ namespace VSHUD
             {
                 long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, lod1alt.Length);
                 mesh = lod1alt[alternateIndex];
-                
-                //mesh.AddMeshData(lod0alt[alternateIndex]);
+                var lod = lod0alt?[alternateIndex];
+
+                if (lod != null && mesh != lod) mesh.AddMeshData(lod0alt[alternateIndex]);
             }
             else
             { 
                 mesh = lod1;
-                
-                //if (lod0 != null) mesh.AddMeshData(lod0);
+
+                if (lod0 != null && mesh != lod0) mesh.AddMeshData(lod0);
             }
 
             if (toBlock.RandomizeRotations)
