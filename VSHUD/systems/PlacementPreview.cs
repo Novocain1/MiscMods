@@ -91,7 +91,7 @@ namespace VSHUD
         IClientPlayer player { get => capi?.World?.Player; }
         ItemStack invStack { get => player?.InventoryManager?.ActiveHotbarSlot?.Itemstack;  }
         Item invItem { get => invStack?.Item;  }
-        Block invBlock { get => invStack?.Block ?? (invItem is ItemStone ? capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")) : null); }
+        Block invBlock { get => GetInvBlock(); }
         BlockSelection playerSelection { get => player?.CurrentBlockSelection; }
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
@@ -100,6 +100,8 @@ namespace VSHUD
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
 
+        public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
+
         MeshRef mRef;
         IRenderAPI rpi;
         public Matrixf ModelMat = new Matrixf();
@@ -107,11 +109,30 @@ namespace VSHUD
 
         public PlacementPreviewHelper ph;
 
+        Block itemPlacedBlock;
+
         public PlacementRenderer(ICoreClientAPI capi)
         {
             this.capi = capi;
             rpi = capi.Render;
             ph = new PlacementPreviewHelper();
+            
+            itemActions[typeof(ItemStone)] = () => { itemPlacedBlock = capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")); };
+        }
+
+        public Block GetInvBlock() 
+        {
+            Block block = invStack?.Block;
+            if (block == null && invItem != null)
+            {
+                if (itemActions.TryGetValue(invItem.GetType(), out Vintagestory.API.Common.Action action))
+                {
+                    action.Invoke();
+                    block = itemPlacedBlock;
+                }
+                else itemPlacedBlock = block = null;
+            }
+            return block;
         }
 
         public void UpdateBlockMesh(Block toBlock, BlockPos altPos)
@@ -122,7 +143,7 @@ namespace VSHUD
             var lod1 = tesselatormanager.blockModelDatas[toBlock.Id];
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
-            var lod1alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
+            var lod1alt = tesselatormanager.altblockModelDatasLod1[toBlock.Id];
 
 
             if (toBlock is BlockMeal)
