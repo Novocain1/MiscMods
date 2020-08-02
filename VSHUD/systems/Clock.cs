@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,7 +58,7 @@ namespace VSHUD
         {
             base.OnOwnPlayerDataReceived();
 
-            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 300, 256);
+            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 400, 256);
 
             double[] stroke = new double[] { 0, 0, 0, 1 };
 
@@ -76,6 +77,14 @@ namespace VSHUD
 
             GameCalendar cal = (GameCalendar)capi.World.Calendar;
             float stability = (float)capi.World.Player.Entity.WatchedAttributes.GetDouble("temporalStability", 0.0);
+            var stabilitySystem = capi.ModLoader.GetModSystem<SystemTemporalStability>();
+            var data = AccessTools.Field(typeof(SystemTemporalStability), "data").GetValue(stabilitySystem);
+            double nextStormDays = (double)AccessTools.Field(data.GetType(), "nextStormTotalDays").GetValue(data) - capi.World.Calendar.TotalDays;
+            EnumTempStormStrength nextStormStrength = (EnumTempStormStrength)AccessTools.Field(data.GetType(), "nextStormStrength").GetValue(data);
+            float stormGlitchStrength = (float)AccessTools.Field(data.GetType(), "stormGlitchStrength").GetValue(data);
+            double stormActiveDays = (double)AccessTools.Field(data.GetType(), "stormActiveTotalDays").GetValue(data) - capi.World.Calendar.TotalDays;
+
+            bool nowStormActive = (bool)AccessTools.Field(data.GetType(), "nowStormActive").GetValue(data);
 
             string hour = cal.FullHourOfDay < 10 ? "0" + cal.FullHourOfDay : "" + cal.FullHourOfDay;
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
@@ -90,7 +99,9 @@ namespace VSHUD
                 .AppendLine(string.Format("Rainfall: {0}%, Fertility: {1}%", Math.Round(climate.Rainfall, 3) * 100, Math.Round(climate.Fertility, 3) * 100))
                 .AppendLine(string.Format("Wind Velocity: {0}", GlobalConstants.CurrentWindSpeedClient.Sanitize()))
                 .AppendLine(string.Format("Temporal Stability: {0}", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3)))
-                .AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100));
+                .AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100))
+                .AppendLine(nowStormActive ? string.Format("Magnitude {0} Temporal Storm Ends In {1} Hours.", Math.Round(stormGlitchStrength * 10, 1), Math.Round(stormActiveDays * 24, 2)) :
+                    string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2), nextStormDays > 1 ? "Days" : "Hours"));
 
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
         }
