@@ -213,13 +213,15 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (playerSelection == null || invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
-            playerSelection.Position = playerSelection.Position.GetBlock(capi).IsReplacableBy(invBlock) ? playerSelection.Position : playerSelection.Position.Offset(playerSelection.Face);
+            var selClone = playerSelection?.Clone();
 
-            toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, playerSelection);
+            if (selClone == null || invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
+            selClone.Position = selClone.Position.GetBlock(capi).IsReplacableBy(invBlock) ? selClone.Position : selClone.Position.Offset(selClone.Face);
+
+            toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, selClone);
             if (toBlock == null) return;
             
-            BlockPos adjPos = playerSelection.Position;
+            BlockPos adjPos = selClone.Position;
 
             UpdateBlockMesh(toBlock, adjPos);
             if (mRef == null) return;

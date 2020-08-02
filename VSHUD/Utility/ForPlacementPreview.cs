@@ -475,14 +475,46 @@ namespace VSHUD
 
     public class LadderPlacement : IPlacementPreview
     {
+        HorizontalAttachablePlacement horizontalAttachablePlacement;
+
+        public LadderPlacement()
+        {
+            horizontalAttachablePlacement = new HorizontalAttachablePlacement();
+        }
+
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
             BlockPos pos = blockSel.Position;
 
+            if (blockSel.Face.Index < 4 && pos.Copy().Offset(blockSel.Face.GetOpposite()).GetBlock(world).HasBehavior<BlockBehaviorLadder>()) { 
+                orientedBlock = null; 
+                return false; 
+            }
+
             BlockFacing[] horVer = Block.SuggestedHVOrientation(byPlayer, blockSel);
             AssetLocation blockCode = block.CodeWithParts(horVer[0].Code);
 
-            orientedBlock = world.BlockAccessor.GetBlock(blockCode);
+            string ownFirstCodePart = block.FirstCodePart();
+            string failureCode = "";
+
+            // Has ladder above at aimed position?
+            Block aboveBlock = world.BlockAccessor.GetBlock(pos.X, pos.Y + 1, pos.Z);
+            if (aboveBlock.FirstCodePart() == ownFirstCodePart && HasSupport(aboveBlock, world.BlockAccessor, pos) && aboveBlock.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode))
+            {
+                orientedBlock = aboveBlock;
+                return true;
+            }
+
+            // Has ladder below at aimed position?
+            Block belowBlock = world.BlockAccessor.GetBlock(pos.X, pos.Y - 1, pos.Z);
+            if (belowBlock.FirstCodePart() == ownFirstCodePart && HasSupport(belowBlock, world.BlockAccessor, pos) && belowBlock.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode))
+            {
+                orientedBlock = belowBlock;
+                return true;
+            }
+            if (blockSel.Face.Index < 4) horizontalAttachablePlacement.TryGetPlacedBlock(world, byPlayer, block, blockSel, out orientedBlock);
+            else orientedBlock = world.BlockAccessor.GetBlock(blockCode);
+
             // Otherwise place if we have support for it
             if (HasSupport(orientedBlock, world.BlockAccessor, pos)) return true;
 
@@ -501,13 +533,9 @@ namespace VSHUD
 
             BlockPos upPos = pos.UpCopy();
 
-            return
-                SideSolid(blockAccess, pos, ownFacing)
-                || SideSolid(blockAccess, upPos, BlockFacing.UP)
-                || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos))
-            ;
+            return SideSolid(blockAccess, pos, ownFacing) || SideSolid(blockAccess, upPos, BlockFacing.UP)
+                || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos));
         }
-
 
         public bool HasSupportDown(Block forBlock, IBlockAccessor blockAccess, BlockPos pos)
         {
@@ -516,10 +544,8 @@ namespace VSHUD
             BlockPos downPos = pos.DownCopy();
 
             return
-                SideSolid(blockAccess, pos, ownFacing)
-                || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
-                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos))
-            ;
+                SideSolid(blockAccess, pos, ownFacing) || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
+                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos));
         }
 
         public bool HasSupport(Block forBlock, IBlockAccessor blockAccess, BlockPos pos)
@@ -530,12 +556,9 @@ namespace VSHUD
             BlockPos upPos = pos.UpCopy();
 
             return
-                SideSolid(blockAccess, pos, ownFacing)
-                || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
-                || SideSolid(blockAccess, upPos, BlockFacing.UP)
-                || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos))
-                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos))
-            ;
+                SideSolid(blockAccess, pos, ownFacing) || SideSolid(blockAccess, downPos, BlockFacing.DOWN)
+                || SideSolid(blockAccess, upPos, BlockFacing.UP) || (pos.Y < blockAccess.MapSizeY - 1 && blockAccess.GetBlock(upPos) == forBlock && HasSupportUp(forBlock, blockAccess, upPos))
+                || (pos.Y > 0 && blockAccess.GetBlock(downPos) == forBlock && HasSupportDown(forBlock, blockAccess, downPos));
         }
 
         public bool SideSolid(IBlockAccessor blockAccess, BlockPos pos, BlockFacing facing)
