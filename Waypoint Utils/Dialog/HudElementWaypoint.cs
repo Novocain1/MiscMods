@@ -56,11 +56,6 @@ namespace VSHUD
             };
         }
 
-        ~HudElementWaypoint()
-        {
-            
-        }
-
         public override void OnOwnPlayerDataReceived()
         {
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialogAtPos(0.0);
