@@ -387,8 +387,8 @@ namespace VSHUD
 
     public static class HackMan
     {
-        public static T GetField<T, K>(this K instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
-        public static T GetProperty<T, K>(this K instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
         public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
     }
 }

@@ -76,13 +76,15 @@ namespace VSHUD
             ClimateCondition climate = capi.World.BlockAccessor.GetClimateAt(entityPos, EnumGetClimateMode.NowValues);
 
             GameCalendar cal = (GameCalendar)capi.World.Calendar;
+           
             float stability = (float)capi.World.Player.Entity.WatchedAttributes.GetDouble("temporalStability", 0.0);
             var stabilitySystem = capi.ModLoader.GetModSystem<SystemTemporalStability>();
-            var data = AccessTools.Field(typeof(SystemTemporalStability), "data").GetValue(stabilitySystem);
-            double nextStormDays = (double)AccessTools.Field(data.GetType(), "nextStormTotalDays").GetValue(data) - capi.World.Calendar.TotalDays;
-            EnumTempStormStrength nextStormStrength = (EnumTempStormStrength)AccessTools.Field(data.GetType(), "nextStormStrength").GetValue(data);
-            float stormGlitchStrength = (float)AccessTools.Field(data.GetType(), "stormGlitchStrength").GetValue(data);
-            double stormActiveDays = (double)AccessTools.Field(data.GetType(), "stormActiveTotalDays").GetValue(data) - capi.World.Calendar.TotalDays;
+            var data = stabilitySystem.GetField<object>("data");
+
+            double nextStormDays = data.GetField<double>("nextStormTotalDays") - capi.World.Calendar.TotalDays;
+            EnumTempStormStrength nextStormStrength = data.GetField<EnumTempStormStrength>("nextStormStrength");
+            float stormGlitchStrength = data.GetField<float>("stormGlitchStrength");
+            double stormActiveDays = data.GetField<double>("stormActiveTotalDays") - capi.World.Calendar.TotalDays;
 
             bool nowStormActive = (bool)AccessTools.Field(data.GetType(), "nowStormActive").GetValue(data);
 

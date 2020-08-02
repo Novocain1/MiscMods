@@ -668,7 +668,7 @@ namespace VSHUD
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
             orientedBlock = null;
-            string Type = (block as BlockChute).GetProperty<string, BlockChute>("Type");
+            string Type = (block as BlockChute).GetProperty<string>("Type");
             string failureCode = "";
 
             BlockChute blockToPlace = null;
