@@ -21,11 +21,11 @@ using System.Globalization;
 
 namespace VSHUD
 {
-    class WaypointUtilSystem : ModSystem
+    class FloatyWaypoints : VSHUDClientSystem
     {
         ICoreClientAPI capi;
         public ConfigLoader cL;
-        public WaypointUtilConfig Config;
+        public VSHUDConfig Config;
         public WaypointMapLayer WPLayer { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
 
         public Dictionary<string, LoadedTexture> texturesByIcon;

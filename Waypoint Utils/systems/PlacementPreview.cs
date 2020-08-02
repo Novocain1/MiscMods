@@ -15,7 +15,7 @@ using Vintagestory.API.Datastructures;
 
 namespace VSHUD
 {
-    class PlacementPreview : ModSystem
+    class PlacementPreview : VSHUDClientSystem
     {
         PlacementRenderer renderer;
         public override void StartClientSide(ICoreClientAPI api)
@@ -25,26 +25,56 @@ namespace VSHUD
             api.Input.RegisterHotKey("placementpreviewtoggle", "Toggle Placement Preview", GlKeys.Quote);
             api.Input.SetHotKeyHandler("placementpreviewtoggle", (a) => 
             {
-                WaypointUtilConfig config = api.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
+                VSHUDConfig config = api.ModLoader.GetModSystem<FloatyWaypoints>().Config;
                 config.PRShow = !config.PRShow;
                 api.ModLoader.GetModSystem<ConfigLoader>().SaveConfig();
                 return true;
             });
 
-            api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|textured]", (id, args) =>
+            api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|tinted|tintcolorhex|tintcolorrgb|tintdefault|opacity]", (id, args) =>
             {
-                WaypointUtilConfig config = api.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
+                VSHUDConfig config = api.ModLoader.GetModSystem<FloatyWaypoints>().Config;
                 string arg = args.PopWord();
-                bool? enabled = args.PopBool();
+                bool? enabled;
+
                 switch (arg)
                 {
                     case "enabled":
+                        enabled = args.PopBool();
                         config.PRShow = enabled ?? !config.PRShow;
                         api.ShowChatMessage("Block preview set to " + config.PRShow);
                         break;
                     case "tinted":
+                        enabled = args.PopBool();
                         config.PRTint = enabled ?? !config.PRTint;
                         api.ShowChatMessage("Block preview tinting set to " + config.PRTint);
+                        break;
+                    case "tintcolorhex":
+                        string col = args.PopWord();
+                        if (col?[0] == '#')
+                        {
+                            var color = ColorUtil.Hex2Doubles(col);
+                            config.PRTintColor = new float[]
+                            {
+                                (float)(color[0]) * 10.0f,
+                                (float)(color[1]) * 10.0f,
+                                (float)(color[2]) * 10.0f,
+                            };
+                        }
+                        break;
+                    case "opacity":
+                        config.PROpacity = args.PopFloat() ?? config.PROpacity;
+                        break;
+                    case "opacitydefault":
+                        config.PROpacity = new VSHUDConfig().PROpacity;
+                        break;
+                    case "tintcolorrgb":
+                        config.PRTintColor[0] = args.PopFloat() ?? config.PRTintColor[0];
+                        config.PRTintColor[1] = args.PopFloat() ?? config.PRTintColor[1];
+                        config.PRTintColor[2] = args.PopFloat() ?? config.PRTintColor[2];
+                        break;
+                    case "tintdefault":
+                        config.PRTintColor = new VSHUDConfig().PRTintColor;
                         break;
                     default:
                         break;
@@ -66,7 +96,7 @@ namespace VSHUD
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
         Vec3d playerPos { get => player?.Entity.Pos.XYZ;  }
-        WaypointUtilConfig config { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config; }
+        VSHUDConfig config { get => capi.ModLoader.GetModSystem<FloatyWaypoints>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
 
@@ -187,14 +217,13 @@ namespace VSHUD
             
             prog.ViewMatrix = rpi.CameraMatrixOriginf;
             prog.ProjectionMatrix = rpi.CurrentProjectionMatrix;
-            prog.RgbaTint = new Vec4f(1, 1, 1, 0.5f);
-            
-            if (!config.PRTint)
-            {
-                prog.Tex2dOverlay2D = capi.Render.GetOrLoadTexture(new AssetLocation("block/blue.png"));
-                prog.OverlayOpacity = 0.5f;
-            }
-            prog.ExtraGlow = 255 / 2;
+            Vec4f col;
+
+            if (config.PRTint) col = prog.RgbaTint = new Vec4f(1 + config.PRTintColor[0], 1 + config.PRTintColor[1], 1 + config.PRTintColor[2], config.PROpacity);
+            else prog.RgbaTint = col = new Vec4f(1, 1, 1, config.PROpacity);
+
+            prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
+            prog.ExtraGlow = 255 / (int)(capi.World.Calendar.SunLightStrength * 64.0f);
             
             rpi.RenderMesh(mRef);
             prog.Stop();

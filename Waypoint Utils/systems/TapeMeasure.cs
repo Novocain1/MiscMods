@@ -14,7 +14,7 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class TapeMeasure : ModSystem
+    class TapeMeasure : VSHUDClientSystem
     {
         ICoreClientAPI capi;
         BlockPos start = new BlockPos(0, 0, 0);
@@ -97,7 +97,7 @@ namespace VSHUD
                     MakeHighlights(highlighted);
                     break;
                 case "path":
-                    WaypointUtilSystem wUtil = capi.ModLoader.GetModSystem<WaypointUtilSystem>();
+                    FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
                     if (radius > wUtil.Waypoints.Count || thickness > wUtil.Waypoints.Count) break;
                     BlockPos wp1Pos = wUtil.Waypoints[radius]?.Position?.AsBlockPos, wp2Pos = wUtil.Waypoints[thickness]?.Position?.AsBlockPos;
                     if (wp1Pos != null && wp2Pos != null)
@@ -172,7 +172,7 @@ namespace VSHUD
 
         public void CmdMeasuringTape(int groupId, CmdArgs args)
         {
-            WaypointUtilSystem wUtil = capi.ModLoader.GetModSystem<WaypointUtilSystem>();
+            FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
             string arg = args.PopWord();
             switch (arg)
             {

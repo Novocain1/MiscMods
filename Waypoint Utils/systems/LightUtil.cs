@@ -13,11 +13,11 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class LightUtil : ModSystem
+    class LightUtil : VSHUDClientSystem
     {
         ICoreClientAPI capi;
         long id;
-        WaypointUtilConfig config;
+        VSHUDConfig config;
         ConfigLoader configLoader;
 
         public override void StartClientSide(ICoreClientAPI api)

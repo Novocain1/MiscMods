@@ -21,9 +21,9 @@ namespace VSHUD
         public double distance = 0;
         public int waypointID;
         public long id;
-        WaypointUtilConfig config;
+        VSHUDConfig config;
         public WaypointRelative waypoint;
-        WaypointUtilSystem system { get => capi.ModLoader.GetModSystem<WaypointUtilSystem>(); }
+        FloatyWaypoints system { get => capi.ModLoader.GetModSystem<FloatyWaypoints>(); }
         public override bool Focused => false;
         GuiDialogEditWayPoint waypointEditDialog;
 
@@ -44,7 +44,7 @@ namespace VSHUD
             DialogTitle = waypoint.Title;
             absolutePos = waypoint.Position.Clone();
             this.waypointID = waypoint.Index;
-            config = capi.ModLoader.GetModSystem<WaypointUtilSystem>().Config;
+            config = capi.ModLoader.GetModSystem<FloatyWaypoints>().Config;
             waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
             
             waypointEditDialog.OnClosed += () =>
@@ -122,7 +122,7 @@ namespace VSHUD
             if (!IsOpened() || waypoint.OwnWaypoint == null) return;
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
-            WaypointUtilConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
+            VSHUDConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
             Vec3d pos = MatrixToolsd.Project(waypointPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
 
             double[] clamps = new double[]

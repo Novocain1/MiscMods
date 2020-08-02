@@ -12,7 +12,7 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class ClockDialogSystem : ModSystem
+    class ClockDialogSystem : VSHUDClientSystem
     {
         private long id;
 

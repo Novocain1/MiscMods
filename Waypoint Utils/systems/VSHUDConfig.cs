@@ -8,7 +8,7 @@ using Vintagestory.API.Common;
 
 namespace VSHUD
 {
-    class WaypointUtilConfig
+    class VSHUDConfig
     {
         public double DotRange { get; set; } = 2000.0;
         public double TitleRange { get; set; } = 500.0;
@@ -34,14 +34,16 @@ namespace VSHUD
 
         public bool PRShow { get; set; } = true;
         public bool PRTint { get; set; } = false;
+        public float[] PRTintColor { get; set; } = new float[] { 0, 0, 3 };
+        public float PROpacity { get; set; } = 0.8f;
 
         public List<int> DisabledColors { get; set; } = new List<int>();
     }
 
-    class ConfigLoader : ModSystem
+    class ConfigLoader : VSHUDClientSystem
     {
         ICoreClientAPI capi;
-        public WaypointUtilConfig Config { get; set; } = new WaypointUtilConfig();
+        public VSHUDConfig Config { get; set; } = new VSHUDConfig();
         public override double ExecuteOrder() => 0.05;
 
         public override void StartClientSide(ICoreClientAPI api)
@@ -52,12 +54,12 @@ namespace VSHUD
 
         public void LoadConfig()
         {
-            if (capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json") == null) { SaveConfig(); return; }
+            if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(); return; }
 
-            Config = capi.LoadModConfig<WaypointUtilConfig>("waypointutils.json");
+            Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
             SaveConfig();
         }
 
-        public void SaveConfig() => capi.StoreModConfig(Config, "waypointutils.json");
+        public void SaveConfig() => capi.StoreModConfig(Config, "vshud.json");
     }
 }

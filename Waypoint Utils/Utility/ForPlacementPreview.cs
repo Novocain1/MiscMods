@@ -731,7 +731,7 @@ namespace VSHUD
 
             if (blockSel.Face.IsHorizontal)
             {
-                if (TryAttachTo(world.BlockAccessor, block, blockSel.Position, blockSel.Face, out orientedBlock)) return true;
+                if (TryAttachTo(world.BlockAccessor, block, blockSel.Position, blockSel.Face, ref orientedBlock)) return true;
             }
 
             Block upBlock = world.BlockAccessor.GetBlock(blockSel.Position.UpCopy());
@@ -745,12 +745,12 @@ namespace VSHUD
             return false;
         }
 
-        bool TryAttachTo(IBlockAccessor blockAccessor, Block block, BlockPos blockpos, BlockFacing onBlockFace, out Block orientedBlock)
+        bool TryAttachTo(IBlockAccessor blockAccessor, Block block, BlockPos blockpos, BlockFacing onBlockFace, ref Block orientedBlock)
         {
             BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
-            orientedBlock = blockAccessor.GetBlock(blockAccessor.GetBlockId(attachingBlockPos));
+            var tmpBlock = blockAccessor.GetBlock(blockAccessor.GetBlockId(attachingBlockPos));
 
-            if (orientedBlock.CanAttachBlockAt(blockAccessor, block, attachingBlockPos, onBlockFace))
+            if (tmpBlock.CanAttachBlockAt(blockAccessor, block, attachingBlockPos, onBlockFace))
             {
                 orientedBlock = blockAccessor.GetBlock(block.CodeWithParts(onBlockFace.Code));
                 return true;

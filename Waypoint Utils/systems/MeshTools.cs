@@ -14,7 +14,7 @@ using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
-    class MeshTools : ModSystem
+    class MeshTools : VSHUDClientSystem
     {
         ICoreClientAPI capi;
         public override void StartClientSide(ICoreClientAPI api)
