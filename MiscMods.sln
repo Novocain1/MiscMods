@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSHUD", "Waypoint Utils\VSHUD.csproj", "{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSHUD", "VSHUD\VSHUD.csproj", "{CB4F63C9-1F62-4A9A-9364-8FDDF6116583}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItemSorting", "ItemSorting\ItemSorting.csproj", "{E159209D-8DCD-4FC7-9300-F93FE17FEB34}"
 EndProject
