@@ -85,8 +85,7 @@ namespace VSHUD
             EnumTempStormStrength nextStormStrength = data.GetField<EnumTempStormStrength>("nextStormStrength");
             float stormGlitchStrength = data.GetField<float>("stormGlitchStrength");
             double stormActiveDays = data.GetField<double>("stormActiveTotalDays") - capi.World.Calendar.TotalDays;
-
-            bool nowStormActive = (bool)AccessTools.Field(data.GetType(), "nowStormActive").GetValue(data);
+            bool nowStormActive = data.GetField<bool>("nowStormActive");
 
             string hour = cal.FullHourOfDay < 10 ? "0" + cal.FullHourOfDay : "" + cal.FullHourOfDay;
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
