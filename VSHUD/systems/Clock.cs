@@ -19,7 +19,7 @@ namespace VSHUD
         ICoreClientAPI capi;
 
         ConfigLoader ConfigLoader { get => capi.ModLoader.GetModSystem<ConfigLoader>(); }
-        ClockShowConfig Config { get => ConfigLoader.Config.clockShowConfig; }
+        ClockShowConfig Config { get => ConfigLoader.Config.ClockShowConfig; }
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -88,7 +88,7 @@ namespace VSHUD
 
     class GuiDialogClock : HudElement
     {
-        ClockShowConfig Config { get => capi.ModLoader.GetModSystem<ConfigLoader>().Config.clockShowConfig; }
+        ClockShowConfig Config { get => capi.ModLoader.GetModSystem<ConfigLoader>().Config.ClockShowConfig; }
 
         long id;
 
