@@ -16,9 +16,15 @@ namespace VSHUD
     class ClockDialogSystem : VSHUDClientSystem
     {
         private long id;
+        ICoreClientAPI capi;
+
+        ConfigLoader ConfigLoader { get => capi.ModLoader.GetModSystem<ConfigLoader>(); }
+        ClockShowConfig Config { get => ConfigLoader.Config.clockShowConfig; }
 
         public override void StartClientSide(ICoreClientAPI api)
         {
+            capi = api;
+
             GuiDialogClock clock = new GuiDialogClock(api);
 
             api.Input.RegisterHotKey("clock", "Open Clock GUI", GlKeys.ControlRight, HotkeyType.GUIOrOtherControls);
@@ -42,11 +48,48 @@ namespace VSHUD
                 clock.Toggle();
                 return true;
             });
+
+            api.RegisterCommand("clockconfig", "Configures VSHUD Clock", "[Calendar|Season|Temperature|Rainfall|WindVelocity|LocalTemporalStability|PlayerTemporalStability|TemporalStormInfo] true/false", (id, args) => 
+            {
+                string arg = args.PopWord().ToLowerInvariant();
+                switch (arg)
+                {
+                    case "calendar":
+                        Config.Calendar = args.PopBool() ?? !Config.Calendar;
+                        break;
+                    case "season":
+                        Config.Season = args.PopBool() ?? !Config.Season;
+                        break;
+                    case "temperature":
+                        Config.Temperature = args.PopBool() ?? !Config.Temperature;
+                        break;
+                    case "rainfall":
+                        Config.Rainfall = args.PopBool() ?? !Config.Rainfall;
+                        break;
+                    case "windvelocity":
+                        Config.WindVelocity = args.PopBool() ?? !Config.WindVelocity;
+                        break;
+                    case "localtemporalstability":
+                        Config.LocalTemporalStability = args.PopBool() ?? !Config.LocalTemporalStability;
+                        break;
+                    case "playertemporalstability":
+                        Config.PlayerTemporalStability = args.PopBool() ?? !Config.PlayerTemporalStability;
+                        break;
+                    case "temporalstorminfo":
+                        Config.TemporalStormInfo = args.PopBool() ?? !Config.TemporalStormInfo;
+                        break;
+                    default:
+                        break;
+                }
+                ConfigLoader.SaveConfig();
+            });
         }
     }
 
     class GuiDialogClock : HudElement
     {
+        ClockShowConfig Config { get => capi.ModLoader.GetModSystem<ConfigLoader>().Config.clockShowConfig; }
+
         long id;
 
         public GuiDialogClock(ICoreClientAPI capi) : base(capi)
@@ -94,15 +137,19 @@ namespace VSHUD
             string time = hour + dot + minute;
 
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine(string.Format("Date: {0} {1}, {2}, {3}", cal.MonthName, cal.DayOfMonth.DisplayWithSuffix(), cal.Year, time))
-                .AppendLine(string.Format("Season: {0}", cal.GetSeason(entityPos)))
-                .AppendLine(string.Format("Temperature: {0}°C", Math.Round(climate.Temperature)))
-                .AppendLine(string.Format("Rainfall: {0}%, Fertility: {1}%", Math.Round(climate.Rainfall, 3) * 100, Math.Round(climate.Fertility, 3) * 100))
-                .AppendLine(string.Format("Wind Velocity: {0}", GlobalConstants.CurrentWindSpeedClient.Sanitize()))
-                .AppendLine(string.Format("Temporal Stability: {0}", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3)))
-                .AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100))
-                .AppendLine(nowStormActive ? string.Format("Magnitude {0} Temporal Storm Ends In {1} Hours.", Math.Round(stormGlitchStrength * 10, 1), Math.Round(stormActiveDays * 24, 2)) :
-                    string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2), nextStormDays > 1 ? "Days" : "Hours"));
+            
+            if (Config.Calendar) stringBuilder.AppendLine(string.Format("Date: {0} {1}, {2}, {3}", cal.MonthName, cal.DayOfMonth.DisplayWithSuffix(), cal.Year, time));
+            if (Config.Season) stringBuilder.AppendLine(string.Format("Season: {0}", cal.GetSeason(entityPos)));
+            if (Config.Temperature) stringBuilder.AppendLine(string.Format("Temperature: {0}°C", Math.Round(climate.Temperature)));
+            if (Config.Rainfall) stringBuilder.AppendLine(string.Format("Rainfall: {0}%, Fertility: {1}%", Math.Round(climate.Rainfall, 3) * 100, Math.Round(climate.Fertility, 3) * 100));
+            if (Config.WindVelocity) stringBuilder.AppendLine(string.Format("Wind Velocity: {0}", GlobalConstants.CurrentWindSpeedClient.Sanitize()));
+            if (Config.LocalTemporalStability) stringBuilder.AppendLine(string.Format("Temporal Stability: {0}", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3)));
+            if (Config.PlayerTemporalStability) stringBuilder.AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100));
+            if (Config.TemporalStormInfo)
+            {
+                stringBuilder.AppendLine(nowStormActive ? string.Format("Magnitude {0} Temporal Storm Ends In {1} Hours.", Math.Round(stormGlitchStrength * 10, 1), Math.Round(stormActiveDays * 24, 2)) :
+                string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2), nextStormDays > 1 ? "Days" : "Hours"));
+            }
 
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
         }

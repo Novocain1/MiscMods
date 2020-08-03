@@ -8,6 +8,18 @@ using Vintagestory.API.Common;
 
 namespace VSHUD
 {
+    class ClockShowConfig
+    {
+        public bool Calendar { get; set; } = true;
+        public bool Season { get; set; } = true;
+        public bool Temperature { get; set; } = true;
+        public bool Rainfall { get; set; } = true;
+        public bool WindVelocity { get; set; } = true;
+        public bool LocalTemporalStability { get; set; } = true;
+        public bool PlayerTemporalStability { get; set; } = true;
+        public bool TemporalStormInfo { get; set; } = true;
+    }
+
     class VSHUDConfig
     {
         public double DotRange { get; set; } = 2000.0;
@@ -36,6 +48,8 @@ namespace VSHUD
         public bool PRTint { get; set; } = false;
         public float[] PRTintColor { get; set; } = new float[] { 0, 0, 3 };
         public float PROpacity { get; set; } = 0.8f;
+
+        public ClockShowConfig clockShowConfig { get; set; } = new ClockShowConfig();
 
         public List<int> DisabledColors { get; set; } = new List<int>();
     }
