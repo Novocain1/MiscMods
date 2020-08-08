@@ -126,4 +126,7 @@
     <Folder Include="Utility\Patches\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>call "$(ProjectDir)\package.bat"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

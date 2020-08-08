@@ -1,0 +1,11 @@
+{
+    "type": "code",
+	"name": "VSHUD Compat",
+	"side": "Client",
+	"modid": "vshudcompat",
+	"description" : "VSHUD compatible for systems which fail to see assembly modinfos.",
+	"authors": ["Novocain"],
+	"version": "1.5.5",
+	"dependencies": {
+	}
+}
