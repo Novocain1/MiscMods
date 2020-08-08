@@ -9,7 +9,7 @@ using Vintagestory.API.Common;
     Description = "Automatically creates waypoints on player death, floaty waypoints, and other misc client side things",
     Side = "Client",
     Authors = new[] { "Novocain" },
-    Version = "1.5.4")]
+    Version = "1.5.4.hotfix")]
 
 namespace VSHUD
 {

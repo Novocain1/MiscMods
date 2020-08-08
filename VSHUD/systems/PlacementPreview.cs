@@ -183,9 +183,11 @@ namespace VSHUD
             { 
                 mesh = lod1;
                 mesh.IndicesMax = mesh.Indices.Count();
-                lod0.IndicesMax = lod0.Indices.Count();
-
-                if (lod0 != null && mesh != lod0) mesh.AddMeshData(lod0);
+                if (lod0 != null)
+                {
+                    lod0.IndicesMax = lod0.Indices.Count();
+                    if (mesh != lod0) mesh.AddMeshData(lod0);
+                }
             }
 
             if (toBlock.RandomizeRotations)
