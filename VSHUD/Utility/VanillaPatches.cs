@@ -11,10 +11,7 @@ namespace VSHUD
 {
     class VanillaPatches : ModSystem
     {
-        public override void StartClientSide(ICoreClientAPI api)
-        {
-            Patch();
-        }
+        public override void StartClientSide(ICoreClientAPI api) => Patch();
 
         public void Patch()
         {

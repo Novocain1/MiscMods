@@ -117,13 +117,13 @@
     <Compile Include="systems\TapeMeasure.cs" />
     <Compile Include="systems\VSHUDConfig.cs" />
     <Compile Include="systems\FloatyWaypoints.cs" />
-    <Compile Include="Utility\Patches\GuiDialogCharacterFix.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="VSHUDClientSystem.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="mods\" />
     <Folder Include="obj\" />
+    <Folder Include="Utility\Patches\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

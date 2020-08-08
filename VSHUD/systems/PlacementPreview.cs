@@ -99,6 +99,7 @@ namespace VSHUD
         VSHUDConfig config { get => capi.ModLoader.GetModSystem<FloatyWaypoints>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
+        List<Type> NonCulledTypes { get; set; }
 
         public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
 
@@ -118,6 +119,13 @@ namespace VSHUD
             ph = new PlacementPreviewHelper();
             
             itemActions[typeof(ItemStone)] = () => { itemPlacedBlock = capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")); };
+            NonCulledTypes = new List<Type>()
+            {
+                typeof(BlockFernTree),
+                typeof(BlockPlant),
+                typeof(BlockVines),
+                typeof(BlockLeaves)
+            };
         }
 
         public Block GetInvBlock() 
@@ -222,6 +230,11 @@ namespace VSHUD
                 && !player.Entity.Controls.Sneak;
         }
 
+        public bool IsNonCulled(Block block)
+        {
+            return NonCulledTypes.Contains(block.GetType()) || NonCulledTypes.Contains(block.GetType().BaseType);
+        }
+
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             var selClone = playerSelection?.Clone();
@@ -239,7 +252,9 @@ namespace VSHUD
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
-            if (toBlock is BlockPlant || toBlock is BlockVines || toBlock is BlockLeaves) rpi.GlDisableCullFace();
+            
+            if (IsNonCulled(toBlock)) rpi.GlDisableCullFace();
+
             Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);
@@ -261,6 +276,8 @@ namespace VSHUD
             
             rpi.RenderMesh(mRef);
             prog.Stop();
+
+            rpi.GlEnableCullFace();
         }
     }
 }
