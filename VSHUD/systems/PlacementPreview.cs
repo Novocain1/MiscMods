@@ -140,7 +140,7 @@ namespace VSHUD
             MeshData mesh;
             MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
             var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(toBlock.Id) ? tesselatormanager.blockModelDatasLod0[toBlock.Id] : null;
-            var lod1 = tesselatormanager.blockModelDatas[toBlock.Id];
+            var lod1 = tesselatormanager.blockModelDatas[toBlock.Id].Clone();
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
             var lod1alt = tesselatormanager.altblockModelDatasLod1[toBlock.Id];
@@ -167,14 +167,23 @@ namespace VSHUD
             else if (toBlock.HasAlternates && lod1alt != null)
             {
                 long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, lod1alt.Length);
-                mesh = lod1alt[alternateIndex];
-                var lod = lod0alt?[alternateIndex];
+                mesh = lod1alt[alternateIndex].Clone();
+                var lod = lod0alt?[alternateIndex].Clone();
 
-                if (lod != null && mesh != lod) mesh.AddMeshData(lod0alt[alternateIndex]);
+                if (lod != null && mesh != lod)
+                {
+                    mesh.IndicesMax = mesh.Indices.Count();
+                    lod.IndicesMax = lod.Indices.Count();
+
+                    mesh.AddMeshData(lod);
+                    mesh.CompactBuffers();
+                }
             }
             else
             { 
                 mesh = lod1;
+                mesh.IndicesMax = mesh.Indices.Count();
+                lod0.IndicesMax = lod0.Indices.Count();
 
                 if (lod0 != null && mesh != lod0) mesh.AddMeshData(lod0);
             }
@@ -228,7 +237,7 @@ namespace VSHUD
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
-            if (toBlock is BlockPlant || toBlock is BlockVines) rpi.GlDisableCullFace();
+            if (toBlock is BlockPlant || toBlock is BlockVines || toBlock is BlockLeaves) rpi.GlDisableCullFace();
             Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);

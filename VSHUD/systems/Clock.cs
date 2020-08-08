@@ -8,6 +8,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
 using Vintagestory.GameContent;
 
@@ -77,6 +78,10 @@ namespace VSHUD
                         break;
                     case "temporalstorminfo":
                         Config.TemporalStormInfo = args.PopBool() ?? !Config.TemporalStormInfo;
+                        break;
+                    case "offset":
+                        Config.ClockPosMod.X = args.PopFloat() ?? Config.ClockPosMod.X;
+                        Config.ClockPosMod.Y = args.PopFloat() ?? Config.ClockPosMod.Y;
                         break;
                     default:
                         break;
@@ -150,8 +155,10 @@ namespace VSHUD
                 stringBuilder.AppendLine(nowStormActive ? string.Format("Magnitude {0} Temporal Storm Ends In {1} Hours.", Math.Round(stormGlitchStrength * 10, 1), Math.Round(stormActiveDays * 24, 2)) :
                 string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2), nextStormDays > 1 ? "Days" : "Hours"));
             }
-
+            
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
+            SingleComposer.GetDynamicText("clock").Bounds.absOffsetX = Config.ClockPosMod.X;
+            SingleComposer.GetDynamicText("clock").Bounds.absOffsetY = Config.ClockPosMod.Y;
         }
 
         public override bool TryOpen()

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
@@ -18,6 +19,8 @@ namespace VSHUD
         public bool LocalTemporalStability { get; set; } = true;
         public bool PlayerTemporalStability { get; set; } = true;
         public bool TemporalStormInfo { get; set; } = true;
+
+        public Vec2f ClockPosMod { get; set; } = new Vec2f();
     }
 
     class VSHUDConfig

@@ -54,10 +54,6 @@
       <HintPath>..\..\..\Lib\csvorbis.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ENet">
-      <HintPath>..\..\..\Lib\ENet.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
@@ -121,6 +117,8 @@
     <Compile Include="systems\TapeMeasure.cs" />
     <Compile Include="systems\VSHUDConfig.cs" />
     <Compile Include="systems\FloatyWaypoints.cs" />
+    <Compile Include="Utility\Patches\GuiDialogCharacterFix.cs" />
+    <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="VSHUDClientSystem.cs" />
   </ItemGroup>
   <ItemGroup>
