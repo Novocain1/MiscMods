@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
+    <Compile Include="Utility\AStarClient.cs" />
     <Compile Include="Utility\Extensions.cs" />
     <Compile Include="Utility\ForPlacementPreview.cs" />
     <Compile Include="systems\MacroCommands.cs" />

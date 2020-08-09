@@ -10,6 +10,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
+using Vintagestory.Essentials;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -25,7 +26,7 @@ namespace VSHUD
         {
             capi = api;
             capi.RegisterCommand("measure", "Tape Measure", "[start|end|calc]", new ClientChatCommandDelegate(CmdMeasuringTape));
-            capi.RegisterCommand("shape", "Shape Ghost", "", new ClientChatCommandDelegate(CmdShape));
+            capi.RegisterCommand("shape", "Shape Ghost", "[sphere|dome|cube|path|astarpath|circle|extrude|toflatten|save|load|clear]", new ClientChatCommandDelegate(CmdShape));
         }
 
         public void CmdShape(int groupId, CmdArgs args)
@@ -34,8 +35,12 @@ namespace VSHUD
             string arg = args.PopWord();
             int radius = (int)args.PopInt(4);
             int thickness = (int)args.PopInt(1);
-            int attach = (bool)args.PopBool(false) ? radius + 1 : 0;
+            bool at = (bool)args.PopBool(false);
+            int attach = at ? radius + 1 : 0;
             
+            FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
+            BlockPos wp1Pos, wp2Pos;
+
             switch (arg)
             {
                 case "sphere":
@@ -97,12 +102,33 @@ namespace VSHUD
                     MakeHighlights(highlighted);
                     break;
                 case "path":
-                    FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
+                    
                     if (radius > wUtil.Waypoints.Count || thickness > wUtil.Waypoints.Count) break;
-                    BlockPos wp1Pos = wUtil.Waypoints[radius]?.Position?.AsBlockPos, wp2Pos = wUtil.Waypoints[thickness]?.Position?.AsBlockPos;
+                    wp1Pos = wUtil.Waypoints[radius]?.Position?.AsBlockPos.AddCopy(0, at ? -1 : 0, 0);
+                    wp2Pos = wUtil.Waypoints[thickness]?.Position?.AsBlockPos.AddCopy(0, at ? -1 : 0, 0);
+
                     if (wp1Pos != null && wp2Pos != null)
                     {
                         highlighted = new HashSet<BlockPos>(highlighted.Concat(PlotLine3d(wp1Pos, wp2Pos)));
+                    }
+                    MakeHighlights(highlighted);
+                    break;
+                case "astarpath":
+                    AStarClient aStar = new AStarClient(capi);
+
+                    if (radius > wUtil.Waypoints.Count || thickness > wUtil.Waypoints.Count) break;
+                    wp1Pos = wUtil.Waypoints[radius]?.Position?.AsBlockPos;
+                    wp2Pos = wUtil.Waypoints[thickness]?.Position?.AsBlockPos;
+
+                    if (wp1Pos != null && wp2Pos != null)
+                    {
+                        var path = aStar.FindPath(wp1Pos, wp2Pos, 2, 1.0f, new Cuboidf(new Vec3f(0, 0, 0), new Vec3f(0, 2, 0)), int.MaxValue);
+                        if (at && path != null)
+                        {
+                            foreach (var val in path) val.Down();
+                        }
+
+                        if (path != null) highlighted = new HashSet<BlockPos>(highlighted.Concat(path));
                     }
                     MakeHighlights(highlighted);
                     break;
@@ -244,7 +270,12 @@ namespace VSHUD
 
         public void MakeHighlights(HashSet<BlockPos> highlighted)
         {
-            List<int> color = new List<int>() { ColorUtil.ToRgba((int)(0.25 * 255), (int)(0.25 * 255), (int)(0.5 * 255), (int)(0.5 * 255)) };
+            List<int> color = new List<int>();
+            for (int i = 0; i < highlighted.Count; i++)
+            {
+                color.Add(ColorUtil.ToRgba((int)(0.5 * 255), (int)(0.5 * 255), (int)(0.5 * 255), (int)(0.5 * 255)));
+            }
+
             capi.World.HighlightBlocks(capi.World.Player, 514, highlighted.ToList(), color, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
         }
 

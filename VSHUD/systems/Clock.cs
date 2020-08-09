@@ -50,7 +50,7 @@ namespace VSHUD
                 return true;
             });
 
-            api.RegisterCommand("clockconfig", "Configures VSHUD Clock", "[Calendar|Season|Temperature|Rainfall|WindVelocity|LocalTemporalStability|PlayerTemporalStability|TemporalStormInfo] true/false", (id, args) => 
+            api.RegisterCommand("clockconfig", "Configures VSHUD Clock", "[Calendar|Season|Temperature|Rainfall|WindVelocity|LocalTemporalStability|PlayerTemporalStability|TemporalStormInfo] true/false [Offset] x/y", (id, args) => 
             {
                 string arg = args.PopWord().ToLowerInvariant();
                 switch (arg)
