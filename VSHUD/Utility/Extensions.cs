@@ -300,7 +300,16 @@ namespace VSHUD
             
             if (targetPos != null)
             {
-                if (block is BlockBucket)
+                if (block is BlockAnvil)
+                {
+                    double dx = entityPos.X - (targetPos.X + blockSel.HitPosition.X);
+                    double dz = entityPos.Z - (targetPos.Z + blockSel.HitPosition.Z);
+                    float angleHor = (float)Math.Atan2(dx, dz);
+
+                    float deg22dot5rad = GameMath.PIHALF / 4;
+                    return ((int)Math.Round(angleHor / deg22dot5rad)) * deg22dot5rad;
+                }
+                else if (block is BlockBucket)
                 {
                     double dx = entityPos.X - (targetPos.X + blockSel.HitPosition.X);
                     double dz = (float)entityPos.Z - (targetPos.Z + blockSel.HitPosition.Z);

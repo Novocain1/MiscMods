@@ -99,7 +99,10 @@ namespace VSHUD
         VSHUDConfig config { get => capi.ModLoader.GetModSystem<FloatyWaypoints>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
+        
         List<Type> NonCulledTypes { get; set; }
+        List<Type> IgnoredTypes { get; set; }
+        List<Type> SneakPlacedTypes { get; set; }
 
         public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
 
@@ -124,7 +127,19 @@ namespace VSHUD
                 typeof(BlockFernTree),
                 typeof(BlockPlant),
                 typeof(BlockVines),
-                typeof(BlockLeaves)
+                typeof(BlockLeaves),
+                typeof(BlockSeaweed)
+            };
+            IgnoredTypes = new List<Type>()
+            {
+                typeof(BlockMushroom)
+            };
+            SneakPlacedTypes = new List<Type>()
+            {
+                typeof(BlockBehaviorRightClickPickup),
+                typeof(BlockMeal),
+                typeof(BlockBucket),
+                typeof(ItemStone)
             };
         }
 
@@ -218,28 +233,32 @@ namespace VSHUD
             mRef?.Dispose();
         }
 
-        public bool SneakCheck
+        public bool SneakCheck { get => SneakChecked && !player.Entity.Controls.Sneak; }
+
+        public bool NonCulled { get => IsNonCulled(invBlock) || invBlock.BlockBehaviors.Any((b) => IsNonCulled(b)); }
+        public bool Ignored { get => ShouldIgnore(invBlock) || invBlock.BlockBehaviors.Any((b) => ShouldIgnore(b)); }
+        public bool SneakChecked { get => IsSneakChecked((object)invItem ?? invBlock) || invBlock.BlockBehaviors.Any((b) => IsSneakChecked(b)); }
+
+        public bool IsSneakChecked(object obj)
         {
-            get =>
-                (
-                (invBlock?.HasBehavior<BlockBehaviorRightClickPickup>() ?? false) ||
-                invBlock is BlockMeal ||
-                invBlock is BlockBucket ||
-                invItem is ItemStone
-                )
-                && !player.Entity.Controls.Sneak;
+            return SneakPlacedTypes.Contains(obj.GetType()) || SneakPlacedTypes.Contains(obj.GetType().BaseType);
         }
 
-        public bool IsNonCulled(Block block)
+        public bool IsNonCulled(object obj)
         {
-            return NonCulledTypes.Contains(block.GetType()) || NonCulledTypes.Contains(block.GetType().BaseType);
+            return NonCulledTypes.Contains(obj.GetType()) || NonCulledTypes.Contains(obj.GetType().BaseType);
+        }
+
+        public bool ShouldIgnore(object obj)
+        {
+            return capi.World.Player.WorldData.CurrentGameMode == EnumGameMode.Survival && (IgnoredTypes.Contains(obj.GetType()) || IgnoredTypes.Contains(obj.GetType().BaseType));
         }
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
             var selClone = playerSelection?.Clone();
 
-            if (selClone == null || invBlock == null || pos == null || !config.PRShow || SneakCheck) return;
+            if (selClone == null || invBlock == null || pos == null || !config.PRShow || Ignored || SneakCheck) return;
             selClone.Position = selClone.Position.GetBlock(capi).IsReplacableBy(invBlock) ? selClone.Position : selClone.Position.Offset(selClone.Face);
 
             toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, selClone);
@@ -252,8 +271,8 @@ namespace VSHUD
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
-            
-            if (IsNonCulled(toBlock)) rpi.GlDisableCullFace();
+
+            if (NonCulled) rpi.GlDisableCullFace();
 
             Vec2f offset = adjPos.GetOffset(toBlock);
 
