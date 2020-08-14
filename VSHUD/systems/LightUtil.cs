@@ -8,7 +8,6 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
-using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -48,10 +47,6 @@ namespace VSHUD
                     api.World.UnregisterGameTickListener(id);
                 }
             }, 500);
-
-            var harmony = new Harmony("ModSystem.VSHUD.LightUtil");
-            harmony.PatchAll();
-            capi.Event.LevelFinalize += () => capi.Shader.ReloadShaders();
         }
 
         public void CmdLightUtil(int groupId, CmdArgs args)
@@ -182,11 +177,5 @@ namespace VSHUD
         {
             capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, new List<BlockPos>(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes);
         }
-    }
-
-    [HarmonyPatch(typeof(ChunkRenderer), "RenderOpaque")]
-    class FastBlockHighlights
-    {
-        //NYI
     }
 }

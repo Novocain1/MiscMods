@@ -103,6 +103,8 @@
   <ItemGroup>
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
+    <Compile Include="Dialog\GuiDialogClock.cs" />
+    <Compile Include="Utility\Patches\FastBlockHighlights.cs" />
     <Compile Include="Utility\AStarClient.cs" />
     <Compile Include="Utility\Extensions.cs" />
     <Compile Include="Utility\ForPlacementPreview.cs" />
@@ -120,11 +122,11 @@
     <Compile Include="systems\FloatyWaypoints.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="VSHUDClientSystem.cs" />
+    <Compile Include="VSHUDMain.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="mods\" />
     <Folder Include="obj\" />
-    <Folder Include="Utility\Patches\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
