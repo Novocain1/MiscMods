@@ -11,6 +11,8 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
+using Vintagestory.Common;
+using OpenTK.Graphics.OpenGL;
 
 namespace VSHUD
 {
@@ -65,6 +67,65 @@ namespace VSHUD
 
             api.RegisterCommand("objworld", "", "", (p, a) =>
             {
+                {
+                    /*
+                    MeshData mesh = new MeshData(1, 1);
+                    int rad = a.PopInt() ?? 1;
+
+                    var game = api.World as ClientMain;
+                    var tess = new ChunkTesselator();
+                    tess.SetField("game", game);
+                    tess.Start();
+
+                    var worldmap = game.GetField<ClientWorldMap>("WorldMap");
+                    IBlockAccessor ba = api.World.BlockAccessor;
+
+                    BlockPos playerPos = api.World.Player.Entity.Pos.AsBlockPos;
+                    Vec3i startChunkPos = playerPos.GetChunkPos(ba);
+
+                    for (int x = -rad; x < rad; x++)
+                    {
+                        for (int y = 0; y < (ba.MapSizeY / ba.ChunkSize); y++)
+                        {
+                            for (int z = -rad; z < rad; z++)
+                            {
+                                MeshData meshPart = new MeshData(1, 1);
+                                IntRef intRef = new IntRef();
+
+                                int extChunkSize = ba.ChunkSize + 2;
+                                int[] blocks = new int[extChunkSize * extChunkSize * extChunkSize];
+                                ushort[] light = new ushort[extChunkSize * extChunkSize * extChunkSize];
+                                byte[] lightSat = new byte[extChunkSize * extChunkSize * extChunkSize];
+
+                                Vec3i chunkPos = startChunkPos.AddCopy(x, 0, z);
+                                chunkPos.Y = y;
+
+                                IWorldChunk chunk = ba.GetChunk(chunkPos.X, chunkPos.Y, chunkPos.Z);
+                                if (chunk == null) continue;
+                                chunk.Unpack();
+
+                                worldmap.GetExtendedChunk(blocks, light, lightSat, chunkPos.X, chunkPos.Y, chunkPos.Z);
+
+                                tess.BeginProcessChunk(chunkPos.X, chunkPos.Y, chunkPos.Z, chunk.Blocks, blocks, light, lightSat);
+                                TesselatedChunkPart[] tessParts = tess.NowProcessChunks(chunkPos.X, chunkPos.Y, chunkPos.Z, intRef);
+
+                                for (int i = 0; i < tessParts.Length; i++)
+                                {
+                                    if (tessParts[i] == null) continue;
+                                    meshPart.AddMeshData(tessParts[i].GetField<MeshData>("modelDataLod0").Clone());
+                                    meshPart.AddMeshData(tessParts[i].GetField<MeshData>("modelDataLod1").Clone());
+                                }
+                                meshPart.Translate(x * ba.ChunkSize, y * ba.ChunkSize, z * ba.ChunkSize);
+                                mesh.AddMeshData(meshPart);
+                            }
+                        }
+                    }
+
+
+
+                    ConvertToObj(mesh, "world", false, true);
+                    */
+                }
                 MeshData mesh = new MeshData(1, 1);
                 BlockPos playerPos = api.World.Player.Entity.Pos.AsBlockPos;
                 int rad = (int)a.PopInt(16);

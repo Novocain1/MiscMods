@@ -353,28 +353,44 @@ namespace VSHUD
         {
             MeshData thismesh;
             ShapeTesselatorManager tesselatormanager = api.TesselatorManager as ShapeTesselatorManager;
+            var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(block.Id) ? tesselatormanager.blockModelDatasLod0[block.Id] : null;
+            var lod1 = tesselatormanager.blockModelDatas[block.Id].Clone();
 
-            if (block.HasAlternates)
+            var lod0alt = tesselatormanager.altblockModelDatasLod0[block.Id];
+            var lod1alt = tesselatormanager.altblockModelDatasLod1[block.Id];
+
+            if (block.HasAlternates && lod1alt != null)
             {
-                long alternateIndex = block.RandomizeAxes == EnumRandomizeAxes.XYZ ?
-                    GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, tesselatormanager.altblockModelDatasLod0[block.Id].Length) : GameMath.MurmurHash3Mod(bpos.X, 0, bpos.Z, tesselatormanager.altblockModelDatasLod0[block.Id].Length);
-                thismesh = tesselatormanager.altblockModelDatasLod1[block.Id][alternateIndex];
+                long alternateIndex = block.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(bpos.X, 0, bpos.Z, lod1alt.Length);
+                thismesh = lod1alt[alternateIndex].Clone();
+                var lod = lod0alt?[alternateIndex].Clone();
+
+                if (lod != null && thismesh != lod)
+                {
+                    thismesh.IndicesMax = thismesh.Indices.Count();
+                    lod.IndicesMax = lod.Indices.Count();
+
+                    thismesh.AddMeshData(lod);
+                    thismesh.CompactBuffers();
+                }
             }
-            else thismesh = tesselatormanager.blockModelDatas[block.Id];
+            else
+            {
+                thismesh = lod1;
+                thismesh.IndicesMax = thismesh.Indices.Count();
+                if (lod0 != null)
+                {
+                    lod0.IndicesMax = lod0.Indices.Count();
+                    if (thismesh != lod0) thismesh.AddMeshData(lod0);
+                }
+            }
 
             if (block.RandomizeRotations)
             {
-                if (block.BlockMaterial == EnumBlockMaterial.Leaves)
-                {
-                    int index = GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, JsonTesselator.randomRotations.Length);
-                    thismesh = thismesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
-                }
-                else
-                {
-                    int index = GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, JsonTesselator.randomRotations.Length);
-                    thismesh = thismesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
-                }
+                int index = GameMath.MurmurHash3Mod(bpos.X, bpos.Y, bpos.Z, JsonTesselator.randomRotations.Length);
+                thismesh = thismesh.Clone().MatrixTransform(JsonTesselator.randomRotMatrices[index]);
             }
+
             return thismesh.Clone();
         }
 
@@ -392,6 +408,11 @@ namespace VSHUD
             if (number.EndsWith("3")) return number + "rd";
             return number + "th";
         }
+
+        public static Vec3i GetChunkPos(this BlockPos pos, IBlockAccessor ba)
+        {
+            return pos.DivCopy(ba.ChunkSize).ToVec3i();
+        }
     }
 
     public static class HackMan
@@ -399,5 +420,6 @@ namespace VSHUD
         public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
         public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
         public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
+        public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
     }
 }
