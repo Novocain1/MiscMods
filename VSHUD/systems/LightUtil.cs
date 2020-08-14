@@ -15,7 +15,6 @@ namespace VSHUD
     class LightUtil : VSHUDClientSystem
     {
         ICoreClientAPI capi;
-        long id;
         VSHUDConfig config;
         ConfigLoader configLoader;
 
@@ -25,28 +24,20 @@ namespace VSHUD
             configLoader = capi.ModLoader.GetModSystem<ConfigLoader>();
             config = configLoader.Config;
             capi.RegisterCommand("lightutil", "Light Util", "[lightlevel|type|radius|alpha|red]", new ClientChatCommandDelegate(CmdLightUtil));
-
-            id = api.World.RegisterGameTickListener(dt =>
+            
+            capi.Event.LevelFinalize += () =>
             {
-                EntityPlayer player = api.World.Player.Entity;
-
-                if (player != null)
+                capi.World.RegisterGameTickListener(d =>
                 {
-                    api.World.RegisterGameTickListener(d =>
-                    {
-                        if (config.LightLevels)
-                        {
-                            LightHighlight(null, config.LightLevelType);
-                        }
-                        else
-                        {
-                            ClearLightLevelHighlights();
-                        }
-                    }, 100);
+                    if (config.LightLevels) LightHighlight(null, config.LightLevelType);
+                    else ClearLightLevelHighlights();
+                }, 100);
 
-                    api.World.UnregisterGameTickListener(id);
-                }
-            }, 500);
+                capi.Event.BlockChanged += (a, b) => 
+                {
+                    if (config.LightLevels) LightHighlight(null, config.LightLevelType);
+                };
+            };
         }
 
         public void CmdLightUtil(int groupId, CmdArgs args)
