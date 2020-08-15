@@ -115,7 +115,7 @@
     <Compile Include="Utility\ColorStuff.cs" />
     <Compile Include="Dialog\HudElementWaypoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="systems\LightUtil.cs" />
+    <Compile Include="systems\LightUtilModSystem.cs" />
     <Compile Include="Dialog\GuiDialogWaypointFrontEnd.cs" />
     <Compile Include="systems\TapeMeasure.cs" />
     <Compile Include="systems\VSHUDConfig.cs" />

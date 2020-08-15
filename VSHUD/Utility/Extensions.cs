@@ -413,6 +413,11 @@ namespace VSHUD
         {
             return pos.DivCopy(ba.ChunkSize).ToVec3i();
         }
+
+        public static bool InsideRadius(this int rad, int x, int y, int z)
+        {
+            return (x * x + y * y + z * z) <= (rad * rad);
+        }
     }
 
     public static class HackMan
@@ -420,6 +425,10 @@ namespace VSHUD
         public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
         public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
         public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
+        public static void CallMethod(this object instance, string method, params object[] args) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, args);
+        public static void CallMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, null);
+
         public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
+        public static MethodInfo GetMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method);
     }
 }
