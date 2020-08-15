@@ -134,13 +134,11 @@ namespace VSHUD
 
     class LightUtilSystem : ClientSystem
     {
-        ClientMain game;
         ICoreClientAPI capi;
         VSHUDConfig config;
 
         public LightUtilSystem(ClientMain game, VSHUDConfig config) : base(game)
         {
-            this.game = game;
             this.config = config;
             capi = (ICoreClientAPI)game.Api;
         }
