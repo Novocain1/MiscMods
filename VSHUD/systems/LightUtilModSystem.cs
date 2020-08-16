@@ -145,7 +145,7 @@ namespace VSHUD
 
         public override string Name => "LightUtil";
 
-        public override _4xGtS0JBVusWznK2GHUn2RuV09G GetSystemType() => _4xGtS0JBVusWznK2GHUn2RuV09G.Misc;
+        public override _7HAVGma8EtvgCmuBjSCznILJUCD GetSystemType() => _7HAVGma8EtvgCmuBjSCznILJUCD.Misc;
 
         public override void OnSeperateThreadGameTick(float dt)
         {
