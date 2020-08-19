@@ -32,7 +32,7 @@ namespace VSHUD
             
             capi.Event.LevelFinalize += () =>
             {
-                LightUtilThread thread = new LightUtilThread(capi, config);                
+                LightUtilThread thread = new LightUtilThread(capi, config);              
             };
         }
 
@@ -147,19 +147,17 @@ namespace VSHUD
 
         public override _WInHoPdqEmbfcVp6E75E2iH1nIe GetSystemType() => _WInHoPdqEmbfcVp6E75E2iH1nIe.Misc;
 
-        public override void OnSeperateThreadGameTick(float dt)
-        {
-            if (config.LightLevels) LightHighlight(null, config.LightLevelType);
-            else ClearLightLevelHighlights();
-        }
+        public override void OnSeperateThreadGameTick(float dt) => LightHighlight();
 
         ConcurrentDictionary<BlockPos, int> colors = new ConcurrentDictionary<BlockPos, int>();
         ConcurrentQueue<BlockPos> emptyList = new ConcurrentQueue<BlockPos>();
 
-        public void LightHighlight(BlockPos pos = null, EnumLightLevelType type = EnumLightLevelType.OnlyBlockLight)
+        public void LightHighlight(BlockPos pos = null)
         {
             try 
             {
+                if (!config.LightLevels) return;
+
                 colors.Clear();
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
@@ -172,7 +170,7 @@ namespace VSHUD
                     BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(iPos) as BlockEntityFarmland;
 
                     BlockPos cPos = blockEntityFarmland == null && config.LUShowAbove ? iPos.UpCopy() : iPos;
-                    int level = capi.World.BlockAccessor.GetLightLevel(cPos, type);
+                    int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
 
                     bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(iPos.UpCopy()).IsReplacableBy(block) : true;
                     bool opq = config.LUOpaque ? blockEntityFarmland != null || block.AllSidesOpaque : true;
