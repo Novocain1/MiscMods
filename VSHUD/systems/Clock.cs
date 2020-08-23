@@ -14,6 +14,7 @@ namespace VSHUD
 
         ConfigLoader ConfigLoader { get => capi.ModLoader.GetModSystem<ConfigLoader>(); }
         ClockShowConfig Config { get => ConfigLoader.Config.ClockShowConfig; }
+        const string syntax = "[Calendar|Season|Temperature|Rainfall|WindVelocity|LocalTemporalStability|PlayerTemporalStability|TemporalStormInfo] true/false [Offset] x/y";
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -42,10 +43,10 @@ namespace VSHUD
                 clock.Toggle();
                 return true;
             });
-
-            api.RegisterCommand("clockconfig", "Configures VSHUD Clock", "[Calendar|Season|Temperature|Rainfall|WindVelocity|LocalTemporalStability|PlayerTemporalStability|TemporalStormInfo] true/false [Offset] x/y", (id, args) => 
+            
+            api.RegisterCommand("clockconfig", "Configures VSHUD Clock", syntax, (id, args) => 
             {
-                string arg = args.PopWord().ToLowerInvariant();
+                string arg = args.PopWord()?.ToLowerInvariant();
                 switch (arg)
                 {
                     case "calendar":
@@ -77,6 +78,7 @@ namespace VSHUD
                         Config.ClockPosMod.Y = args.PopFloat() ?? Config.ClockPosMod.Y;
                         break;
                     default:
+                        api.ShowChatMessage("Syntax: " + syntax);
                         break;
                 }
                 ConfigLoader.SaveConfig();
