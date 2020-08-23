@@ -156,7 +156,11 @@ namespace VSHUD
         {
             try 
             {
-                if (!config.LightLevels) return;
+                if (!config.LightLevels)
+                {
+                    ClearLightLevelHighlights();
+                    return;
+                }
 
                 colors.Clear();
 
