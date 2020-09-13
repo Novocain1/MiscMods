@@ -46,6 +46,7 @@ namespace VSHUD
         public bool LUShowAbove { get; set; } = true;
         public bool LUSpawning { get; set; } = true;
         public bool LUOpaque { get; set; } = true;
+        public bool CreateChunkObjs { get; set; } = false;
 
         public bool PRShow { get; set; } = true;
         public bool PRTint { get; set; } = false;
@@ -67,6 +68,11 @@ namespace VSHUD
         {
             capi = api;
             LoadConfig();
+            ChunkObjCreator.Seed = api.World.Seed;
+            var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
+            ChunkObjCreator.SpawnPos = spawnChunk;
+
+            ChunkObjCreator.Process = Config.CreateChunkObjs;
         }
 
         public void LoadConfig()
