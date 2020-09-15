@@ -48,8 +48,8 @@ namespace VSHUD
                 mesh0.CompactBuffers();
                 mesh1.CompactBuffers();
 
-                Export(mesh0, chunkX, chunkY, chunkZ, cPass, 0);
-                Export(mesh1, chunkX, chunkY, chunkZ, cPass, 1);
+                if (mesh0.VerticesCount > 0) Export(mesh0, chunkX, chunkY, chunkZ, cPass, 0);
+                if (mesh1.VerticesCount > 0) Export(mesh1, chunkX, chunkY, chunkZ, cPass, 1);
 
                 i++;
             }
