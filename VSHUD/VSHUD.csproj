@@ -101,10 +101,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="systems\Threads\LightUtilThread.cs" />
+    <Compile Include="systems\Threads\ObjExportThread.cs" />
+    <Compile Include="Utility\Patches\ChunkObjCreator.cs" />
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClock.cs" />
-    <Compile Include="Utility\Patches\FastBlockHighlights.cs" />
     <Compile Include="Utility\AStarClient.cs" />
     <Compile Include="Utility\Extensions.cs" />
     <Compile Include="Utility\ForPlacementPreview.cs" />
