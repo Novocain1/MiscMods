@@ -1,9 +1,11 @@
 ﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -430,5 +432,39 @@ namespace VSHUD
 
         public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
         public static MethodInfo GetMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method);
+    }
+
+    static class ThreadStuff
+    {
+        static Type threadType;
+
+        static ThreadStuff()
+        {
+            var ts = AccessTools.GetTypesFromAssembly(Assembly.GetAssembly(typeof(ClientMain)));
+            threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
+        }
+
+        public static void InjectClientThread(this ICoreClientAPI capi, string name, params ClientSystem[] systems)
+        {
+            object instance;
+            Thread thread;
+
+            instance = AccessTools.CreateInstance(threadType);
+            instance.SetField("game", capi.World as ClientMain);
+            instance.SetField("threadName", name);
+            instance.SetField("clientsystems", systems);
+            instance.SetField("lastFramePassedTime", new Stopwatch());
+            instance.SetField("totalPassedTime", new Stopwatch());
+            instance.SetField("paused", false);
+            instance.SetField("sleepMs", 1000);
+
+            List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
+
+            thread = new Thread(() => instance.CallMethod("Process"));
+            thread.IsBackground = true;
+            thread.Start();
+            thread.Name = name;
+            clientThreads.Add(thread);
+        }
     }
 }

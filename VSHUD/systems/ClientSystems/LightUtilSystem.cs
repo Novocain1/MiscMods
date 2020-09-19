@@ -15,39 +15,6 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class LightUtilThread
-    {
-        public object instance;
-        Thread thread;
-
-        public LightUtilThread(ICoreClientAPI capi, VSHUDConfig config)
-        {
-            var ts = AccessTools.GetTypesFromAssembly(Assembly.GetAssembly(typeof(ClientMain)));
-            Type threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
-            instance = AccessTools.CreateInstance(threadType);
-            instance.SetField("game", capi.World as ClientMain);
-            instance.SetField("threadName", "lightutil");
-            instance.SetField("clientsystems", new ClientSystem[] { new LightUtilSystem(capi.World as ClientMain, config) });
-            instance.SetField("lastFramePassedTime", new Stopwatch());
-            instance.SetField("totalPassedTime", new Stopwatch());
-            instance.SetField("paused", false);
-            instance.SetField("sleepMs", 100);
-
-            List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
-
-            thread = new Thread(Process);
-            thread.IsBackground = true;
-            thread.Start();
-            thread.Name = "lightutil";
-            clientThreads.Add(thread);
-        }
-
-        public void Process()
-        {
-            instance.CallMethod("Process");
-        }
-    }
-
     class LightUtilSystem : ClientSystem
     {
         ICoreClientAPI capi;

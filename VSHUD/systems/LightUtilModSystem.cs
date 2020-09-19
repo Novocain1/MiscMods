@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
@@ -21,7 +22,7 @@ namespace VSHUD
             
             capi.Event.LevelFinalize += () =>
             {
-                LightUtilThread thread = new LightUtilThread(capi, config);              
+                capi.InjectClientThread("LightUtil", new LightUtilSystem(api.World as ClientMain, config));
             };
         }
 

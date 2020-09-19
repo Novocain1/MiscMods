@@ -101,8 +101,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="systems\Threads\LightUtilThread.cs" />
-    <Compile Include="systems\Threads\ObjExportThread.cs" />
+    <Compile Include="systems\ClientSystems\LightUtilSystem.cs" />
+    <Compile Include="systems\ClientSystems\ObjExportSystem.cs" />
     <Compile Include="Utility\Patches\ChunkObjCreator.cs" />
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />

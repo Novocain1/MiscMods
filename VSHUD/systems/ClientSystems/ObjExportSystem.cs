@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Common;
 
 namespace VSHUD
 {
@@ -35,49 +36,11 @@ namespace VSHUD
         }
     }
 
-    class ObjExportThread
-    {
-        public object instance;
-        Thread thread;
-
-        public ObjExportThread(ICoreClientAPI capi)
-        {
-            var ts = AccessTools.GetTypesFromAssembly(Assembly.GetAssembly(typeof(ClientMain)));
-            Type threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
-            instance = AccessTools.CreateInstance(threadType);
-            instance.SetField("game", capi.World as ClientMain);
-            instance.SetField("threadName", "objexport");
-            instance.SetField("clientsystems", new ClientSystem[] { new ObjExportSystem(capi.World as ClientMain) });
-            instance.SetField("lastFramePassedTime", new Stopwatch());
-            instance.SetField("totalPassedTime", new Stopwatch());
-            instance.SetField("paused", false);
-            instance.SetField("sleepMs", 1000);
-
-            List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
-
-            thread = new Thread(Process);
-            thread.IsBackground = true;
-            thread.Start();
-            thread.Name = "objexport";
-            clientThreads.Add(thread);
-        }
-
-        public void Process()
-        {
-            instance.CallMethod("Process");
-        }
-    }
-
     class ObjExportSystem : ClientSystem
     {
-        ClientMain game;
-
         public static Queue<QueuedObj> queuedObjs = new Queue<QueuedObj>();
 
-        public ObjExportSystem(ClientMain game) : base(game)
-        {
-            this.game = game;
-        }
+        public ObjExportSystem(ClientMain game) : base(game) {}
 
         public override string Name => "ObjExport";
 
