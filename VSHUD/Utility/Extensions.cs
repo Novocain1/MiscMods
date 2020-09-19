@@ -444,7 +444,7 @@ namespace VSHUD
             threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
         }
 
-        public static void InjectClientThread(this ICoreClientAPI capi, string name, params ClientSystem[] systems)
+        public static void InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems)
         {
             object instance;
             Thread thread;
@@ -456,7 +456,7 @@ namespace VSHUD
             instance.SetField("lastFramePassedTime", new Stopwatch());
             instance.SetField("totalPassedTime", new Stopwatch());
             instance.SetField("paused", false);
-            instance.SetField("sleepMs", 1000);
+            instance.SetField("sleepMs", ms);
 
             List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
 
