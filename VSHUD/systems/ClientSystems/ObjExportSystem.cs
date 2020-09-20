@@ -18,31 +18,14 @@ namespace VSHUD
     class QueuedObj
     {
         public MeshData Mesh;
-        public int ChunkX;
-        public int ChunkY;
-        public int ChunkZ;
-        public EnumChunkRenderPass Pass;
-        public int Lod;
-        public int Seed;
         public string FilePath;
         public string FileName;
 
-        public QueuedObj(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod, int seed)
+        public QueuedObj(MeshData mesh, string filePath, string fileName)
         {
             Mesh = mesh.Clone();
-            ChunkX = chunkX;
-            ChunkY = chunkY;
-            ChunkZ = chunkZ;
-            Pass = pass;
-            Lod = lod;
-            Seed = seed;
-
-            FileName = string.Format("{0} {1} {2} {3} lod{4}", chunkX, chunkY, chunkZ, pass, lod);
-
-            FilePath = Path.Combine(GamePaths.Binaries, "worldparts");
-            FilePath = Path.Combine(FilePath, seed.ToString());
-            Directory.CreateDirectory(FilePath);
-            FilePath = Path.Combine(FilePath, FileName + ".obj");
+            FilePath = filePath;
+            FileName = fileName;
         }
 
         public void Export()
@@ -87,7 +70,7 @@ namespace VSHUD
                     }
 
                     tw.WriteLine();
-                    tw.Write("usemtl BlockTextureAtlas");
+                    tw.Write("usemtl TextureAtlas");
 
                     for (int i = 0; i < Mesh.Indices.Length / 3; i++)
                     {

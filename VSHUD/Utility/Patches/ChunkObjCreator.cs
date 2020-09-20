@@ -2,6 +2,8 @@
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using HarmonyLib;
+using System.IO;
+using Vintagestory.API.Config;
 
 namespace VSHUD
 {
@@ -13,9 +15,15 @@ namespace VSHUD
         public static int Seed = 0;
         public static Vec3i SpawnPos;
 
-        public static void AddToQueue(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass part, int lod)
+        public static void AddToQueue(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod)
         {
-            ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, chunkX, chunkY, chunkZ, part, lod, Seed));
+            string fileName = string.Format("{0} {1} {2} {3} lod{4}", chunkX, chunkY, chunkZ, pass, lod);
+            string filePath = Path.Combine(GamePaths.Binaries, "worldparts");
+            filePath = Path.Combine(filePath, Seed.ToString());
+            Directory.CreateDirectory(filePath);
+            filePath = Path.Combine(filePath, fileName + ".obj");
+
+            ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, filePath, fileName));
         }
         
         public static void Postfix(int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)
