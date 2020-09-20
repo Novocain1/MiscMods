@@ -81,7 +81,7 @@ namespace VSHUD
                     mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
                 }
 
-                capi.InjectClientThread("LightUtil", 1000, new ObjExportSystem(api.World as ClientMain));
+                capi.InjectClientThread("ObjExport", 1000, new ObjExportSystem(api.World as ClientMain));
             };
         }
     }
