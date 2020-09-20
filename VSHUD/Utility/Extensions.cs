@@ -429,6 +429,7 @@ namespace VSHUD
         public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
         public static void CallMethod(this object instance, string method, params object[] args) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, args);
         public static void CallMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, null);
+        public static object CreateInstance(this Type type) => AccessTools.CreateInstance(type);
 
         public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
         public static MethodInfo GetMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method);
@@ -449,7 +450,7 @@ namespace VSHUD
             object instance;
             Thread thread;
 
-            instance = AccessTools.CreateInstance(threadType);
+            instance = threadType.CreateInstance();
             instance.SetField("game", capi.World as ClientMain);
             instance.SetField("threadName", name);
             instance.SetField("clientsystems", systems);
