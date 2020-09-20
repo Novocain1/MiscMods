@@ -15,7 +15,7 @@ namespace VSHUD
 
         public static void AddToQueue(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass part, int lod)
         {
-            ObjExportSystem.queuedObjs.Enqueue(new QueuedObj(mesh, chunkX, chunkY, chunkZ, part, lod, Seed));
+            ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, chunkX, chunkY, chunkZ, part, lod, Seed));
         }
         
         public static void Postfix(int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)
