@@ -85,16 +85,4 @@ namespace VSHUD
             };
         }
     }
-
-    public class Mat22X : Mat22
-    {
-        public static float[] Translate(float[] output, float[] a, float[] v)
-        {
-            output[0] = a[0] + v[0];
-            output[1] = a[1] + v[1];
-            output[2] = a[2] + v[0];
-            output[3] = a[3] + v[1];
-            return output;
-        }
-    }
 }

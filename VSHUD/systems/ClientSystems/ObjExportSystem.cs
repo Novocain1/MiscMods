@@ -40,19 +40,6 @@ namespace VSHUD
                 {
                     tw.Write("o " + FileName);
 
-                    for (int i = 0; i < Mesh.Uv.Length / 4; i++)
-                    {
-                        if (i + 4 > Mesh.UvCount) continue;
-                        float[] transform = new float[] { Mesh.Uv[i * 4 + 0], Mesh.Uv[i * 4 + 1], Mesh.Uv[i * 4 + 2], Mesh.Uv[i * 4 + 3] };
-
-                        Mat22.Scale(transform, transform, new float[] { 1.0f, -1.0f });
-                        Mat22X.Translate(transform, transform, new float[] { 0.0f, 1.0f });
-                        Mesh.Uv[i * 4 + 0] = transform[0];
-                        Mesh.Uv[i * 4 + 1] = transform[1];
-                        Mesh.Uv[i * 4 + 2] = transform[2];
-                        Mesh.Uv[i * 4 + 3] = transform[3];
-                    }
-
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
                         tw.WriteLine();
