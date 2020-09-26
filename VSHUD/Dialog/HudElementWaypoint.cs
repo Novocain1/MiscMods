@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -15,13 +13,12 @@ namespace VSHUD
     {
         public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : absolutePos; }
         public Vec3d absolutePos;
-
+        public long id;
         public string DialogTitle;
         public string dialogText = "";
         public double distance = 0;
         public int waypointID;
-        public long id;
-        VSHUDConfig config;
+        public VSHUDConfig config;
         public WaypointRelative waypoint;
         FloatyWaypoints system { get => capi.ModLoader.GetModSystem<FloatyWaypoints>(); }
         public override bool Focused => false;
@@ -78,31 +75,15 @@ namespace VSHUD
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            UpdateDialog();
-            RegisterDialogUpdate();
+            WaypointTextUpdateSystem.TextTasks.Push(this);
         }
 
         public void RegisterDialogUpdate()
         {
-            id = capi.Event.RegisterGameTickListener(dt => UpdateDialog(), 500 + capi.World.Rand.Next(0, 64));
-        }
-
-        public void UpdateDialog()
-        {
-            if (!IsOpened() || waypoint.OwnWaypoint == null) return;
-
-            UpdateTitle();
-            distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
-            bool km = distance >= 1000;
-
-            dialogText = DialogTitle.UcFirst() + " " + (km ? Math.Round(distance / 1000, 3) : distance) + (km ? "km" : "m");
-        }
-
-        public void UpdateTitle()
-        {
-            string wp = config.WaypointPrefix ? "Waypoint: " : "";
-            wp = config.WaypointID ? wp + "ID: " + waypointID + " | " : wp;
-            DialogTitle = waypoint.OwnWaypoint.Title != null ? wp + waypoint.OwnWaypoint.Title : "Waypoint: ";
+            id = capi.Event.RegisterGameTickListener(dt =>
+            {
+                WaypointTextUpdateSystem.TextTasks.Push(this);
+            }, 30);
         }
 
         protected virtual double FloatyDialogPosition => 0.75;
@@ -115,6 +96,8 @@ namespace VSHUD
         public override void OnRenderGUI(float deltaTime)
         {
             if (!IsOpened() || waypoint.OwnWaypoint == null) return;
+            var dynText = SingleComposer.GetDynamicText("text");
+
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
             VSHUDConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
@@ -136,7 +119,7 @@ namespace VSHUD
 
             if (pos.Z < 0 || (distance > config.DotRange && (!dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)))
             {
-                SingleComposer.GetDynamicText("text").SetNewText("");
+                dynText.SetNewText("");
                 SingleComposer.Dispose();
                 return;
             }
@@ -153,10 +136,8 @@ namespace VSHUD
 
             isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !system.WaypointElements.Any(ui => ui.isAligned && ui != this);
 
-            if (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned) SingleComposer.GetDynamicText("text").SetNewText(dialogText);
-            else SingleComposer.GetDynamicText("text").SetNewText("");
-
-            if (isClamped) SingleComposer.GetDynamicText("text").SetNewText("");
+            if (!isClamped && (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)) dynText.SetNewText(dialogText);
+            else dynText.SetNewText("");
 
             if (texturesByIcon != null)
             {

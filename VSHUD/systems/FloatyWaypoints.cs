@@ -121,7 +121,7 @@ namespace VSHUD
                         if (Config.DebugDeathWaypoints) capi.ShowChatMessage("DEBUG: Sent Command: " + str);
                     }
                 });
-
+                capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
                 RepopulateDialogs();
                 capi.Event.RegisterCallback(dt => Update(), 100);
             };

@@ -101,6 +101,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="systems\ClientSystems\WaypointTextUpdateSystem.cs" />
     <Compile Include="systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="systems\ClientSystems\ObjExportSystem.cs" />
     <Compile Include="Utility\Patches\ChunkObjCreator.cs" />
