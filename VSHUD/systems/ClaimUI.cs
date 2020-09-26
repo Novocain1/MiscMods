@@ -10,7 +10,7 @@ using Vintagestory.Common;
 
 namespace VSHUD
 {
-    class ClaimUI : VSHUDClientSystem
+    class ClaimUI : ClientModSystem
     {
         private long id;
 

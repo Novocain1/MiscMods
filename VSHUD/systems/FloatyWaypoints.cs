@@ -21,7 +21,7 @@ using System.Globalization;
 
 namespace VSHUD
 {
-    class FloatyWaypoints : VSHUDClientSystem
+    class FloatyWaypoints : ClientModSystem
     {
         ICoreClientAPI capi;
         public ConfigLoader cL;

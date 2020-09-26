@@ -10,7 +10,7 @@ using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
-    class MacroCommands : VSHUDClientSystem
+    class MacroCommands : ClientModSystem
     {
         public override void StartClientSide(ICoreClientAPI api)
         {

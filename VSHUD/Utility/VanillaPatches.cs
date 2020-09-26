@@ -9,7 +9,7 @@ using Vintagestory.API.Common;
 
 namespace VSHUD
 {
-    class VanillaPatches : VSHUDClientSystem
+    class VanillaPatches : ClientModSystem
     {
         public override void StartClientSide(ICoreClientAPI api) => Patch();
 

@@ -7,7 +7,7 @@ using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
-    class ClockDialogSystem : VSHUDClientSystem
+    class ClockDialogSystem : ClientModSystem
     {
         private long id;
         ICoreClientAPI capi;

@@ -7,7 +7,7 @@ using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
-    class LightUtilModSystem : VSHUDClientSystem
+    class LightUtilModSystem : ClientModSystem
     {
         ICoreClientAPI capi;
         VSHUDConfig config;

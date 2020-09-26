@@ -9,7 +9,7 @@ using Vintagestory.API.Common;
 
 namespace VSHUD
 {
-    class VSHUDMain : VSHUDClientSystem
+    class VSHUDMain : ClientModSystem
     {
         public override void StartClientSide(ICoreClientAPI api)
         {

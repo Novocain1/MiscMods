@@ -15,7 +15,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace VSHUD
 {
-    class MeshTools : VSHUDClientSystem
+    class MeshTools : ClientModSystem
     {
         ICoreClientAPI capi;
         public override void StartClientSide(ICoreClientAPI api)

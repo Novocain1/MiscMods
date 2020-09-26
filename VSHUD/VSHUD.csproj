@@ -124,7 +124,7 @@
     <Compile Include="systems\VSHUDConfig.cs" />
     <Compile Include="systems\FloatyWaypoints.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
-    <Compile Include="VSHUDClientSystem.cs" />
+    <Compile Include="ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />
   </ItemGroup>
   <ItemGroup>

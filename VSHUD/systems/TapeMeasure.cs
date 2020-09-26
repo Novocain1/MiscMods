@@ -15,7 +15,7 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class TapeMeasure : VSHUDClientSystem
+    class TapeMeasure : ClientModSystem
     {
         ICoreClientAPI capi;
         BlockPos start = new BlockPos(0, 0, 0);

@@ -15,7 +15,7 @@ using Vintagestory.API.Datastructures;
 
 namespace VSHUD
 {
-    class PlacementPreview : VSHUDClientSystem
+    class PlacementPreview : ClientModSystem
     {
         PlacementRenderer renderer;
         public override void StartClientSide(ICoreClientAPI api)

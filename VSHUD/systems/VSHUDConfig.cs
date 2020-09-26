@@ -58,7 +58,7 @@ namespace VSHUD
         public List<int> DisabledColors { get; set; } = new List<int>();
     }
 
-    class ConfigLoader : VSHUDClientSystem
+    class ConfigLoader : ClientModSystem
     {
         ICoreClientAPI capi;
         public VSHUDConfig Config { get; set; } = new VSHUDConfig();
