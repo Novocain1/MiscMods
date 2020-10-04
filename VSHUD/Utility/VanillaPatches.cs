@@ -11,12 +11,17 @@ namespace VSHUD
 {
     class VanillaPatches : ClientModSystem
     {
-        public override void StartClientSide(ICoreClientAPI api) => Patch();
+        public const string patchCode = "Novocain.ModSystem.VanillaPatches";
+        public Harmony harmonyInstance = new Harmony(patchCode);
 
-        public void Patch()
+        public override void StartClientSide(ICoreClientAPI api) 
         {
-            var Harmony = new Harmony("ModSystem.VanillaPatches");
-            Harmony.PatchAll();
+            harmonyInstance.PatchAll();
+        }
+
+        public override void Dispose()
+        {
+            harmonyInstance.UnpatchAll(patchCode);   
         }
     }
 }
