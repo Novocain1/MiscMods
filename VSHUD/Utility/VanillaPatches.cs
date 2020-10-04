@@ -14,14 +14,14 @@ namespace VSHUD
         public const string patchCode = "Novocain.ModSystem.VanillaPatches";
         public Harmony harmonyInstance = new Harmony(patchCode);
 
-        public override void StartClientSide(ICoreClientAPI api) 
+        public override void StartClientSide(ICoreClientAPI api)
         {
             harmonyInstance.PatchAll();
         }
 
         public override void Dispose()
         {
-            harmonyInstance.UnpatchAll(patchCode);   
+            harmonyInstance.UnpatchAll(patchCode);
         }
     }
 }
