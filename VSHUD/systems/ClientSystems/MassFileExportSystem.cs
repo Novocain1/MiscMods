@@ -108,9 +108,9 @@ namespace VSHUD
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
-        public override void OnSeperateThreadGameTick(float dt) => ExportEnqueuedObjs();
+        public override void OnSeperateThreadGameTick(float dt) => ProcessStackedExportables();
 
-        public void ExportEnqueuedObjs()
+        public void ProcessStackedExportables()
         {
             for (int i = 0; i < toExport.Count; i++)
             {
