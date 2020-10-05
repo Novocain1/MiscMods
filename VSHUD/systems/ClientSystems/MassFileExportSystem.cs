@@ -23,12 +23,20 @@ namespace VSHUD
         void Export();
     }
 
-    class PreparedMesh : IExportable
+    abstract class Exportable : IExportable
+    {
+        public abstract bool Enabled { get; set; }
+        public abstract string FilePath { get; set; }
+        public abstract string FileName { get; set; }
+        public abstract void Export();
+    }
+
+    class PreparedMesh : Exportable
     {
         public MeshData Mesh;
-        public bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
-        public string FilePath { get; set; }
-        public string FileName { get; set; }
+        public override bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
+        public override string FilePath { get; set; }
+        public override string FileName { get; set; }
 
         public PreparedMesh(MeshData mesh, string filePath, string fileName)
         {
@@ -37,7 +45,7 @@ namespace VSHUD
             FileName = fileName;
         }
 
-        public void Export() => ExportAsObj();
+        public override void Export() => ExportAsObj();
 
         public void ExportAsObj()
         {
@@ -100,7 +108,7 @@ namespace VSHUD
 
     class MassFileExportSystem : ClientSystem
     {
-        public static ConcurrentStack<IExportable> toExport = new ConcurrentStack<IExportable>();
+        public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
         public MassFileExportSystem(ClientMain game) : base(game) {}
 
@@ -114,7 +122,7 @@ namespace VSHUD
         {
             for (int i = 0; i < toExport.Count; i++)
             {
-                bool success = toExport.TryPop(out IExportable exportable) && exportable.Enabled;
+                bool success = toExport.TryPop(out Exportable exportable) && exportable.Enabled;
                 if (success) exportable.Export();
             }
         }
