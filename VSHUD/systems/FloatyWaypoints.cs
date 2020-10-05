@@ -24,7 +24,6 @@ namespace VSHUD
     class FloatyWaypoints : ClientModSystem
     {
         ICoreClientAPI capi;
-        public ConfigLoader cL;
         public VSHUDConfig Config;
         public WaypointMapLayer WPLayer { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
 
@@ -90,8 +89,7 @@ namespace VSHUD
             PopulateTextures();
             HudElementWaypoint.quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
 
-            cL = capi.ModLoader.GetModSystem<ConfigLoader>();
-            Config = cL.Config;
+            Config = ConfigLoader.Config;
 
             GuiDialogWaypointFrontEnd frontEnd = new GuiDialogWaypointFrontEnd(capi);
 
@@ -283,7 +281,7 @@ namespace VSHUD
                     capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export]"));
                     break;
             }
-            cL.SaveConfig();
+            ConfigLoader.SaveConfig(capi);
         }
 
         

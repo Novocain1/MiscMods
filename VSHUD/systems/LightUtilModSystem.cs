@@ -17,7 +17,7 @@ namespace VSHUD
         {
             capi = api;
             configLoader = capi.ModLoader.GetModSystem<ConfigLoader>();
-            config = configLoader.Config;
+            config = ConfigLoader.Config;
             capi.RegisterCommand("lightutil", "Light Util", "[lightlevel|type|radius|alpha|red]", new ClientChatCommandDelegate(CmdLightUtil));
             
             capi.Event.LevelFinalize += () =>

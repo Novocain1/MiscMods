@@ -100,7 +100,7 @@ namespace VSHUD
 
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
-            VSHUDConfig config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
+            VSHUDConfig config = ConfigLoader.Config;
             Vec3d pos = MatrixToolsd.Project(waypointPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
 
             double[] clamps = new double[]

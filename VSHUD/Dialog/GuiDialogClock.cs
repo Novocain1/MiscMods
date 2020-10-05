@@ -11,7 +11,7 @@ namespace VSHUD
 {
     class GuiDialogClock : HudElement
     {
-        ClockShowConfig Config { get => capi.ModLoader.GetModSystem<ConfigLoader>().Config.ClockShowConfig; }
+        ClockShowConfig Config { get => ConfigLoader.Config.ClockShowConfig; }
 
         long id;
 

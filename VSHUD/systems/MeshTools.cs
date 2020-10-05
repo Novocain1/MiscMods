@@ -41,6 +41,14 @@ namespace VSHUD
                     ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, Path.Combine(GamePaths.Binaries, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
                 }
             });
+
+            api.RegisterCommand("objworld", "", "", (p, a) =>
+            {
+                ConfigLoader.Config.CreateChunkObjs = a.PopBool() ?? !ConfigLoader.Config.CreateChunkObjs;
+                capi.ShowChatMessage(string.Format("Chunk Tesselator .obj Caching {0}.", ConfigLoader.Config.CreateChunkObjs ? "Enabled" : "Disabled"));
+                ConfigLoader.SaveConfig(capi);
+            });
+
             api.RegisterCommand("meshdata", "", "", (p, a) =>
             {
                 var bs = api.World.Player.CurrentBlockSelection;

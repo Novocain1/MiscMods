@@ -61,7 +61,7 @@ namespace VSHUD
     class ConfigLoader : ClientModSystem
     {
         ICoreClientAPI capi;
-        public VSHUDConfig Config { get; set; } = new VSHUDConfig();
+        public static VSHUDConfig Config { get; set; } = new VSHUDConfig();
         public override double ExecuteOrder() => 0.05;
 
         public override void StartClientSide(ICoreClientAPI api)
@@ -71,18 +71,19 @@ namespace VSHUD
             ChunkObjCreator.Seed = api.World.Seed;
             var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
             ChunkObjCreator.SpawnPos = spawnChunk;
-
-            ChunkObjCreator.Process = Config.CreateChunkObjs;
         }
 
-        public void LoadConfig()
+        public void LoadConfig() => LoadConfig(capi);
+        public void SaveConfig() => SaveConfig(capi);
+
+        public static void LoadConfig(ICoreClientAPI capi)
         {
-            if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(); return; }
+            if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(capi); return; }
 
             Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
-            SaveConfig();
+            SaveConfig(capi);
         }
 
-        public void SaveConfig() => capi.StoreModConfig(Config, "vshud.json");
+        public static void SaveConfig(ICoreClientAPI capi) => capi.StoreModConfig(Config, "vshud.json");
     }
 }

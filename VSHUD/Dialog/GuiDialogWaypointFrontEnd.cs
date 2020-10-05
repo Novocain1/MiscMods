@@ -25,7 +25,7 @@ namespace VSHUD
         public override void OnOwnPlayerDataReceived()
         {
             base.OnOwnPlayerDataReceived();
-            config = capi.ModLoader.GetModSystem<ConfigLoader>().Config;
+            config = ConfigLoader.Config;
 
             ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 465, 500);
             ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -200, 465, 100);
