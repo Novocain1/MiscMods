@@ -15,20 +15,31 @@ using System.Collections.Concurrent;
 
 namespace VSHUD
 {
-    class QueuedObj
+    interface IExportable
+    {
+        bool Enabled { get; set; }
+        string FilePath { get; set; }
+        string FileName { get; set; }
+        void Export();
+    }
+
+    class PreparedMesh : IExportable
     {
         public MeshData Mesh;
-        public string FilePath;
-        public string FileName;
+        public bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
+        public string FilePath { get; set; }
+        public string FileName { get; set; }
 
-        public QueuedObj(MeshData mesh, string filePath, string fileName)
+        public PreparedMesh(MeshData mesh, string filePath, string fileName)
         {
             Mesh = mesh.Clone();
             FilePath = filePath;
             FileName = fileName;
         }
 
-        public void Export()
+        public void Export() => ExportAsObj();
+
+        public void ExportAsObj()
         {
             try
             {
@@ -87,11 +98,11 @@ namespace VSHUD
         }
     }
 
-    class ObjExportSystem : ClientSystem
+    class MassFileExportSystem : ClientSystem
     {
-        public static ConcurrentStack<QueuedObj> queuedObjs = new ConcurrentStack<QueuedObj>();
+        public static ConcurrentStack<IExportable> toExport = new ConcurrentStack<IExportable>();
 
-        public ObjExportSystem(ClientMain game) : base(game) {}
+        public MassFileExportSystem(ClientMain game) : base(game) {}
 
         public override string Name => "ObjExport";
 
@@ -101,10 +112,10 @@ namespace VSHUD
 
         public void ExportEnqueuedObjs()
         {
-            for (int i = 0; i < queuedObjs.Count; i++)
+            for (int i = 0; i < toExport.Count; i++)
             {
-                bool success = queuedObjs.TryPop(out QueuedObj obj);
-                if (success) obj.Export();
+                bool success = toExport.TryPop(out IExportable exportable);
+                if (success && exportable.Enabled) exportable.Export();
             }
         }
     }

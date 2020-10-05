@@ -32,13 +32,13 @@ namespace VSHUD
                     var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
                     string name = asset.ToShortString().Replace("/", "-");
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
-                    ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, Path.Combine(GamePaths.Binaries, name + ".obj"), name + ".obj"));
+                    MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, Path.Combine(GamePaths.Binaries, name + ".obj"), name + ".obj"));
                 }
                 else if (es != null)
                 {
                     Shape loadedShape = es.Entity.Properties.Client.LoadedShape;
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), loadedShape, out MeshData mesh);
-                    ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, Path.Combine(GamePaths.Binaries, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
+                    MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, Path.Combine(GamePaths.Binaries, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
                 }
             });
 
@@ -89,7 +89,7 @@ namespace VSHUD
                     mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
                 }
 
-                capi.InjectClientThread("ObjExport", 1000, new ObjExportSystem(api.World as ClientMain));
+                capi.InjectClientThread("ObjExport", 1000, new MassFileExportSystem(api.World as ClientMain));
             };
         }
     }

@@ -68,9 +68,9 @@ namespace VSHUD
         {
             capi = api;
             LoadConfig();
-            ChunkObjCreator.Seed = api.World.Seed;
+            ChunkPartGrabber.Seed = api.World.Seed;
             var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
-            ChunkObjCreator.SpawnPos = spawnChunk;
+            ChunkPartGrabber.SpawnPos = spawnChunk;
         }
 
         public void LoadConfig() => LoadConfig(capi);

@@ -8,14 +8,14 @@ using Vintagestory.API.Config;
 namespace VSHUD
 {
     [HarmonyPatch(typeof(ChunkTesselator), "NowProcessChunks")]
-    class ChunkObjCreator
+    class ChunkPartGrabber
     {
         public static MeshData Combined = new MeshData(1, 1);
         public static bool Process { get => ConfigLoader.Config.CreateChunkObjs; }
         public static int Seed = 0;
         public static Vec3i SpawnPos;
 
-        public static void AddToQueue(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod)
+        public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod)
         {
             string fileName = string.Format("{0} {1} {2} {3} lod{4}", chunkX, chunkY, chunkZ, pass, lod);
             string filePath = Path.Combine(GamePaths.Binaries, "worldparts");
@@ -23,7 +23,7 @@ namespace VSHUD
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
 
-            ObjExportSystem.queuedObjs.Push(new QueuedObj(mesh, filePath, fileName));
+            MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, filePath, fileName));
         }
         
         public static void Postfix(int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)
@@ -44,8 +44,8 @@ namespace VSHUD
                 mesh0.CompactBuffers();
                 mesh1.CompactBuffers();
 
-                if (mesh0.VerticesCount > 0) AddToQueue(mesh0, chunkX, chunkY, chunkZ, cPass, 0);
-                if (mesh1.VerticesCount > 0) AddToQueue(mesh1, chunkX, chunkY, chunkZ, cPass, 1);
+                if (mesh0.VerticesCount > 0) PushToStack(mesh0, chunkX, chunkY, chunkZ, cPass, 0);
+                if (mesh1.VerticesCount > 0) PushToStack(mesh1, chunkX, chunkY, chunkZ, cPass, 1);
 
                 i++;
             }

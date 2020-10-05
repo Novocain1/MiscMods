@@ -103,8 +103,8 @@
   <ItemGroup>
     <Compile Include="systems\ClientSystems\WaypointTextUpdateSystem.cs" />
     <Compile Include="systems\ClientSystems\LightUtilSystem.cs" />
-    <Compile Include="systems\ClientSystems\ObjExportSystem.cs" />
-    <Compile Include="Utility\Patches\ChunkObjCreator.cs" />
+    <Compile Include="systems\ClientSystems\MassFileExportSystem.cs" />
+    <Compile Include="Utility\Patches\ChunkPartGrabber.cs" />
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClock.cs" />
