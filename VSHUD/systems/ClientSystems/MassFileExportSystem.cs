@@ -114,8 +114,8 @@ namespace VSHUD
         {
             for (int i = 0; i < toExport.Count; i++)
             {
-                bool success = toExport.TryPop(out IExportable exportable);
-                if (success && exportable.Enabled) exportable.Export();
+                bool success = toExport.TryPop(out IExportable exportable) && exportable.Enabled;
+                if (success) exportable.Export();
             }
         }
     }
