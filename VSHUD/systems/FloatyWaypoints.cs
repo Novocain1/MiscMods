@@ -62,7 +62,7 @@ namespace VSHUD
                 int i = 0;
                 foreach (var val in Waypoints)
                 {
-                    WaypointRelative relative = new WaypointRelative(capi)
+                    WaypointRelative relative = new WaypointRelative(capi, val, i)
                     {
                         Color = val.Color,
                         OwningPlayerGroupId = val.OwningPlayerGroupId,
@@ -71,7 +71,6 @@ namespace VSHUD
                         Text = val.Text,
                         Title = val.Title,
                         Icon = val.Icon,
-                        Index = i
                     };
                     rel.Enqueue(relative);
                     i++;
@@ -313,6 +312,15 @@ namespace VSHUD
                     }
                     firstOpen = false;
                 }
+                else if (Waypoints.Count < 1 && WaypointElements.Count > 0)
+                {
+                    foreach (var val in WaypointElements)
+                    {
+                        val.TryClose();
+                        val.Dispose();
+                    }
+                    WaypointElements.Clear();
+                }
                 ManageZDepth();
             }
             else
@@ -426,20 +434,21 @@ namespace VSHUD
 
     public class WaypointRelative : Waypoint
     {
-        public WaypointMapLayer WPLayer { get => api.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
-        public List<Waypoint> Waypoints { get => WPLayer.ownWaypoints; }
-
         ICoreAPI api;
-        public WaypointRelative(ICoreAPI api)
+
+        public WaypointRelative(ICoreAPI api, Waypoint ownWaypoint, int index)
         {
             this.api = api;
+            OwnWaypoint = ownWaypoint;
+            Index = index;
         }
 
+        public int OwnColor { get => OwnWaypoint?.Color ?? -1; }
+        public int Index { get; }
+        public Waypoint OwnWaypoint { get; }
+        
         public Vec3d RelativeToSpawn { get => Position.SubCopy(api.World.DefaultSpawnPosition.XYZ); }
         public double? DistanceFromPlayer { get => (api as ICoreClientAPI)?.World.Player.Entity.Pos.DistanceTo(Position); }
-        public int Index { get; set; }
-        public int OwnColor { get => OwnWaypoint?.Color ?? 0; }
-        public Waypoint OwnWaypoint { get => Index > Waypoints.Count - 1 ? null : Waypoints[Index]; }
     }
 
     public class DummyWaypoint
