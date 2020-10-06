@@ -56,7 +56,12 @@ namespace VSHUD
 
         public override void Export() => ExportAsObj();
 
-        public void ExportAsObj()
+        public virtual void ExportAsGltf()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ExportAsObj()
         {
             try
             {
