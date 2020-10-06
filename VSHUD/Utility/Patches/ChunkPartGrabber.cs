@@ -23,7 +23,7 @@ namespace VSHUD
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
 
-            MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, filePath, fileName));
+            MassFileExportSystem.toExport.Push(new ExportableChunkPart(mesh, filePath, fileName));
         }
         
         public static void Postfix(int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)

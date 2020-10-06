@@ -32,13 +32,13 @@ namespace VSHUD
                     var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
                     string name = asset.ToShortString().Replace("/", "-");
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
-                    MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, Path.Combine(GamePaths.Binaries, name + ".obj"), name + ".obj"));
+                    MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.Binaries, name + ".obj"), name + ".obj"));
                 }
                 else if (es != null)
                 {
                     Shape loadedShape = es.Entity.Properties.Client.LoadedShape;
                     api.Tesselator.TesselateShape(api.World.GetBlock(0), loadedShape, out MeshData mesh);
-                    MassFileExportSystem.toExport.Push(new PreparedMesh(mesh, Path.Combine(GamePaths.Binaries, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
+                    MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.Binaries, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
                 }
             });
 

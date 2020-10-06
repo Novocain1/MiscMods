@@ -31,14 +31,23 @@ namespace VSHUD
         public abstract void Export();
     }
 
-    class PreparedMesh : Exportable
+    class ExportableChunkPart : ExportableMesh
+    {
+        public override bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
+
+        public ExportableChunkPart(MeshData mesh, string filePath, string fileName) : base(mesh, filePath, fileName)
+        {
+        }
+    }
+
+    class ExportableMesh : Exportable
     {
         public MeshData Mesh;
-        public override bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
+        public override bool Enabled { get; set; } = true;
         public override string FilePath { get; set; }
         public override string FileName { get; set; }
 
-        public PreparedMesh(MeshData mesh, string filePath, string fileName)
+        public ExportableMesh(MeshData mesh, string filePath, string fileName)
         {
             Mesh = mesh.Clone();
             FilePath = filePath;
