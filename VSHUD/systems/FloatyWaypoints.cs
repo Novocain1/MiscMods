@@ -25,7 +25,8 @@ namespace VSHUD
     {
         ICoreClientAPI capi;
         public VSHUDConfig Config;
-        public WaypointMapLayer WPLayer { get => capi.ModLoader.GetModSystem<WorldMapManager>().MapLayers.OfType<WaypointMapLayer>().Single(); }
+        public WorldMapManager MapManager { get => capi.ModLoader.GetModSystem<WorldMapManager>(); }
+        public WaypointMapLayer WPLayer { get => MapManager.MapLayers.OfType<WaypointMapLayer>().Single(); }
 
         public Dictionary<string, LoadedTexture> texturesByIcon;
         string[] iconKeys { get => texturesByIcon.Keys.ToArray(); }
@@ -120,7 +121,9 @@ namespace VSHUD
                 });
                 capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
                 RepopulateDialogs();
-                capi.Event.RegisterCallback(dt => Update(), 100);
+
+                //Trick server into sending waypoints to the client even if they don't have their map opened.
+                MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() });
             };
             updateID = capi.Event.RegisterGameTickListener(dt => Update(), 30);
 

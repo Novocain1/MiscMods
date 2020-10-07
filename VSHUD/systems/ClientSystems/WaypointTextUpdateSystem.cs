@@ -39,7 +39,7 @@ namespace VSHUD
             hudElemWaypoint.distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(hudElemWaypoint.waypointPos, 3);
             bool km = hudElemWaypoint.distance >= 1000;
 
-            hudElemWaypoint.dialogText = hudElemWaypoint.DialogTitle.UcFirst() + " " + (km ? Math.Round(hudElemWaypoint.distance / 1000, 3) : hudElemWaypoint.distance) + (km ? "km" : "m");
+            hudElemWaypoint.dialogText = hudElemWaypoint.DialogTitle.UcFirst() + " " + (km ? Math.Round(hudElemWaypoint.distance / 1000, 3) : hudElemWaypoint.distance).ToString("F3") + (km ? "km" : "m");
         }
 
         public void UpdateTitle(HudElementWaypoint hudElemWaypoint)
