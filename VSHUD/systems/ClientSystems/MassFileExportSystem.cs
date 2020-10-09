@@ -89,17 +89,13 @@ namespace VSHUD
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
                         tw.WriteLine();
-                        tw.Write("v");
-                        tw.Write(" " + Mesh.xyz[i * 3 + 0].ToString("F6"));
-                        tw.Write(" " + Mesh.xyz[i * 3 + 1].ToString("F6"));
-                        tw.Write(" " + Mesh.xyz[i * 3 + 2].ToString("F6"));
+                        tw.Write(string.Format("v {0} {1} {2}", Mesh.xyz[i * 3 + 0].ToString("F6"), Mesh.xyz[i * 3 + 1].ToString("F6"), Mesh.xyz[i * 3 + 2].ToString("F6")));
                     }
 
                     for (int i = 0; i < uvs.Length / 2; i++)
                     {
                         tw.WriteLine();
-                        tw.Write("vt " + uvs[i * 2 + 0].ToString("F6"));
-                        tw.Write(" " + uvs[i * 2 + 1].ToString("F6"));
+                        tw.Write(string.Format("vt {0} {1}", uvs[i * 2 + 0].ToString("F6"), uvs[i * 2 + 1].ToString("F6")));
                     }
 
                     tw.WriteLine();
