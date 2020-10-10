@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -242,6 +243,8 @@ namespace VSHUD
 
                 Vec4f newColor = new Vec4f();
                 ColorUtil.ToRGBAVec4f(waypoint.OwnColor, ref newColor);
+                float dist = (float)(waypoint.DistanceFromPlayer ?? 1.0f);
+                float scale = GameMath.Max(dist / ClientSettings.FieldOfView, 1.0f);
 
                 prog.NormalShaded = 0;
                 
@@ -252,6 +255,7 @@ namespace VSHUD
 
                 prog.Tex2D = texID;
                 prog.ModelMatrix = mvMat.Identity().Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
+                    .Scale(scale, scale, scale)
                     .RotateYDeg(counter * 50 % 360.0f).Values;
                 prog.ViewMatrix = capi.Render.CameraMatrixOriginf;
                 prog.ProjectionMatrix = capi.Render.CurrentProjectionMatrix;
