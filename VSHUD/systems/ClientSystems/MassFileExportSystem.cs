@@ -122,7 +122,7 @@ namespace VSHUD
 
         public MassFileExportSystem(ClientMain game) : base(game) {}
 
-        public override string Name => "ObjExport";
+        public override string Name => "File Export";
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
