@@ -9,7 +9,7 @@ using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
-    class ClockShowConfig
+    public class ClockShowConfig
     {
         public bool Calendar { get; set; } = true;
         public bool Season { get; set; } = true;
@@ -23,7 +23,7 @@ namespace VSHUD
         public Vec2f ClockPosMod { get; set; } = new Vec2f();
     }
 
-    class VSHUDConfig
+    public class VSHUDConfig
     {
         public double DotRange { get; set; } = 2000.0;
         public double TitleRange { get; set; } = 500.0;
@@ -33,6 +33,7 @@ namespace VSHUD
         public bool WaypointID { get; set; } = true;
         public bool FloatyWaypoints { get; set; } = true;
         public bool DebugDeathWaypoints { get; set; } = false;
+        public bool ShowPillars { get; set; } = true;
 
         public bool LightLevels { get; set; } = false;
         public EnumLightLevelType LightLevelType { get; set; } = EnumLightLevelType.OnlyBlockLight;

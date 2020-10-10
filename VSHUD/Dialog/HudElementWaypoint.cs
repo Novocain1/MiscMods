@@ -11,7 +11,7 @@ namespace VSHUD
 {
     class HudElementWaypoint : HudElement
     {
-        public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0) : absolutePos; }
+        public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : absolutePos; }
         public Vec3d absolutePos;
         public long id;
         public string DialogTitle;
@@ -26,6 +26,10 @@ namespace VSHUD
 
         public Dictionary<string, LoadedTexture> texturesByIcon { get => system.texturesByIcon; }
         public static MeshRef quadModel;
+        public static MeshRef pillar;
+        
+        public PillarRenderer renderer;
+
         private Matrixf mvMat = new Matrixf();
         CairoFont font;
         public bool isAligned;
@@ -51,6 +55,10 @@ namespace VSHUD
                     SingleComposer.ReCompose();
                 }, 100);
             };
+
+            renderer = new PillarRenderer(capi, waypoint);
+
+            capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque);
         }
 
         public override void OnOwnPlayerDataReceived()
@@ -162,6 +170,7 @@ namespace VSHUD
                 engineShader.UniformMatrix("modelViewMatrix", mvMat.Values);
                 capi.Render.RenderMesh(quadModel);
             }
+
             base.OnRenderGUI(deltaTime);
         }
 
@@ -176,6 +185,7 @@ namespace VSHUD
             base.Dispose();
             capi.Event.UnregisterGameTickListener(id);
             SingleComposer.Dispose();
+            capi.Event.UnregisterRenderer(renderer, EnumRenderStage.Opaque);
         }
 
         public override bool UnregisterOnClose => true;
@@ -191,6 +201,66 @@ namespace VSHUD
             waypointEditDialog.ignoreNextKeyPress = true;
             waypointEditDialog.TryOpen();
             waypointEditDialog.Focus();
+        }
+    }
+
+    public class PillarRenderer : IRenderer
+    {
+        ICoreClientAPI capi;
+        WaypointRelative waypoint;
+
+        public PillarRenderer(ICoreClientAPI capi, WaypointRelative waypoint)
+        {
+            this.capi = capi;
+            this.waypoint = waypoint;
+        }
+
+        public double RenderOrder => 0.5;
+        public VSHUDConfig config { get => ConfigLoader.Config; }
+        public int RenderRange => 24;
+
+        public MeshRef pillar { get => HudElementWaypoint.pillar; }
+        private Matrixf mvMat = new Matrixf();
+        float counter = 0;
+
+        public void Dispose()
+        {
+            
+        }
+
+        public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
+        {
+            if (config.ShowPillars)
+            {
+                counter += deltaTime;
+                Vec3d pos = config.PerBlockWaypoints ? waypoint.Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : waypoint.Position;
+                IStandardShaderProgram prog = capi.Render.PreparedStandardShader((int)pos.X, (int)pos.Y, (int)pos.Z);
+                Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
+                
+                capi.Render.GlToggleBlend(true, EnumBlendMode.Standard);
+                int texID = capi.Render.GetOrLoadTexture(new AssetLocation("block/creative/col78.png"));
+
+                Vec4f newColor = new Vec4f();
+                ColorUtil.ToRGBAVec4f(waypoint.OwnColor, ref newColor);
+
+                prog.NormalShaded = 0;
+                
+                prog.RgbaLightIn = newColor;
+
+                newColor.A = 0.5f;
+                prog.RgbaTint = newColor;
+
+                prog.Tex2D = texID;
+                prog.ModelMatrix = mvMat.Identity().Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z)
+                    .RotateYDeg(counter * 50 % 360.0f).Values;
+                prog.ViewMatrix = capi.Render.CameraMatrixOriginf;
+                prog.ProjectionMatrix = capi.Render.CurrentProjectionMatrix;
+                //prog.BindTexture2D("tex", 0, 0);
+
+                capi.Render.RenderMesh(pillar);
+
+                prog.Stop();
+            }
         }
     }
 }

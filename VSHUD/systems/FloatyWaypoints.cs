@@ -99,10 +99,13 @@ namespace VSHUD
             capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
 
-            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall]", new ClientChatCommandDelegate(CmdWaypointConfig));
+            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export|pillars]", new ClientChatCommandDelegate(CmdWaypointConfig));
 
             capi.Event.LevelFinalize += () =>
             {
+                var pillar = CubeMeshUtil.GetCube(0.1f, capi.World.BlockAccessor.MapSizeY, new Vec3f());
+                HudElementWaypoint.pillar = capi.Render.UploadMesh(pillar);
+
                 EntityPlayer player = api.World.Player.Entity;
                 frontEnd.OnOwnPlayerDataReceived();
 
@@ -279,8 +282,12 @@ namespace VSHUD
                         }
                     }, 1);
                     break;
+                case "pillars":
+                    Config.ShowPillars = args.PopBool() ?? !Config.ShowPillars;
+                    capi.ShowChatMessage("Waypoint Pillars Set To " + Config.ShowPillars + ".");
+                    break;
                 default:
-                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export]"));
+                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export|pillars]"));
                     break;
             }
             ConfigLoader.SaveConfig(capi);
