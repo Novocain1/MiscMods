@@ -5,7 +5,7 @@
 	"modid": "vshudcompat",
 	"description" : "VSHUD compatible for systems which fail to see assembly modinfos.",
 	"authors": ["Novocain"],
-	"version": "2.0.0-pre.2",
+	"version": "2.0.0-pre.3",
 	"dependencies": {
 	}
 }
