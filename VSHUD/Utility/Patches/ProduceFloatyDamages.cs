@@ -14,6 +14,7 @@ namespace VSHUD
             if (api.Side.IsClient())
             {
                 var healthTree = __instance.WatchedAttributes.GetTreeAttribute("health");
+                if (healthTree == null) return;
                 float maxHealth = healthTree.GetFloat("maxhealth"), baseMaxHealth = healthTree.GetFloat("basemaxhealth");
                 maxHealth = maxHealth == 0 ? baseMaxHealth : 20.0f;
 
@@ -22,7 +23,7 @@ namespace VSHUD
                     float lastHealth = __instance.WatchedAttributes.GetFloat("fldLastHealth", maxHealth);
                     float health = healthTree.GetFloat("currenthealth");
                     float dHealth = lastHealth - health;
-                    new HudElementFloatyDamage(api as ICoreClientAPI, dHealth, __instance.Pos.XYZ);
+                    if (dHealth != 0) new HudElementFloatyDamage(api as ICoreClientAPI, dHealth, __instance.Pos.XYZ);
                     __instance.WatchedAttributes.SetFloat("fldLastHealth", health);
                 });
             }
