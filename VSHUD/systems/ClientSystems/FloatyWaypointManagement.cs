@@ -29,7 +29,7 @@ namespace VSHUD
                 }
                 return false;
             });
-            Populate();
+            Update();
         }
 
         public override string Name => "Floaty Waypoint Management";
@@ -46,6 +46,16 @@ namespace VSHUD
             }, "");
         }
 
+        public int OpenedCount()
+        {
+            int i = 0;
+            foreach (var val in WaypointElements)
+            {
+                if (val.IsOpened()) i++;
+            }
+            return i;
+        }
+
         public void Update()
         {
             if (utils.Config.FloatyWaypoints)
@@ -53,7 +63,7 @@ namespace VSHUD
                 bool repopped;
                 if (repopped = WaypointElements.Count == 0) Populate();
 
-                if (utils.Waypoints.Count > 0 && utils.Waypoints.Count != WaypointElements.Count)
+                if (utils.Waypoints.Count > 0 && utils.Waypoints.Count != OpenedCount())
                 {
                     if (!repopped) Populate();
 
@@ -107,6 +117,19 @@ namespace VSHUD
 
                 WaypointElements.Push(waypoint);
             }
+        }
+
+        public void Dispose() => Dispose(capi.World as ClientMain);
+
+        public override void Dispose(ClientMain game)
+        {
+            base.Dispose(game);
+            foreach (var val in WaypointElements)
+            {
+                val.TryClose();
+                val.Dispose();
+            }
+            WaypointElements.Clear();
         }
     }
 }

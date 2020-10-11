@@ -48,5 +48,13 @@ namespace VSHUD
             wp = hudElemWaypoint.config.WaypointID ? wp + "ID: " + hudElemWaypoint.waypointID + " | " : wp;
             hudElemWaypoint.DialogTitle = hudElemWaypoint.waypoint.OwnWaypoint.Title != null ? wp + hudElemWaypoint.waypoint.OwnWaypoint.Title : "Waypoint: ";
         }
+        
+        public void Dispose() => Dispose(capi.World as ClientMain);
+
+        public override void Dispose(ClientMain game)
+        {
+            base.Dispose(game);
+            TextTasks.Clear();
+        }
     }
 }

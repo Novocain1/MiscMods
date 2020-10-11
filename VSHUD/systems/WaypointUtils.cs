@@ -28,7 +28,7 @@ namespace VSHUD
         public VSHUDConfig Config;
         public WorldMapManager MapManager { get => capi.ModLoader.GetModSystem<WorldMapManager>(); }
         public WaypointMapLayer WPLayer { get => MapManager.MapLayers.OfType<WaypointMapLayer>().Single(); }
-
+        public ClientSystem[] systems = new ClientSystem[64];
         public static Dictionary<string, LoadedTexture> texturesByIcon;
         public static string[] iconKeys;
 
@@ -127,8 +127,8 @@ namespace VSHUD
                 //Trick server into sending waypoints to the client even if they don't have their map opened.
                 MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() });
 
-                capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
-                capi.InjectClientThread("Floaty Waypoint Management", 30, new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
+                capi.InjectClientThread("WaypointDialogUpdate", 20, systems[0] = new WaypointTextUpdateSystem(capi.World as ClientMain));
+                capi.InjectClientThread("Floaty Waypoint Management", 30, systems[1] = new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
             };
         }
 
@@ -265,9 +265,13 @@ namespace VSHUD
         
         private bool ViewWaypoints(KeyCombination t1)
         {
+            Config.FloatyWaypoints = !Config.FloatyWaypoints;
+            ConfigLoader.SaveConfig(capi);
+
             foreach (var val in FloatyWaypointManagement.WaypointElements)
             {
-                val.Toggle();
+                if (Config.FloatyWaypoints) val.TryOpen();
+                else val.TryClose();
             }
             return true;
         }
@@ -310,6 +314,10 @@ namespace VSHUD
         public override void Dispose()
         {
             base.Dispose();
+            foreach (var val in systems.Where((a) => a != null))
+            {
+                val.Dispose(capi.World as ClientMain);
+            }
         }
     }
 

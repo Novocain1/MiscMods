@@ -1,6 +1,7 @@
 ﻿using Vintagestory.Client.NoObf;
 using System.Collections.Concurrent;
 using Action = Vintagestory.API.Common.Action;
+using Vintagestory.API.Client;
 
 namespace VSHUD
 {
@@ -23,6 +24,14 @@ namespace VSHUD
                 bool success = Actions.TryDequeue(out Action action);
                 if (success) action.Invoke();
             }
+        }
+
+        public void Dispose(ICoreClientAPI capi) => Dispose(capi.World as ClientMain);
+
+        public override void Dispose(ClientMain game)
+        {
+            base.Dispose(game);
+            Actions = new ConcurrentQueue<Action>();
         }
     }
 }
