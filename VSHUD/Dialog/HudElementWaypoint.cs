@@ -10,8 +10,10 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
-    class HudElementWaypoint : HudElement
+    public class HudElementWaypoint : HudElement
     {
+        public bool Dirty { get; set; } = false;
+
         public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : absolutePos; }
         public Vec3d absolutePos;
         public long id;
@@ -21,11 +23,10 @@ namespace VSHUD
         public int waypointID;
         public VSHUDConfig config;
         public WaypointRelative waypoint;
-        FloatyWaypoints system { get => capi.ModLoader.GetModSystem<FloatyWaypoints>(); }
         public override bool Focused => false;
         GuiDialogEditWayPoint waypointEditDialog;
 
-        public Dictionary<string, LoadedTexture> texturesByIcon { get => system.texturesByIcon; }
+        public static Dictionary<string, LoadedTexture> texturesByIcon { get => WaypointUtils.texturesByIcon; }
         public static MeshRef quadModel;
         public static MeshRef pillar;
         
@@ -46,7 +47,7 @@ namespace VSHUD
             DialogTitle = waypoint.Title;
             absolutePos = waypoint.Position.Clone();
             this.waypointID = waypoint.Index;
-            config = capi.ModLoader.GetModSystem<FloatyWaypoints>().Config;
+            config = capi.ModLoader.GetModSystem<WaypointUtils>().Config;
             waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
             
             waypointEditDialog.OnClosed += () =>
@@ -57,13 +58,10 @@ namespace VSHUD
                 }, 100);
             };
 
-            renderer = new PillarRenderer(capi, waypoint);
+            renderer = new PillarRenderer(capi, waypoint, this);
 
             capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque);
-        }
 
-        public override void OnOwnPlayerDataReceived()
-        {
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialogAtPos(0.0);
             ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.CenterMiddle, 0, 0, 250, 50);
 
@@ -97,8 +95,7 @@ namespace VSHUD
 
         protected virtual double FloatyDialogPosition => 0.75;
         protected virtual double FloatyDialogAlign => 0.75;
-        public double order;
-        public override double DrawOrder => order;
+        public override double DrawOrder => 0;
 
         public override bool ShouldReceiveMouseEvents() => false;
 
@@ -143,7 +140,7 @@ namespace VSHUD
             double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
-            isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !system.WaypointElements.Any(ui => ui.isAligned && ui != this);
+            isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !FloatyWaypointManagement.WaypointElements.Any(ui => ui.isAligned && ui != this);
 
             if (!isClamped && (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)) dynText.SetNewText(dialogText);
             else dynText.SetNewText("");
@@ -178,18 +175,15 @@ namespace VSHUD
         public override void OnGuiClosed()
         {
             base.OnGuiClosed();
-            Dispose();
         }
 
         public override void Dispose()
         {
             base.Dispose();
             capi.Event.UnregisterGameTickListener(id);
-            SingleComposer.Dispose();
+            SingleComposer?.Dispose();
             capi.Event.UnregisterRenderer(renderer, EnumRenderStage.Opaque);
         }
-
-        public override bool UnregisterOnClose => true;
 
         public override void OnGuiOpened()
         {
@@ -209,11 +203,13 @@ namespace VSHUD
     {
         ICoreClientAPI capi;
         WaypointRelative waypoint;
+        HudElementWaypoint ownDialog;
 
-        public PillarRenderer(ICoreClientAPI capi, WaypointRelative waypoint)
+        public PillarRenderer(ICoreClientAPI capi, WaypointRelative waypoint, HudElementWaypoint ownDialog)
         {
             this.capi = capi;
             this.waypoint = waypoint;
+            this.ownDialog = ownDialog;
         }
 
         public double RenderOrder => 0.5;
@@ -231,7 +227,7 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (config.ShowPillars)
+            if (config.ShowPillars && ownDialog.IsOpened())
             {
                 counter += deltaTime;
                 Vec3d pos = config.PerBlockWaypoints ? waypoint.Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : waypoint.Position;

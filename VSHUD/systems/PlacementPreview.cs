@@ -25,7 +25,7 @@ namespace VSHUD
             api.Input.RegisterHotKey("placementpreviewtoggle", "Toggle Placement Preview", GlKeys.Quote);
             api.Input.SetHotKeyHandler("placementpreviewtoggle", (a) => 
             {
-                VSHUDConfig config = api.ModLoader.GetModSystem<FloatyWaypoints>().Config;
+                VSHUDConfig config = api.ModLoader.GetModSystem<WaypointUtils>().Config;
                 config.PRShow = !config.PRShow;
                 api.ModLoader.GetModSystem<ConfigLoader>().SaveConfig();
                 return true;
@@ -33,7 +33,7 @@ namespace VSHUD
 
             api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|tinted|tintcolorhex|tintcolorrgb|tintdefault|opacity]", (id, args) =>
             {
-                VSHUDConfig config = api.ModLoader.GetModSystem<FloatyWaypoints>().Config;
+                VSHUDConfig config = api.ModLoader.GetModSystem<WaypointUtils>().Config;
                 string arg = args.PopWord();
                 bool? enabled;
 
@@ -96,7 +96,7 @@ namespace VSHUD
         BlockPos pos { get => playerSelection?.Position; }
         Vec3d camPos { get => player?.Entity.CameraPos; }
         Vec3d playerPos { get => player?.Entity.Pos.XYZ;  }
-        VSHUDConfig config { get => capi.ModLoader.GetModSystem<FloatyWaypoints>().Config; }
+        VSHUDConfig config { get => capi.ModLoader.GetModSystem<WaypointUtils>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
         

@@ -101,6 +101,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="systems\ClientSystems\FloatyWaypointManagement.cs" />
+    <Compile Include="systems\ClientSystems\VSHUDTaskSystem.cs" />
     <Compile Include="systems\ClientSystems\WaypointTextUpdateSystem.cs" />
     <Compile Include="systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="systems\ClientSystems\MassFileExportSystem.cs" />
@@ -122,7 +124,7 @@
     <Compile Include="Dialog\GuiDialogWaypointFrontEnd.cs" />
     <Compile Include="systems\TapeMeasure.cs" />
     <Compile Include="systems\VSHUDConfig.cs" />
-    <Compile Include="systems\FloatyWaypoints.cs" />
+    <Compile Include="systems\WaypointUtils.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />

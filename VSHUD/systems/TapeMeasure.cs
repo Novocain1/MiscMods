@@ -38,7 +38,7 @@ namespace VSHUD
             bool at = (bool)args.PopBool(false);
             int attach = at ? radius + 1 : 0;
             
-            FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
+            WaypointUtils wUtil = capi.ModLoader.GetModSystem<WaypointUtils>();
             BlockPos wp1Pos, wp2Pos;
 
             switch (arg)
@@ -198,7 +198,7 @@ namespace VSHUD
 
         public void CmdMeasuringTape(int groupId, CmdArgs args)
         {
-            FloatyWaypoints wUtil = capi.ModLoader.GetModSystem<FloatyWaypoints>();
+            WaypointUtils wUtil = capi.ModLoader.GetModSystem<WaypointUtils>();
             string arg = args.PopWord();
             switch (arg)
             {

@@ -8,7 +8,7 @@ using Vintagestory.Client.NoObf;
     Description = "Automatically creates waypoints on player death, floaty waypoints, and other misc client side things",
     Side = "Client",
     Authors = new[] { "Novocain" },
-    Version = "1.5.17")]
+    Version = "2.0.0")]
 
 namespace VSHUD
 {
@@ -20,6 +20,7 @@ namespace VSHUD
             {
                 api.Shader.ReloadShaders();
                 api.InjectClientThread("File Export", 30, new MassFileExportSystem(api.World as ClientMain));
+                api.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(api.World as ClientMain));
             };
         }
     }
