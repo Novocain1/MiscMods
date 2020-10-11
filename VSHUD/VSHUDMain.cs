@@ -23,8 +23,8 @@ namespace VSHUD
             api.Event.LevelFinalize += () =>
             {
                 api.Shader.ReloadShaders();
-                api.InjectClientThread("File Export", 30, new MassFileExportSystem(api.World as ClientMain));
-                api.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(api.World as ClientMain));
+                api.InjectClientThread("File Export", 30, systems[0] = new MassFileExportSystem(api.World as ClientMain));
+                api.InjectClientThread("VSHUD Tasks", 30, systems[1] = new VSHUDTaskSystem(api.World as ClientMain));
             };
         }
 
