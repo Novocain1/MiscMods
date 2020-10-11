@@ -13,6 +13,7 @@ namespace VSHUD
         float expiryTime = 2.0f;
         Vec3d pos;
         CairoFont font;
+        double[] color;
 
         public HudElementFloatyDamage(ICoreClientAPI capi, double damage, Vec3d pos) : base(capi)
         {
@@ -20,10 +21,16 @@ namespace VSHUD
 
             ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialogAtPos(0.0);
             ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.CenterMiddle, 0, 0, 250, 50);
+            
+            font = CairoFont.WhiteDetailText();
 
-            font = CairoFont.WhiteSmallText();
-            font.Color = new double[] { 1.0, 0.0, 0.0, 1.0 };
-            string dmg = GameMath.Max(0.001, damage).ToString("F3");
+            color = new double[4];
+            color[3] = 1.0;
+            color[0] = damage > 0 ? 1.0 : 0.0;
+            color[1] = damage > 0 ? 0.0 : 1.0;
+            font.Color = color;
+
+            string dmg = Math.Abs(damage).ToString("F3");
 
             font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15);
 
@@ -44,7 +51,7 @@ namespace VSHUD
         public override void OnRenderGUI(float deltaTime)
         {
             base.OnRenderGUI(deltaTime);
-            pos.Y += deltaTime * 2.0;
+            pos.Y += deltaTime / 1.5;
             var dynText = SingleComposer.GetDynamicText("text");
 
             Vec3d projectedPos = MatrixToolsd.Project(pos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
@@ -53,7 +60,8 @@ namespace VSHUD
             SingleComposer.Bounds.absFixedX = projectedPos.X - SingleComposer.Bounds.OuterWidth / 2;
             SingleComposer.Bounds.absFixedY = capi.Render.FrameHeight - projectedPos.Y - SingleComposer.Bounds.OuterHeight;
 
-            dynText.Font = font.WithColor(new double[] { 1.0, 0.0, 0.0, expiryTime / 2.0});
+            dynText.Font = font.WithColor(new double[] { color[0], color[1], color[2], expiryTime / 2.0}).WithStroke(new double[] { 0.0, 0.0, 0.0, expiryTime / 2.0 }, 1.0);
+            dynText.RecomposeText();
 
             expiryTime -= deltaTime;
             if (expiryTime < 0)

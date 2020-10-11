@@ -101,11 +101,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dialog\HudElementFloatyDamage.cs" />
     <Compile Include="systems\ClientSystems\FloatyWaypointManagement.cs" />
     <Compile Include="systems\ClientSystems\VSHUDTaskSystem.cs" />
     <Compile Include="systems\ClientSystems\WaypointTextUpdateSystem.cs" />
     <Compile Include="systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="systems\ClientSystems\MassFileExportSystem.cs" />
+    <Compile Include="systems\FloatyDamage.cs" />
     <Compile Include="Utility\Patches\ChunkPartGrabber.cs" />
     <Compile Include="systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
@@ -125,6 +127,7 @@
     <Compile Include="systems\TapeMeasure.cs" />
     <Compile Include="systems\VSHUDConfig.cs" />
     <Compile Include="systems\WaypointUtils.cs" />
+    <Compile Include="Utility\Patches\ProduceFloatyDamages.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />
