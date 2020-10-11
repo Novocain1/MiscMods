@@ -17,6 +17,12 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             harmonyInstance.PatchAll();
+            StringBuilder builder = new StringBuilder("Harmony Patched Methods: ");
+            foreach (var val in harmonyInstance.GetPatchedMethods())
+            {
+                builder.Append(val.Name + ", ");
+            }
+            api.Logger.Notification(builder.ToString());
         }
 
         public override void Dispose()
