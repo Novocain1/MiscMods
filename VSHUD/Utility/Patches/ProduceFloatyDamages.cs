@@ -13,14 +13,17 @@ namespace VSHUD
         {
             if (api.Side.IsClient())
             {
-                __instance.WatchedAttributes.SetFloat("lastHealth", 0.0f);
+                var healthTree = __instance.WatchedAttributes.GetTreeAttribute("health");
+                float maxHealth = healthTree.GetFloat("maxhealth"), baseMaxHealth = healthTree.GetFloat("basemaxhealth");
+                maxHealth = maxHealth == 0 ? baseMaxHealth : 20.0f;
+
                 __instance.WatchedAttributes.RegisterModifiedListener("health", () =>
                 {
-                    float lastHealth = __instance.WatchedAttributes.GetFloat("lastHealth");
-                    float health = __instance.WatchedAttributes.GetTreeAttribute("health").GetFloat("currenthealth");
+                    float lastHealth = __instance.WatchedAttributes.GetFloat("fldLastHealth", maxHealth);
+                    float health = healthTree.GetFloat("currenthealth");
                     float dHealth = lastHealth - health;
                     new HudElementFloatyDamage(api as ICoreClientAPI, dHealth, __instance.Pos.XYZ);
-                    __instance.WatchedAttributes.SetFloat("lastHealth", health);
+                    __instance.WatchedAttributes.SetFloat("fldLastHealth", health);
                 });
             }
         }
