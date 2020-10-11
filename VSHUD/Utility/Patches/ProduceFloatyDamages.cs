@@ -10,7 +10,7 @@ namespace VSHUD
     {
         public static void Postfix(Entity __instance, float damage)
         {
-            if (__instance.World.Side.IsClient()) new HudElementFloatyDamage(__instance.World.Api as ICoreClientAPI, damage, __instance.Pos.XYZ);
+            if (__instance.World.Side.IsClient() && ConfigLoader.Config.FDShow) new HudElementFloatyDamage(__instance.World.Api as ICoreClientAPI, damage, __instance.Pos.XYZ);
         }
     }
 }

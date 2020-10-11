@@ -54,6 +54,8 @@ namespace VSHUD
         public float[] PRTintColor { get; set; } = new float[] { 0, 0, 3 };
         public float PROpacity { get; set; } = 0.8f;
 
+        public bool FDShow { get; set; } = true;
+
         public ClockShowConfig ClockShowConfig { get; set; } = new ClockShowConfig();
 
         public List<int> DisabledColors { get; set; } = new List<int>();
