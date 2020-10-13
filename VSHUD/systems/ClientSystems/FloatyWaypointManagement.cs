@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.GameContent;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace VSHUD
 {
@@ -34,7 +35,7 @@ namespace VSHUD
 
         public override string Name => "Floaty Waypoint Management";
 
-        public override EnumClientSystemType GetSystemType() => EnumClientSystemType.HudElement;
+        public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
         public override void OnSeperateThreadGameTick(float dt) => Process();
 
@@ -61,19 +62,9 @@ namespace VSHUD
             if (utils.Config.FloatyWaypoints)
             {
                 bool repopped;
-                if (repopped = WaypointElements.Count == 0) Populate();
+                if (repopped = WaypointElements.Count == 0) Repopulate();
 
-                if (utils.Waypoints.Count > 0 && utils.Waypoints.Count != OpenedCount())
-                {
-                    if (!repopped) Populate();
-
-                    foreach (var val in WaypointElements)
-                    {
-                        if (val.IsOpened() && (val.distance > utils.Config.DotRange || utils.Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryClose();
-                        else if (!val.IsOpened() && (val.distance < utils.Config.DotRange && !utils.Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryOpen();
-                    }
-                }
-                else if (utils.Waypoints.Count < 1 && WaypointElements.Count > 0)
+                if (utils.Waypoints.Count < 1 && WaypointElements.Count > 0)
                 {
                     for (int i = 0; i < WaypointElements.Count; i++)
                     {
@@ -82,6 +73,34 @@ namespace VSHUD
                             elem.TryClose();
                             elem.Dispose();
                         }
+                    }
+                }
+                else if (utils.Waypoints.Count > 0 && utils.Waypoints.Count != OpenedCount())
+                {
+                    if (!repopped) Repopulate();
+
+                    foreach (var val in WaypointElements)
+                    {
+                        if (val.IsOpened() && (val.distance > utils.Config.DotRange || utils.Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryClose();
+                        else if (!val.IsOpened() && (val.distance < utils.Config.DotRange && !utils.Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryOpen();
+                    }
+                }
+                foreach (var val in WaypointElements)
+                {
+                    if (val.Dirty)
+                    {
+                        val.waypoint = utils.WaypointsRel[val.waypointID];
+                        val.UpdateEditDialog();
+                        var dynText = val.SingleComposer.GetDynamicText("text");
+                        dynText.Font.Color = val.dColor;
+                        dynText.RecomposeText();
+                        
+                        WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(val);
+                        val.Dirty = false;
+                    }
+                    else if (val.displayText || val.IsOpened())
+                    {
+                        WaypointTextUpdateSystem.EnqueueIfNotAlready(val);
                     }
                 }
             }
@@ -97,25 +116,38 @@ namespace VSHUD
             }
         }
 
-        public void Populate()
+        public void Repopulate()
         {
-            foreach (var val in utils.WaypointsRel)
+            HudElementWaypoint[] arr = new HudElementWaypoint[utils.WaypointsRel.Length];
+
+            for (int i = utils.WaypointsRel.Length; i < WaypointElements.Count; )
             {
-                WaypointElements.Push(new HudElementWaypoint(capi, val));
+                if (WaypointElements.TryPop(out var elem))
+                {
+                    elem.TryClose();
+                    elem.Dispose();
+                    i++;
+                }
             }
 
-            foreach (var val in WaypointElements)
+            for (int i = 0; WaypointElements.Count > 0 && i < arr.Length; )
             {
-                val.TryClose();
+                if (WaypointElements.TryPop(out var elem))
+                {
+                    arr[i] = elem;
+                    i++;
+                }
             }
-            WaypointElements.Clear();
 
-            foreach (var val in utils.WaypointsRel)
+            for (int i = 0; i < utils.WaypointsRel.Length; i++)
             {
-                HudElementWaypoint waypoint = new HudElementWaypoint(capi, val);
-                waypoint.OnOwnPlayerDataReceived();
-
-                WaypointElements.Push(waypoint);
+                if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
+                else
+                {
+                    arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
+                }
+                arr[i].UpdateEditDialog();
+                WaypointElements.Push(arr[i]);
             }
         }
 

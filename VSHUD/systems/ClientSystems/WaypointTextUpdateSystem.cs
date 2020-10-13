@@ -3,13 +3,25 @@ using System.Collections.Concurrent;
 using Vintagestory.API.Client;
 using Vintagestory.API.Util;
 using Vintagestory.Client.NoObf;
+using System.Linq;
 
 namespace VSHUD
 {
     class WaypointTextUpdateSystem : ClientSystem
     {
         ICoreClientAPI capi;
-        public static ConcurrentStack<HudElementWaypoint> TextTasks = new ConcurrentStack<HudElementWaypoint>();
+
+        public static void EnqueueIfNotAlreadyFast(HudElementWaypoint wp)
+        {
+            if (!Priority.Contains(wp)) Priority.Push(wp);
+        }
+        public static void EnqueueIfNotAlready(HudElementWaypoint wp)
+        {
+            if (!TextTasks.Contains(wp)) TextTasks.Enqueue(wp);
+        }
+
+        public static ConcurrentQueue<HudElementWaypoint> TextTasks = new ConcurrentQueue<HudElementWaypoint>();
+        public static ConcurrentStack<HudElementWaypoint> Priority = new ConcurrentStack<HudElementWaypoint>();
 
         public WaypointTextUpdateSystem(ClientMain game) : base(game)
         {
@@ -22,11 +34,19 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt)
         {
+            for (int i = 0; i < Priority.Count; i++)
+            {
+                if (Priority.TryPop(out var elem))
+                {
+                    UpdateDialog(elem);
+                }
+            }
+            
             for (int i = 0; i < TextTasks.Count; i++)
             {
-                if (TextTasks.TryPop(out HudElementWaypoint hudElemWaypoint))
+                if (TextTasks.TryDequeue(out var elem))
                 {
-                    UpdateDialog(hudElemWaypoint);
+                    UpdateDialog(elem);
                 }
             }
         }
@@ -36,7 +56,6 @@ namespace VSHUD
             if (!hudElemWaypoint.IsOpened() || hudElemWaypoint.waypoint.OwnWaypoint == null) return;
 
             UpdateTitle(hudElemWaypoint);
-            hudElemWaypoint.distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(hudElemWaypoint.waypointPos, 3);
             bool km = hudElemWaypoint.distance >= 1000;
 
             hudElemWaypoint.dialogText = hudElemWaypoint.DialogTitle.UcFirst() + " " + (km ? Math.Round(hudElemWaypoint.distance / 1000, 3) : hudElemWaypoint.distance).ToString("F3") + (km ? "km" : "m");
@@ -54,7 +73,10 @@ namespace VSHUD
         public override void Dispose(ClientMain game)
         {
             base.Dispose(game);
-            TextTasks.Clear();
+            for (int i = 0; i < TextTasks.Count; )
+            {
+                if (TextTasks.TryDequeue(out var a)) i++;
+            }
         }
     }
 }

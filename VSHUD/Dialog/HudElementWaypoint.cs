@@ -15,12 +15,11 @@ namespace VSHUD
         public bool Dirty { get; set; } = false;
 
         public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : absolutePos; }
-        public Vec3d absolutePos;
-        public long id;
-        public string DialogTitle;
+        public Vec3d absolutePos { get => waypoint.Position.Clone(); }
+        public string DialogTitle { get; set; }
         public string dialogText = "";
         public double distance = 0;
-        public int waypointID;
+        public int waypointID { get => waypoint.Index; }
         public VSHUDConfig config;
         public WaypointRelative waypoint;
         public override bool Focused => false;
@@ -35,30 +34,34 @@ namespace VSHUD
         private Matrixf mvMat = new Matrixf();
         CairoFont font;
         public bool isAligned;
+        public bool displayText;
 
         public float ZDepth { get; set; }
         public override float ZSize => 0.00001f;
         public double DistanceFromPlayer { get => capi.World.Player.Entity.Pos.DistanceTo(waypointPos); }
-        double[] dColor { get => ColorUtil.ToRGBADoubles(waypoint.OwnColor); }
+        public double[] dColor { get => ColorUtil.ToRGBADoubles(waypoint.OwnColor); }
+
+        public void UpdateEditDialog()
+        {
+            waypointEditDialog?.Dispose();
+
+            waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
+
+            waypointEditDialog.OnClosed += () =>
+            {
+                Dirty = true;
+            };
+        }
 
         public HudElementWaypoint(ICoreClientAPI capi, WaypointRelative waypoint) : base(capi)
         {
             this.waypoint = waypoint;
             DialogTitle = waypoint.Title;
-            absolutePos = waypoint.Position.Clone();
-            this.waypointID = waypoint.Index;
-            config = capi.ModLoader.GetModSystem<WaypointUtils>().Config;
-            waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
-            
-            waypointEditDialog.OnClosed += () =>
-            {
-                capi.Event.RegisterCallback(dt => {
-                    SingleComposer.GetDynamicText("text").Font.Color = dColor;
-                    SingleComposer.ReCompose();
-                }, 100);
-            };
 
-            renderer = new PillarRenderer(capi, waypoint, this);
+            config = capi.ModLoader.GetModSystem<WaypointUtils>().Config;
+            UpdateEditDialog();
+
+            renderer = new PillarRenderer(capi, this);
 
             capi.Event.RegisterRenderer(renderer, EnumRenderStage.Opaque);
 
@@ -82,15 +85,7 @@ namespace VSHUD
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            WaypointTextUpdateSystem.TextTasks.Push(this);
-        }
-
-        public void RegisterDialogUpdate()
-        {
-            id = capi.Event.RegisterGameTickListener(dt =>
-            {
-                WaypointTextUpdateSystem.TextTasks.Push(this);
-            }, 30);
+            WaypointTextUpdateSystem.TextTasks.Enqueue(this);
         }
 
         protected virtual double FloatyDialogPosition => 0.75;
@@ -102,7 +97,10 @@ namespace VSHUD
         public override void OnRenderGUI(float deltaTime)
         {
             if (!IsOpened() || waypoint.OwnWaypoint == null) return;
+            distance = capi.World.Player.Entity.Pos.RoundedDistanceTo(waypointPos, 3);
+
             var dynText = SingleComposer.GetDynamicText("text");
+            dynText.Font.Color = dColor;
 
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
@@ -141,8 +139,11 @@ namespace VSHUD
             double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
 
             isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !FloatyWaypointManagement.WaypointElements.Any(ui => ui.isAligned && ui != this);
+            displayText = !isClamped && (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned);
+            
+            if (displayText) 
+                dynText.SetNewText(dialogText);
 
-            if (!isClamped && (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned)) dynText.SetNewText(dialogText);
             else dynText.SetNewText("");
 
             if (texturesByIcon != null)
@@ -180,15 +181,14 @@ namespace VSHUD
         public override void Dispose()
         {
             base.Dispose();
-            capi.Event.UnregisterGameTickListener(id);
             SingleComposer?.Dispose();
+            waypointEditDialog.Dispose();
             capi.Event.UnregisterRenderer(renderer, EnumRenderStage.Opaque);
         }
 
         public override void OnGuiOpened()
         {
             base.OnGuiOpened();
-            RegisterDialogUpdate();
         }
 
         public void OpenEditDialog()
@@ -202,13 +202,12 @@ namespace VSHUD
     public class PillarRenderer : IRenderer
     {
         ICoreClientAPI capi;
-        WaypointRelative waypoint;
+        WaypointRelative waypoint { get => ownDialog.waypoint; }
         HudElementWaypoint ownDialog;
 
-        public PillarRenderer(ICoreClientAPI capi, WaypointRelative waypoint, HudElementWaypoint ownDialog)
+        public PillarRenderer(ICoreClientAPI capi, HudElementWaypoint ownDialog)
         {
             this.capi = capi;
-            this.waypoint = waypoint;
             this.ownDialog = ownDialog;
         }
 
