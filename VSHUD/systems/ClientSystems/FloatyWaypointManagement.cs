@@ -10,6 +10,8 @@ namespace VSHUD
     class FloatyWaypointManagement : ClientSystem
     {
         public static ConcurrentStack<HudElementWaypoint> WaypointElements { get; set; } = new ConcurrentStack<HudElementWaypoint>();
+        public static bool mainThreadProcessing = false;
+
         ICoreClientAPI capi;
         WaypointUtils utils;
 
@@ -41,10 +43,7 @@ namespace VSHUD
 
         public void Process()
         {
-            capi.Event.EnqueueMainThreadTask(() =>
-            {
-                Update();
-            }, "");
+            Update();
         }
 
         public int OpenedCount()
@@ -55,6 +54,81 @@ namespace VSHUD
                 if (val.IsOpened()) i++;
             }
             return i;
+        }
+
+        public void OpenOnMainThread(HudElementWaypoint wp)
+        {
+            mainThreadProcessing = true;
+            capi.Event.EnqueueMainThreadTask(() => 
+            {
+                wp.TryOpen();
+                mainThreadProcessing = false;
+            }, "");
+            while (mainThreadProcessing) ;
+        }
+
+        public void CloseOnMainThread(HudElementWaypoint wp)
+        {
+            mainThreadProcessing = true;
+            capi.Event.EnqueueMainThreadTask(() => 
+            { 
+                wp.TryClose();
+                mainThreadProcessing = false;
+            }, "");
+            while (mainThreadProcessing) ;
+        }
+
+        public void DisposeOnMainThread(HudElementWaypoint wp)
+        {
+            mainThreadProcessing = true;
+            capi.Event.EnqueueMainThreadTask(() => 
+            { 
+                wp.Dispose();
+                mainThreadProcessing = false;
+            }, "");
+            while (mainThreadProcessing) ;
+        }
+
+        public void RecomposeTextOnMainThread(HudElementWaypoint wp)
+        {
+            mainThreadProcessing = true;
+            capi.Event.EnqueueMainThreadTask(() =>
+            {
+                if (wp.Dirty)
+                {
+                    wp.waypoint = utils.WaypointsRel[wp.waypointID];
+                    wp.UpdateEditDialog();
+                    var dynText = wp.SingleComposer.GetDynamicText("text");
+                    dynText.Font.Color = wp.dColor;
+                    dynText.RecomposeText();
+
+                    WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
+                    wp.Dirty = false;
+                }
+                else if (wp.displayText || wp.IsOpened())
+                {
+                    WaypointTextUpdateSystem.EnqueueIfNotAlready(wp);
+                }
+                mainThreadProcessing = false;
+            }, "");
+            while (mainThreadProcessing) ;
+        }
+       
+        public void CreateHudElemOnMainThread(int i, HudElementWaypoint[] arr)
+        {
+            mainThreadProcessing = true;
+            capi.Event.EnqueueMainThreadTask(() => 
+            {
+                if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
+                else
+                {
+                    arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
+                }
+                arr[i].UpdateEditDialog();
+                WaypointElements.Push(arr[i]);
+                mainThreadProcessing = false;
+            }, "");
+            while (mainThreadProcessing) ;
         }
 
         public void Update()
@@ -70,8 +144,8 @@ namespace VSHUD
                     {
                         if (WaypointElements.TryPop(out var elem))
                         {
-                            elem.TryClose();
-                            elem.Dispose();
+                            CloseOnMainThread(elem);
+                            DisposeOnMainThread(elem);
                         }
                     }
                 }
@@ -81,27 +155,13 @@ namespace VSHUD
 
                     foreach (var val in WaypointElements)
                     {
-                        if (val.IsOpened() && (val.distance > utils.Config.DotRange || utils.Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryClose();
-                        else if (!val.IsOpened() && (val.distance < utils.Config.DotRange && !utils.Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) val.TryOpen();
+                        if (val.IsOpened() && (val.distance > utils.Config.DotRange || utils.Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) CloseOnMainThread(val);
+                        else if (!val.IsOpened() && (val.distance < utils.Config.DotRange && !utils.Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) OpenOnMainThread(val);
                     }
                 }
                 foreach (var val in WaypointElements)
                 {
-                    if (val.Dirty)
-                    {
-                        val.waypoint = utils.WaypointsRel[val.waypointID];
-                        val.UpdateEditDialog();
-                        var dynText = val.SingleComposer.GetDynamicText("text");
-                        dynText.Font.Color = val.dColor;
-                        dynText.RecomposeText();
-                        
-                        WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(val);
-                        val.Dirty = false;
-                    }
-                    else if (val.displayText || val.IsOpened())
-                    {
-                        WaypointTextUpdateSystem.EnqueueIfNotAlready(val);
-                    }
+                    RecomposeTextOnMainThread(val);
                 }
             }
             else
@@ -110,11 +170,13 @@ namespace VSHUD
                 {
                     if (val.IsOpened())
                     {
-                        val.TryClose();
+                        CloseOnMainThread(val);
                     }
                 }
             }
         }
+
+
 
         public void Repopulate()
         {
@@ -124,8 +186,8 @@ namespace VSHUD
             {
                 if (WaypointElements.TryPop(out var elem))
                 {
-                    elem.TryClose();
-                    elem.Dispose();
+                    CloseOnMainThread(elem);
+                    DisposeOnMainThread(elem);
                     i++;
                 }
             }
@@ -141,13 +203,7 @@ namespace VSHUD
 
             for (int i = 0; i < utils.WaypointsRel.Length; i++)
             {
-                if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
-                else
-                {
-                    arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
-                }
-                arr[i].UpdateEditDialog();
-                WaypointElements.Push(arr[i]);
+                CreateHudElemOnMainThread(i, arr);
             }
         }
 
