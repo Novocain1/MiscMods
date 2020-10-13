@@ -241,11 +241,11 @@ namespace VSHUD
                 float dist = (float)(waypoint.DistanceFromPlayer ?? 1.0f);
                 float scale = GameMath.Max(dist / ClientSettings.FieldOfView, 1.0f);
 
+                newColor.A = 0.9f;
                 prog.NormalShaded = 0;
+                prog.RgbaGlowIn = newColor;
+                prog.ExtraGlow = 64;
                 
-                prog.RgbaLightIn = newColor;
-
-                newColor.A = 0.5f;
                 prog.RgbaTint = newColor;
 
                 prog.Tex2D = texID;

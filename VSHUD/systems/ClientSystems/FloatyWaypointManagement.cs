@@ -119,13 +119,16 @@ namespace VSHUD
             mainThreadProcessing = true;
             capi.Event.EnqueueMainThreadTask(() => 
             {
-                if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
-                else
+                if (i <= arr.Length)
                 {
-                    arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
+                    if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
+                    else
+                    {
+                        arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
+                    }
+                    arr[i].UpdateEditDialog();
+                    WaypointElements.Push(arr[i]);
                 }
-                arr[i].UpdateEditDialog();
-                WaypointElements.Push(arr[i]);
                 mainThreadProcessing = false;
             }, "");
             while (mainThreadProcessing) ;
