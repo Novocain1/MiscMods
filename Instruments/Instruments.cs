@@ -52,7 +52,7 @@ namespace ModProject
             {
                 int delay = instrument == "flute" ? 24 : 500;
                 tick = false;
-                Vec3d pos = byEntity.LocalPos.XYZ;
+                Vec3d pos = byEntity.SidedPos.XYZ;
                 float normalizedPitch = 1.0f - GameMathExt.Normalize(byEntity.Pos.Pitch, 1.578125f, 4.6875f);
                 int note = (int)Math.Round((octave.Length - 1) * normalizedPitch);
 
