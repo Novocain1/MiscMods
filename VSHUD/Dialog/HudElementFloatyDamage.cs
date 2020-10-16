@@ -15,6 +15,8 @@ namespace VSHUD
         CairoFont font;
         double[] color;
 
+        public override bool ShouldReceiveMouseEvents() => false;
+
         public HudElementFloatyDamage(ICoreClientAPI capi, double damage, Vec3d pos) : base(capi)
         {
             this.pos = pos.Clone();
