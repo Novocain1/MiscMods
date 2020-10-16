@@ -73,22 +73,6 @@ namespace VSHUD
                     }
                 }
             });
-
-            api.Event.LevelFinalize += () =>
-            {
-                string path = Path.Combine(GamePaths.Binaries, "worldparts");
-                path = Path.Combine(path, api.World.Seed.ToString(), "textures");
-                Directory.CreateDirectory(path);
-
-                ClientMain game = (api.World as ClientMain);
-                game.SetField("guiShaderProg", ShaderPrograms.Gui);
-                BlockTextureAtlasManager mgr = game.GetField<BlockTextureAtlasManager>("BlockAtlasManager");
-
-                for (int i = 0; i < mgr.Atlasses.Count; i++)
-                {
-                    mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
-                }
-            };
         }
     }
 
