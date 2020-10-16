@@ -1,127 +1,294 @@
 {
-	code: "instrument",
-	class: "BlockInstrument",
-  behaviors: [
-    {
-      name: "HorizontalAttachable", 
-      properties: 
-      {
-        handleDrops: false
-      },
-  }],
-	variantgroups: [
-		{ code: "instrument", states: ["flute", "lute", "harp"] },
-    { code: "rot", states: ["north", "east", "south", "west", "held"] }
-	],
-	creativeinventory: { "general": ["*-held"], "terrain": ["*-held"], "construction": ["*-held"] },
-  shapeByType: {
-		"harp-north": { base: "block/instrument/harp", rotateZ: 90, rotateY: 180},
-    "harp-east": { base: "block/instrument/harp", rotateZ: 90, rotateY: 90},
-    "harp-south": { base: "block/instrument/harp", rotateZ: 90, rotateY: 0},
-    "harp-west": { base: "block/instrument/harp", rotateZ: 90, rotateY: 270},
-    "*-north": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 90},
-    "*-east": { base: "block/instrument/{instrument}", rotateZ: 90},
-    "*-south": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 270 },
-    "*-west": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 180},
-    "*-held": { base: "block/instrument/{instrument}", rotateZ: 90, rotateY: 180},
-  },
-	replaceable: 90,
-  resistance: 0.75,
-	textures: {
-		flute: { base: "block/instrument/flute" },
-    harp01: { base: "block/instrument/harp01" },
-    harp02: { base: "block/instrument/harp02" },
-    lute: { base: "block/instrument/lute" },
-	},
-	soundsbyType: {
-    "*-flute-*":{
-      walk: "walk/stone",
+    "code": "instrument",
+    "class": "BlockInstrument",
+    "behaviors": [
+        {
+            "name": "HorizontalAttachable",
+            "properties": {
+                "handleDrops": false
+            }
+        }
+    ],
+    "variantgroups": [
+        {
+            "code": "instrument",
+            "states": [
+                "flute",
+                "lute",
+                "harp"
+            ]
+        },
+        {
+            "code": "rot",
+            "states": [
+                "north",
+                "east",
+                "south",
+                "west",
+                "held"
+            ]
+        }
+    ],
+    "creativeinventory": {
+        "general": [
+            "*-held"
+        ],
+        "terrain": [
+            "*-held"
+        ],
+        "construction": [
+            "*-held"
+        ]
     },
-    "*":{
-      walk: "walk/stone",
-      hit: "instrument/{instrument}-c3", 
-      break: "instrument/{instrument}-c4",
-    }
-
-	},
-  maxStackSize: 1,
-	heldTpIdleAnimation: "",
-  heldTpUseAnimationByType: {
-    "*": "holdbothhands",
-  },
-  lightAbsorption: 0,
-  sideopaque: {
-		all: false
-	},
-	sidesolid: {
-		all: false
-	},
-	tpHandTransformByType: {
-    "*-flute-held":{
-		  translation: { x: -1.07, y: -0.78, z: -0.46 },
-		  rotation: { x: 36, y: -160, z: -144 },
-		  origin: { x: 0.49, y: 0.51, z: 0.4 },
-		  scale: 0.88
+    "shapeByType": {
+        "harp-north": {
+            "base": "block/instrument/harp",
+            "rotateZ": 90,
+            "rotateY": 180
+        },
+        "harp-east": {
+            "base": "block/instrument/harp",
+            "rotateZ": 90,
+            "rotateY": 90
+        },
+        "harp-south": {
+            "base": "block/instrument/harp",
+            "rotateZ": 90,
+            "rotateY": 0
+        },
+        "harp-west": {
+            "base": "block/instrument/harp",
+            "rotateZ": 90,
+            "rotateY": 270
+        },
+        "*-north": {
+            "base": "block/instrument/{instrument}",
+            "rotateZ": 90,
+            "rotateY": 90
+        },
+        "*-east": {
+            "base": "block/instrument/{instrument}",
+            "rotateZ": 90
+        },
+        "*-south": {
+            "base": "block/instrument/{instrument}",
+            "rotateZ": 90,
+            "rotateY": 270
+        },
+        "*-west": {
+            "base": "block/instrument/{instrument}",
+            "rotateZ": 90,
+            "rotateY": 180
+        },
+        "*-held": {
+            "base": "block/instrument/{instrument}",
+            "rotateZ": 90,
+            "rotateY": 180
+        }
     },
-    "*-lute-held":{
-		  translation: { x: -0.8, y: -0.9, z: -0.7 },
-		  rotation: { x: -29, y: -49, z: -33 },
-		  scale: 0.83
+    "replaceable": 90,
+    "resistance": 0.75,
+    "textures": {
+        "flute": {
+            "base": "block/instrument/flute"
+        },
+        "harp01": {
+            "base": "block/instrument/harp01"
+        },
+        "harp02": {
+            "base": "block/instrument/harp02"
+        },
+        "lute": {
+            "base": "block/instrument/lute"
+        }
     },
-    "*-harp-held":{
-		  translation: { x: -1.1, y: -1.2, z: -1.2 },
-		  rotation: { x: 128, y: -20, z: 66 },
-		  scale: 0.51
-    }
-	},
-  fpHandTransformByType: {
-    "*-flute-held":{
-		  translation: { x: -1.5, y: 0.95, z: 0.5 },
-		  rotation: { x: -116, y: -135, z: 1 },
-		  scale: 2.81
+    "soundsbyType": {
+        "*-flute-*": {
+            "walk": "walk/stone"
+        },
+        "*": {
+            "walk": "walk/stone",
+            "hit": "instrument/{instrument}-c3",
+            "break": "instrument/{instrument}-c4"
+        }
     },
-    "*-lute-held": {
-		  translation: { x: -1.8, y: 0.65, z: 0.7 },
-		  rotation: { x: -63, y: -48, z: 90 },
-		  scale: 2.67
-	  },
-	  "*-harp-held": {
-		  translation: { x: -0.7, y: -0.15, z: 0.5 },
-		  rotation: { x: -169, y: -57, z: -56 },
-		  scale: 2.8699
-	  }
-	},
-  guiTransformByType: {
-    "*-flute-held":{
-		  translation: { x: -0.2, y: 0.9, z: -3.8 },
-		  rotation: { x: 83, y: 38, z: -86 },
-		  scale: 1.86
+    "maxStackSize": 1,
+    "heldTpIdleAnimation": "",
+    "heldTpUseAnimationByType": {
+        "*": "holdbothhands"
     },
-    "*-lute-held":{
-		  rotation: { x: -11, y: 95, z: 1 },
-		  scale: 1.47
+    "lightAbsorption": 0,
+    "sideopaque": {
+        "all": false
     },
-    "*-harp-held":{
-		  translation: { x: 0, y: 6, z: 0 },
-		  rotation: { x: -10, y: -180, z: 122 },
-		  scale: 1.46
-    }
-	},
-  collisionSelectionBoxByType:{
-    "*-east":{
-      x1: 0.875, y1: 0, z1: 0, x2: 1, y2: 1, z2: 1 
+    "sidesolid": {
+        "all": false
     },
-    "*-west":{
-      x1: 0, y1: 0, z1: 0, x2: 0.125, y2: 1, z2: 1 
+    "tpHandTransformByType": {
+        "*-flute-held": {
+            "translation": {
+                "x": -1.07,
+                "y": -0.78,
+                "z": -0.46
+            },
+            "rotation": {
+                "x": 36,
+                "y": -160,
+                "z": -144
+            },
+            "origin": {
+                "x": 0.49,
+                "y": 0.51,
+                "z": 0.4
+            },
+            "scale": 0.88
+        },
+        "*-lute-held": {
+            "translation": {
+                "x": -0.8,
+                "y": -0.9,
+                "z": -0.7
+            },
+            "rotation": {
+                "x": -29,
+                "y": -49,
+                "z": -33
+            },
+            "scale": 0.83
+        },
+        "*-harp-held": {
+            "translation": {
+                "x": -1.1,
+                "y": -1.2,
+                "z": -1.2
+            },
+            "rotation": {
+                "x": 128,
+                "y": -20,
+                "z": 66
+            },
+            "scale": 0.51
+        }
     },
-    "*-south":{
-      x1: 0, y1: 0, z1: 0.875, x2: 1, y2: 1, z2: 1 
+    "fpHandTransformByType": {
+        "*-flute-held": {
+            "translation": {
+                "x": -1.5,
+                "y": 0.95,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": -116,
+                "y": -135,
+                "z": 1
+            },
+            "scale": 2.81
+        },
+        "*-lute-held": {
+            "translation": {
+                "x": -1.8,
+                "y": 0.65,
+                "z": 0.7
+            },
+            "rotation": {
+                "x": -63,
+                "y": -48,
+                "z": 90
+            },
+            "scale": 2.67
+        },
+        "*-harp-held": {
+            "translation": {
+                "x": -0.7,
+                "y": -0.15,
+                "z": 0.5
+            },
+            "rotation": {
+                "x": -169,
+                "y": -57,
+                "z": -56
+            },
+            "scale": 2.8699
+        }
     },
-    "*-north":{
-      x1: 0, y1: 0, z1: 0, x2: 1, y2: 1, z2: 0.125 
+    "guiTransformByType": {
+        "*-flute-held": {
+            "translation": {
+                "x": -0.2,
+                "y": 0.9,
+                "z": -3.8
+            },
+            "rotation": {
+                "x": 83,
+                "y": 38,
+                "z": -86
+            },
+            "scale": 1.86
+        },
+        "*-lute-held": {
+            "rotation": {
+                "x": -11,
+                "y": 95,
+                "z": 1
+            },
+            "scale": 1.47
+        },
+        "*-harp-held": {
+            "translation": {
+                "x": 0,
+                "y": 6,
+                "z": 0
+            },
+            "rotation": {
+                "x": -10,
+                "y": -180,
+                "z": 122
+            },
+            "scale": 1.46
+        }
     },
-  },
-  drops: [
-		{ type: "block", code: "instrument-{instrument}-held", quantity: { avg: 1 }  }
-	],
+    "collisionSelectionBoxByType": {
+        "*-east": {
+            "x1": 0.875,
+            "y1": 0,
+            "z1": 0,
+            "x2": 1,
+            "y2": 1,
+            "z2": 1
+        },
+        "*-west": {
+            "x1": 0,
+            "y1": 0,
+            "z1": 0,
+            "x2": 0.125,
+            "y2": 1,
+            "z2": 1
+        },
+        "*-south": {
+            "x1": 0,
+            "y1": 0,
+            "z1": 0.875,
+            "x2": 1,
+            "y2": 1,
+            "z2": 1
+        },
+        "*-north": {
+            "x1": 0,
+            "y1": 0,
+            "z1": 0,
+            "x2": 1,
+            "y2": 1,
+            "z2": 0.125
+        }
+    },
+    "blockmaterial": "wood",
+    "drops": [
+        {
+            "type": "block",
+            "code": "instrument-{instrument}-held",
+            "quantity": {
+                "avg": 1
+            }
+        }
+    ]
 }

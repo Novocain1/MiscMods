@@ -4,8 +4,8 @@
 	"modid": "instrumentsmod",
 	"description" : "Adds various instruments",
 	"authors": ["Novocain", "BunnyViking"],
-	"version": "1.0.11",
+	"version": "1.0.13",
 	"dependencies": {
-		"game": "1.11.0"
+		"game": "1.13.4"
 	}
 }
