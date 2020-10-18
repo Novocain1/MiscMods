@@ -47,10 +47,6 @@
       <HintPath>..\..\..\Lib\csvorbis.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ENet">
-      <HintPath>..\..\..\Lib\ENet.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
@@ -99,7 +95,6 @@
   <ItemGroup>
     <Compile Include="Instruments.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RedirectLogs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="mods\Instruments\assets\instrumentsmod\sounds\instrument\flute-a3.ogg" />

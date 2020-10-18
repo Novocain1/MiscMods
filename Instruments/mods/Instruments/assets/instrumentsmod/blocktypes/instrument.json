@@ -1,6 +1,18 @@
 {
     "code": "instrument",
     "class": "BlockInstrument",
+    "attributesByType":
+    {
+      "*-flute-*": {
+        "instrument": "{instrument}",
+        "sustain": true,
+        "delay": 24
+      },
+      "*": {
+        "instrument": "{instrument}",
+        "sustain": false
+      }
+    },
     "behaviors": [
         {
             "name": "HorizontalAttachable",
