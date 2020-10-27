@@ -70,8 +70,11 @@ namespace VSHUD
             if (Config.PlayerTemporalStability) stringBuilder.AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100));
             if (Config.TemporalStormInfo)
             {
+                double daysOrHours = Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2);
+                string TTL = daysOrHours < 0 ? "∞" : daysOrHours.ToString("F2");
+
                 stringBuilder.AppendLine(nowStormActive ? string.Format("Magnitude {0} Temporal Storm Ends In {1} Hours.", Math.Round(stormGlitchStrength * 10, 1), Math.Round(stormActiveDays * 24, 2)) :
-                string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2), nextStormDays > 1 ? "Days" : "Hours"));
+                string.Format("{0} Temporal Storm In {1} {2}.", nextStormStrength, TTL, nextStormDays > 1 ? "Days" : "Hours"));
             }
             
             SingleComposer.GetDynamicText("clock").SetNewText(stringBuilder.ToString());
