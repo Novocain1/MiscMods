@@ -117,14 +117,28 @@ namespace VSHUD
         public void CreateHudElemOnMainThread(int i, HudElementWaypoint[] arr)
         {
             mainThreadProcessing = true;
+            var wpRel = utils.WaypointsRel;
+
+            if (i >= wpRel.Length || wpRel.Length == 0)
+            {
+                mainThreadProcessing = false;
+                return;
+            }
+
+            WaypointRelative wp = wpRel[i];
+
             capi.Event.EnqueueMainThreadTask(() => 
             {
-                if (i <= arr.Length)
+                var notif = capi.ModLoader.GetModSystem<ModSystemNotification>();
+                var elem = notif.CreateNotification(string.Format("Building Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")));
+                elem.expiryTime = 0.01f;
+
+                if (!(i >= arr.Length && arr.Length > 0))
                 {
-                    if (arr[i] != null) arr[i].waypoint = utils.WaypointsRel[i];
+                    if (arr[i] != null) arr[i].waypoint = wp;
                     else
                     {
-                        arr[i] = new HudElementWaypoint(capi, utils.WaypointsRel[i]);
+                        arr[i] = new HudElementWaypoint(capi, wp);
                     }
                     arr[i].UpdateEditDialog();
                     WaypointElements.Push(arr[i]);

@@ -14,16 +14,18 @@ namespace VSHUD
         ICoreClientAPI capi;
         public Queue<HudElementNotification> Notifications { get; set; } = new Queue<HudElementNotification>();
 
-        public void CreateNotification(string text)
+        public HudElementNotification CreateNotification(string text)
         {
             var elem = new HudElementNotification(capi, text);
             Notifications.Enqueue(elem);
+            return elem;
         }
 
-        public void CreateNotification(string text, double[] color)
+        public HudElementNotification CreateNotification(string text, double[] color)
         {
             var elem = new HudElementNotification(capi, text, color);
             Notifications.Enqueue(elem);
+            return elem;
         }
 
         public override void StartClientSide(ICoreClientAPI api)

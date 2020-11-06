@@ -64,8 +64,12 @@ namespace VSHUD
             {
                 Queue<WaypointRelative> rel = new Queue<WaypointRelative>();
                 int i = 0;
-                foreach (var val in Waypoints)
+                var wps = Waypoints.ToArray();
+
+                foreach (var val in wps)
                 {
+                    if (val == null) continue;
+
                     WaypointRelative relative = new WaypointRelative(capi, val, i)
                     {
                         Color = val.Color,
