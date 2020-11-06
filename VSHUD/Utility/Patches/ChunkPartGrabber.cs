@@ -10,7 +10,6 @@ namespace VSHUD
     [HarmonyPatch(typeof(ChunkTesselator), "NowProcessChunks")]
     class ChunkPartGrabber
     {
-        public static MeshData Combined = new MeshData(1, 1);
         public static bool Process { get => ConfigLoader.Config.CreateChunkObjs; }
         public static int Seed = 0;
         public static Vec3i SpawnPos;

@@ -46,23 +46,28 @@ namespace VSHUD
             SingleComposer.Bounds.fixedOffsetY = 0;
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
-
+            MakeAdjustments(0);
             TryOpen();
         }
 
         public override void OnRenderGUI(float deltaTime)
         {
             base.OnRenderGUI(deltaTime);
+            MakeAdjustments(deltaTime);
+        }
+
+        public void MakeAdjustments(float deltaTime)
+        {
             pos.Y += deltaTime / 1.5;
             var dynText = SingleComposer.GetDynamicText("text");
 
             Vec3d projectedPos = MatrixToolsd.Project(pos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
             if (projectedPos.Z < 0) dynText.SetNewText("");
-            
+
             SingleComposer.Bounds.absFixedX = projectedPos.X - SingleComposer.Bounds.OuterWidth / 2;
             SingleComposer.Bounds.absFixedY = capi.Render.FrameHeight - projectedPos.Y - SingleComposer.Bounds.OuterHeight;
 
-            dynText.Font = font.WithColor(new double[] { color[0], color[1], color[2], expiryTime / 2.0}).WithStroke(new double[] { 0.0, 0.0, 0.0, expiryTime / 2.0 }, 1.0);
+            dynText.Font = font.WithColor(new double[] { color[0], color[1], color[2], expiryTime / 2.0 }).WithStroke(new double[] { 0.0, 0.0, 0.0, expiryTime / 2.0 }, 1.0);
             dynText.RecomposeText();
 
             expiryTime -= deltaTime;

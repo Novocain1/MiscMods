@@ -101,6 +101,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dialog\HudElementNotification.cs" />
     <Compile Include="Dialog\HudElementFloatyDamage.cs" />
     <Compile Include="systems\ClientSystems\FloatyWaypointManagement.cs" />
     <Compile Include="systems\ClientSystems\VSHUDTaskSystem.cs" />

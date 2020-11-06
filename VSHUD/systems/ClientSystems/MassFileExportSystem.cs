@@ -15,9 +15,10 @@ using System.Collections.Concurrent;
 
 namespace VSHUD
 {
-    interface IExportable
+    interface IExportable : IDisposable
     {
         bool Enabled { get; set; }
+        bool Disposeable { get; set; }
         string FilePath { get; set; }
         string FileName { get; set; }
         void Export();
@@ -26,9 +27,11 @@ namespace VSHUD
     abstract class Exportable : IExportable
     {
         public abstract bool Enabled { get; set; }
+        public abstract bool Disposeable { get; set; }
         public abstract string FilePath { get; set; }
         public abstract string FileName { get; set; }
         public abstract void Export();
+        public abstract void Dispose();
     }
 
     class ExportableChunkPart : ExportableMesh
@@ -44,6 +47,7 @@ namespace VSHUD
     {
         public MeshData Mesh;
         public override bool Enabled { get; set; } = true;
+        public override bool Disposeable { get; set; } = true;
         public override string FilePath { get; set; }
         public override string FileName { get; set; }
 
@@ -114,6 +118,11 @@ namespace VSHUD
             }
 
         }
+
+        public override void Dispose()
+        {
+            Mesh.Clear();
+        }
     }
 
     class MassFileExportSystem : ClientSystem
@@ -132,8 +141,22 @@ namespace VSHUD
         {
             for (int i = 0; i < toExport.Count; i++)
             {
-                bool success = toExport.TryPop(out Exportable exportable) && exportable.Enabled;
-                if (success) exportable.Export();
+                bool success = toExport.TryPop(out Exportable exportable);
+                if (success)
+                {
+                    if (exportable.Enabled)
+                    {
+                        exportable.Export();
+                        if (exportable.Disposeable) exportable.Dispose();
+                    }
+                    else
+                    {
+                        Exportable[] exportables = new Exportable[toExport.Count];
+                        toExport.TryPopRange(exportables);
+                        toExport.Push(exportable);
+                        toExport.PushRange(exportables);
+                    }
+                }
             }
         }
     }

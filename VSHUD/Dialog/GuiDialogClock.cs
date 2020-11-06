@@ -32,6 +32,7 @@ namespace VSHUD
                 .AddDynamicText("", CairoFont.WhiteSmallText().WithStroke(stroke, 2), EnumTextOrientation.Justify, textBounds.ForkChild(), "clock")
                 .Compose();
 
+            
             id = capi.World.RegisterGameTickListener(dt => UpdateText(), 100);
 
         }
