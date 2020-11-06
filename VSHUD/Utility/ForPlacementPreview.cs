@@ -129,7 +129,7 @@ namespace VSHUD
                         case EnumAxis.X:
                             if (z < 0.3 && y < 0.3)
                             {
-                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.Opposite.Code);
                             }
                             else if (z > y)
                             {
@@ -144,7 +144,7 @@ namespace VSHUD
                         case EnumAxis.Y:
                             if (z < 0.3 && x < 0.3)
                             {
-                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.Opposite.Code);
                             }
                             else if (z > x)
                             {
@@ -159,7 +159,7 @@ namespace VSHUD
                         case EnumAxis.Z:
                             if (x < 0.3 && y < 0.3)
                             {
-                                blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
+                                blockCode = block.CodeWithVariant("rot", blockSel.Face.Opposite.Code);
                             }
                             else if (x > y)
                             {
@@ -176,7 +176,7 @@ namespace VSHUD
                 {
                     if (blockSel.Face.IsVertical)
                     {
-                        blockCode = block.CodeWithVariant("rot", blockSel.Face.GetOpposite().Code);
+                        blockCode = block.CodeWithVariant("rot", blockSel.Face.Opposite.Code);
                     }
                     else
                     {
@@ -198,7 +198,7 @@ namespace VSHUD
                 {
                     if (facing == "block")
                     {
-                        h = blockSel.Face.GetOpposite().Code;
+                        h = blockSel.Face.Opposite.Code;
                     }
                     else
                     {
@@ -305,7 +305,7 @@ namespace VSHUD
 
             return
                 (block.FirstCodePart() == fenceblock.FirstCodePart() || block.FirstCodePart() == fenceblock.FirstCodePart() + "gate")
-                || block.SideSolid[side.GetOpposite().Index];
+                || block.SideSolid[side.Opposite.Index];
             ;
         }
     }
@@ -407,7 +407,7 @@ namespace VSHUD
         bool TryAttachTo(IWorldAccessor world, Block block, BlockPos blockpos, BlockFacing onBlockFace, out Block orientedBlock)
         {
             orientedBlock = null;
-            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
+            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.Opposite);
             Block attachingBlock = world.BlockAccessor.GetBlock(world.BlockAccessor.GetBlockId(attachingBlockPos));
 
             BlockFacing onFace = onBlockFace;
@@ -454,7 +454,7 @@ namespace VSHUD
 
         bool TryAttachTo(IWorldAccessor world, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
-            BlockFacing oppositeFace = blockSel.Face.GetOpposite();
+            BlockFacing oppositeFace = blockSel.Face.Opposite;
             orientedBlock = world.BlockAccessor.GetBlock(block.CodeWithParts(oppositeFace.Code));
 
             return orientedBlock != null;
@@ -486,7 +486,7 @@ namespace VSHUD
         {
             BlockPos pos = blockSel.Position;
 
-            if (blockSel.Face.Index < 4 && pos.Copy().Offset(blockSel.Face.GetOpposite()).GetBlock(world).HasBehavior<BlockBehaviorLadder>()) { 
+            if (blockSel.Face.Index < 4 && pos.Copy().Offset(blockSel.Face.Opposite).GetBlock(world).HasBehavior<BlockBehaviorLadder>()) { 
                 orientedBlock = null; 
                 return false; 
             }
@@ -520,7 +520,7 @@ namespace VSHUD
 
 
             // Otherwise maybe on the other side?
-            blockCode = block.CodeWithParts(blockSel.Face.GetOpposite().Code);
+            blockCode = block.CodeWithParts(blockSel.Face.Opposite.Code);
             orientedBlock = world.BlockAccessor.GetBlock(blockCode);
             if (orientedBlock != null && HasSupport(orientedBlock, world.BlockAccessor, pos))  return true;
 
@@ -563,7 +563,7 @@ namespace VSHUD
 
         public bool SideSolid(IBlockAccessor blockAccess, BlockPos pos, BlockFacing facing)
         {
-            return blockAccess.GetBlock(pos.X + facing.Normali.X, pos.Y, pos.Z + facing.Normali.Z).SideSolid[facing.GetOpposite().Index];
+            return blockAccess.GetBlock(pos.X + facing.Normali.X, pos.Y, pos.Z + facing.Normali.Z).SideSolid[facing.Opposite.Index];
         }
     }
 
@@ -649,7 +649,7 @@ namespace VSHUD
 
             BlockFacing onFace = onBlockFace;
 
-            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
+            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.Opposite);
             Block block = world.BlockAccessor.GetBlock(world.BlockAccessor.GetBlockId(attachingBlockPos));
 
             if (block.CanAttachBlockAt(world.BlockAccessor, block, attachingBlockPos, onFace))
@@ -770,7 +770,7 @@ namespace VSHUD
 
         bool TryAttachTo(IBlockAccessor blockAccessor, Block block, BlockPos blockpos, BlockFacing onBlockFace, ref Block orientedBlock)
         {
-            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.GetOpposite());
+            BlockPos attachingBlockPos = blockpos.AddCopy(onBlockFace.Opposite);
             var tmpBlock = blockAccessor.GetBlock(blockAccessor.GetBlockId(attachingBlockPos));
 
             if (tmpBlock.CanAttachBlockAt(blockAccessor, block, attachingBlockPos, onBlockFace))

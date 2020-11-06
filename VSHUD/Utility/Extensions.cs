@@ -298,7 +298,7 @@ namespace VSHUD
 
         public static float GetRotY(this Block block, Vec3d entityPos, BlockSelection blockSel)
         {
-            BlockPos targetPos = blockSel.DidOffset ? blockSel.Position.AddCopy(blockSel.Face.GetOpposite()) : blockSel.Position;
+            BlockPos targetPos = blockSel.DidOffset ? blockSel.Position.AddCopy(blockSel.Face.Opposite) : blockSel.Position;
             
             if (targetPos != null)
             {
