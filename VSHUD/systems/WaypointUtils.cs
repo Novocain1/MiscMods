@@ -322,6 +322,12 @@ namespace VSHUD
             {
                 val.Dispose(capi.World as ClientMain);
             }
+            foreach (var val in texturesByIcon)
+            {
+                val.Value.Dispose();
+                val.Value.SetField("capi", null);
+            }
+            texturesByIcon.Clear();
         }
     }
 
