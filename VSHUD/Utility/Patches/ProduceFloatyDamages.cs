@@ -9,6 +9,8 @@ namespace VSHUD
     [HarmonyPatch(typeof(Entity), "Initialize")]
     class ProduceFloatyDamages
     {
+        public static bool CanCreate { get => ConfigLoader.Config.FDShow; }
+
         public static void Postfix(Entity __instance, EntityProperties properties, ICoreAPI api, long InChunkIndex3d)
         {
             if (api.Side.IsClient())
@@ -23,7 +25,7 @@ namespace VSHUD
                     float lastHealth = __instance.WatchedAttributes.GetFloat("fldLastHealth", maxHealth);
                     float health = healthTree.GetFloat("currenthealth");
                     float dHealth = lastHealth - health;
-                    if (dHealth != 0) new HudElementFloatyDamage(api as ICoreClientAPI, dHealth, __instance.Pos.XYZ);
+                    if (dHealth != 0 && CanCreate) new HudElementFloatyDamage(api as ICoreClientAPI, dHealth, __instance.Pos.XYZ);
                     __instance.WatchedAttributes.SetFloat("fldLastHealth", health);
                 });
             }
