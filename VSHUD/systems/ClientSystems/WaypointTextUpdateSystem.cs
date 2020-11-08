@@ -46,7 +46,10 @@ namespace VSHUD
             {
                 if (TextTasks.TryDequeue(out var elem))
                 {
-                    UpdateDialog(elem);
+                    lock (elem)
+                    {
+                        UpdateDialog(elem);
+                    }
                 }
             }
         }

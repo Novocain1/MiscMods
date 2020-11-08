@@ -46,14 +46,43 @@ namespace VSHUD
             Update();
         }
 
-        public int OpenedCount()
+        public HudElementWaypoint[] Openable
         {
-            int i = 0;
-            foreach (var val in WaypointElements)
+            get
             {
-                if (val.IsOpened()) i++;
+                Stack<HudElementWaypoint> openable = new Stack<HudElementWaypoint>();
+                foreach (var val in WaypointElements)
+                {
+                    if (val.Openable) openable.Push(val);
+                }
+                return openable.ToArray();
             }
-            return i;
+        }
+
+        public HudElementWaypoint[] Closeable
+        {
+            get
+            {
+                Stack<HudElementWaypoint> closeable = new Stack<HudElementWaypoint>();
+                foreach (var val in WaypointElements)
+                {
+                    if (val.Closeable) closeable.Push(val);
+                }
+                return closeable.ToArray();
+            }
+        }
+
+        public HudElementWaypoint[] Opened
+        {
+            get
+            {
+                Stack<HudElementWaypoint> opened = new Stack<HudElementWaypoint>();
+                foreach (var val in WaypointElements)
+                {
+                    if (val.IsOpened()) opened.Push(val);
+                }
+                return opened.ToArray();
+            }
         }
 
         public void OpenOnMainThread(HudElementWaypoint wp)
@@ -133,16 +162,13 @@ namespace VSHUD
                 var elem = notif.CreateNotification(string.Format("Building Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")));
                 elem.expiryTime = 0.01f;
 
-                if (!(i >= arr.Length && arr.Length > 0))
+                if (arr[i] != null) arr[i].waypoint = wp;
+                else
                 {
-                    if (arr[i] != null) arr[i].waypoint = wp;
-                    else
-                    {
-                        arr[i] = new HudElementWaypoint(capi, wp);
-                    }
-                    arr[i].UpdateEditDialog();
-                    WaypointElements.Push(arr[i]);
+                    arr[i] = new HudElementWaypoint(capi, wp);
                 }
+                arr[i].UpdateEditDialog();
+
                 mainThreadProcessing = false;
             }, "");
             while (mainThreadProcessing) ;
@@ -152,44 +178,26 @@ namespace VSHUD
         {
             if (utils.Config.FloatyWaypoints)
             {
-                bool repopped;
-                if (repopped = WaypointElements.Count == 0) Repopulate();
+                if (WaypointElements.Count != utils.Waypoints.Count) Repopulate();
 
-                if (utils.Waypoints.Count < 1 && WaypointElements.Count > 0)
+                foreach (var val in Closeable)
                 {
-                    for (int i = 0; i < WaypointElements.Count; i++)
-                    {
-                        if (WaypointElements.TryPop(out var elem))
-                        {
-                            CloseOnMainThread(elem);
-                            DisposeOnMainThread(elem);
-                        }
-                    }
+                    CloseOnMainThread(val);
                 }
-                else if (utils.Waypoints.Count > 0 && utils.Waypoints.Count != OpenedCount())
-                {
-                    if (!repopped) Repopulate();
 
-                    foreach (var val in WaypointElements)
-                    {
-                        if (val.IsOpened() && (val.distance > utils.Config.DotRange || utils.Config.DisabledColors.Contains(val.waypoint.Color)) && (!val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) CloseOnMainThread(val);
-                        else if (!val.IsOpened() && (val.distance < utils.Config.DotRange && !utils.Config.DisabledColors.Contains(val.waypoint.Color)) || (val.DialogTitle.Contains("*") || val.waypoint.OwnWaypoint.Pinned)) OpenOnMainThread(val);
-                    }
+                foreach (var val in Openable)
+                {
+                    OpenOnMainThread(val);
                 }
-                foreach (var val in WaypointElements)
+
+                foreach (var val in Opened)
                 {
                     RecomposeTextOnMainThread(val);
                 }
             }
             else
             {
-                foreach (var val in WaypointElements)
-                {
-                    if (val.IsOpened())
-                    {
-                        CloseOnMainThread(val);
-                    }
-                }
+                foreach (var val in Opened) CloseOnMainThread(val);
             }
         }
 
@@ -199,28 +207,21 @@ namespace VSHUD
         {
             HudElementWaypoint[] arr = new HudElementWaypoint[utils.WaypointsRel.Length];
 
-            for (int i = utils.WaypointsRel.Length; i < WaypointElements.Count; )
+            int j = 0;
+            foreach (var val in WaypointElements)
             {
-                if (WaypointElements.TryPop(out var elem))
-                {
-                    CloseOnMainThread(elem);
-                    DisposeOnMainThread(elem);
-                    i++;
-                }
+                arr[j] = val;
+                j++;
             }
-
-            for (int i = 0; WaypointElements.Count > 0 && i < arr.Length; )
+            lock (WaypointElements)
             {
-                if (WaypointElements.TryPop(out var elem))
+                WaypointElements.Clear();
+
+                for (int i = 0; i < utils.WaypointsRel.Length; i++)
                 {
-                    arr[i] = elem;
-                    i++;
+                    CreateHudElemOnMainThread(i, arr);
                 }
-            }
-
-            for (int i = 0; i < utils.WaypointsRel.Length; i++)
-            {
-                CreateHudElemOnMainThread(i, arr);
+                WaypointElements.PushRange(arr);
             }
         }
 

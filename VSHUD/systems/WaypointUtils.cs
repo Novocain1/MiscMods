@@ -19,6 +19,7 @@ using Vintagestory.API.Util;
 using Path = System.IO.Path;
 using Action = Vintagestory.API.Common.Action;
 using System.Globalization;
+using Vintagestory.Common;
 
 namespace VSHUD
 {
@@ -284,6 +285,7 @@ namespace VSHUD
         {
             VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
             {
+                Stack<int> rmIDs = new Stack<int>();
                 for (int i = 0; i < Waypoints.Count; i++)
                 {
                     bool contains = false;
@@ -293,15 +295,16 @@ namespace VSHUD
                     }
                     if (contains)
                     {
-                        capi.SendChatMessage("/waypoint remove " + i);
-                        BlockPos rel = Waypoints[i].Position.AsBlockPos.SubCopy(capi.World.DefaultSpawnPosition.AsBlockPos);
-                        string str = Waypoints[i].Title + " Deleted, Rel: " + rel.ToString() + ", Abs: " + Waypoints[i].Position.ToString();
-                        StringBuilder builder = new StringBuilder(str).AppendLine();
-                        FileInfo info = new FileInfo(Path.Combine(GamePaths.Logs, "waypoints-log.txt"));
-                        GamePaths.EnsurePathExists(info.Directory.FullName);
-                        File.AppendAllText(info.FullName, builder.ToString());
-                        capi.Logger.Event(str);
+                        rmIDs.Push(i);
                     }
+                }
+                var arr = rmIDs.ToArray();
+                Array.Sort(arr, delegate (int a, int b) { return b.CompareTo(a); });
+
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    var wpId = arr[i];
+                    capi.SendChatMessage(string.Format("/waypoint remove {0}", wpId));
                 }
             }));
             return true;
@@ -328,6 +331,7 @@ namespace VSHUD
                 val.Value.SetField("capi", null);
             }
             texturesByIcon.Clear();
+            texturesByIcon = null;
         }
     }
 

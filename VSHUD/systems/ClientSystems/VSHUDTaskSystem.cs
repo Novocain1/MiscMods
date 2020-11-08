@@ -8,20 +8,32 @@ namespace VSHUD
     class VSHUDTaskSystem : ClientSystem
     {
         public static ConcurrentQueue<Action> Actions = new ConcurrentQueue<Action>();
+        public static ConcurrentQueue<Action> MainThreadActions = new ConcurrentQueue<Action>();
 
-        public VSHUDTaskSystem(ClientMain game) : base(game) { }
+        public ClientMain game;
+
+        public VSHUDTaskSystem(ClientMain game) : base(game) { this.game = game; }
 
         public override string Name => "VSHUD Tasks";
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
-        public override void OnSeperateThreadGameTick(float dt) => ProcessActions();
-
-        public void ProcessActions()
+        public override void OnSeperateThreadGameTick(float dt)
         {
-            for (int i = 0; i < Actions.Count; i++)
+            ProcessActions(Actions);
+            ProcessMainThreadActions();
+        }
+
+        public void ProcessMainThreadActions()
+        {
+            game.EnqueueMainThreadTask(() => ProcessActions(MainThreadActions), "");
+        }
+
+        public void ProcessActions(ConcurrentQueue<Action> actions)
+        {
+            for (int i = 0; i < actions.Count; i++)
             {
-                bool success = Actions.TryDequeue(out Action action);
+                bool success = actions.TryDequeue(out Action action);
                 if (success) action.Invoke();
             }
         }

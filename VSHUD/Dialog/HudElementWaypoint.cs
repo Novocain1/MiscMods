@@ -40,6 +40,8 @@ namespace VSHUD
         public override float ZSize => 0.00001f;
         public double DistanceFromPlayer { get => capi.World.Player.Entity.Pos.DistanceTo(waypointPos); }
         public double[] dColor { get => ColorUtil.ToRGBADoubles(waypoint.OwnColor); }
+        public bool Closeable { get => IsOpened() && (distance > config.DotRange || config.DisabledColors.Contains(waypoint.Color)) && (!DialogTitle.Contains("*") || waypoint.OwnWaypoint.Pinned); }
+        public bool Openable { get => !IsOpened() && (distance < config.DotRange && !config.DisabledColors.Contains(waypoint.Color)) || (DialogTitle.Contains("*") || waypoint.OwnWaypoint.Pinned); }
 
         public void UpdateEditDialog()
         {
