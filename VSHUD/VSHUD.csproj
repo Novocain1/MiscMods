@@ -129,6 +129,7 @@
     <Compile Include="systems\VSHUDConfig.cs" />
     <Compile Include="systems\WaypointUtils.cs" />
     <Compile Include="Utility\Patches\ProduceFloatyDamages.cs" />
+    <Compile Include="Utility\Patches\TriggerRepopulation.cs" />
     <Compile Include="Utility\VanillaPatches.cs" />
     <Compile Include="ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />

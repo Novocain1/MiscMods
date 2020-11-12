@@ -32,6 +32,8 @@ namespace VSHUD
         public ClientSystem[] systems = new ClientSystem[64];
         public static Dictionary<string, LoadedTexture> texturesByIcon;
         public static string[] iconKeys;
+        
+        public static bool doingConfigAction = false;
 
         public static void PopulateTextures(ICoreClientAPI capi)
         {
@@ -139,6 +141,7 @@ namespace VSHUD
 
         private void CmdWaypointConfig(int groupId, CmdArgs args)
         {
+            doingConfigAction = true;
             string arg = args.PopWord();
             switch (arg)
             {
@@ -264,7 +267,13 @@ namespace VSHUD
                     capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export|pillars]"));
                     break;
             }
+
+            doingConfigAction = false;
+
             ConfigLoader.SaveConfig(capi);
+            
+            //Trick server into sending waypoints to the client even if they don't have their map opened.
+            capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500);
         }
 
         

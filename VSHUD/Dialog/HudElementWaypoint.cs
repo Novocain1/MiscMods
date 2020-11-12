@@ -40,8 +40,15 @@ namespace VSHUD
         public override float ZSize => 0.00001f;
         public double DistanceFromPlayer { get => capi.World.Player.Entity.Pos.DistanceTo(waypointPos); }
         public double[] dColor { get => ColorUtil.ToRGBADoubles(waypoint.OwnColor); }
-        public bool Closeable { get => IsOpened() && (distance > config.DotRange || config.DisabledColors.Contains(waypoint.Color)) && (!DialogTitle.Contains("*") || waypoint.OwnWaypoint.Pinned); }
-        public bool Openable { get => !IsOpened() && (distance < config.DotRange && !config.DisabledColors.Contains(waypoint.Color)) || (DialogTitle.Contains("*") || waypoint.OwnWaypoint.Pinned); }
+        
+        public bool Closeable { get => opened && !ShouldBeVisible; }
+        public bool Openable { get => !opened && ShouldBeVisible; }
+
+        public bool ShouldBeVisible { get => 
+                (distance <= config.DotRange && !ColorCheck) 
+                || DialogTitle.Contains("*") || waypoint.OwnWaypoint.Pinned; }
+
+        public bool ColorCheck { get => config.DisabledColors.Contains(waypoint.Color); }
 
         public void UpdateEditDialog()
         {
@@ -106,7 +113,6 @@ namespace VSHUD
 
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
-            VSHUDConfig config = ConfigLoader.Config;
             Vec3d pos = MatrixToolsd.Project(waypointPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
 
             double[] clamps = new double[]
@@ -228,7 +234,11 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (config.ShowPillars && ownDialog.IsOpened())
+            if (!ownDialog.IsOpened())
+            {
+
+            }
+            if (config.ShowPillars && ownDialog.IsOpened() && ownDialog.ShouldBeVisible)
             {
                 counter += deltaTime;
                 Vec3d pos = config.PerBlockWaypoints ? waypoint.Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : waypoint.Position;
