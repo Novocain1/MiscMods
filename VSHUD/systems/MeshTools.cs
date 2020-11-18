@@ -44,8 +44,20 @@ namespace VSHUD
 
             api.RegisterCommand("objworld", "", "", (p, a) =>
             {
-                ConfigLoader.Config.CreateChunkObjs = a.PopBool() ?? !ConfigLoader.Config.CreateChunkObjs;
-                capi.ShowChatMessage(string.Format("Chunk Tesselator .obj Caching {0}.", ConfigLoader.Config.CreateChunkObjs ? "Enabled" : "Disabled"));
+                string arg = a.PopWord("cache");
+                switch (arg)
+                {
+                    case "cache":
+                        ConfigLoader.Config.CreateChunkObjs = a.PopBool() ?? !ConfigLoader.Config.CreateChunkObjs;
+                        capi.ShowChatMessage(string.Format("Chunk Tesselator .obj Caching {0}.", ConfigLoader.Config.CreateChunkObjs ? "Enabled" : "Disabled"));
+                        break;
+                    case "clear":
+                        MassFileExportSystem.Clear<ExportableChunkPart>();
+                        break;
+                    default:
+                        break;
+                }
+
                 ConfigLoader.SaveConfig(capi);
             });
 

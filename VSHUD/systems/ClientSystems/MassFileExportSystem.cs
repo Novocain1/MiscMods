@@ -129,6 +129,35 @@ namespace VSHUD
     {
         public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
+        public static void Clear<T>()
+        {
+            Stack<int> indices = new Stack<int>();
+
+            int i = 0;
+
+            foreach (var val in toExport)
+            {
+                if (val is T) indices.Push(i);
+                i++;
+            }
+
+            var ind = indices.ToArray();
+
+            var items = new Exportable[toExport.Count];
+            toExport.TryPopRange(items);
+
+            for (i = 0; i < ind.Length; i++)
+            {
+                items[ind[i]].Dispose();
+                items[ind[i]] = null;
+            }
+
+            foreach (var val in items)
+            {
+                if (val != null) toExport.Push(val);
+            }
+        }
+
         public MassFileExportSystem(ClientMain game) : base(game) {}
 
         public override string Name => "File Export";
