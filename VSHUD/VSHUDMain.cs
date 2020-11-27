@@ -15,7 +15,6 @@ namespace VSHUD
     class VSHUDMain : ClientModSystem
     {
         ICoreClientAPI capi;
-        public ClientSystem[] systems = new ClientSystem[64];
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -23,18 +22,9 @@ namespace VSHUD
             api.Event.LevelFinalize += () =>
             {
                 api.Shader.ReloadShaders();
-                api.InjectClientThread("File Export", 30, systems[0] = new MassFileExportSystem(api.World as ClientMain));
-                api.InjectClientThread("VSHUD Tasks", 30, systems[1] = new VSHUDTaskSystem(api.World as ClientMain));
+                api.InjectClientThread("File Export", 30, new MassFileExportSystem(api.World as ClientMain));
+                api.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(api.World as ClientMain));
             };
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            foreach (var val in systems.Where((a) => a != null))
-            {
-                val.Dispose(capi.World as ClientMain);
-            }
         }
     }
 }

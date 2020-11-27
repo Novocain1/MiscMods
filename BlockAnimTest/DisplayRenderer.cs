@@ -4,6 +4,12 @@ using Vintagestory.API.MathTools;
 
 namespace BlockAnimTest
 {
+    class HV
+    {
+        public float H { get; set; }
+        public float V { get; set; }
+    }
+
     class DisplayRenderer : IRenderer
     {
         ICoreClientAPI capi;
@@ -34,7 +40,7 @@ namespace BlockAnimTest
             
             capi.Render.LoadOrUpdateTextureFromRgba(ScreenColors, false, 0, ref display);
             capi.Tesselator.TesselateBlock(block, out mesh);
-            meshRef = capi.Render.UploadMesh(CubeMeshUtil.GetCube(0.5f, 0.5f, new Vec3f(0.5f,0.5f,0.5f)));
+            meshRef = capi.Render.UploadMesh(CubeMeshUtil.GetCube(0.5f, 0.5f, new Vec3f(0.5f, 0.5f, 0.5f)));
         }
 
         public int XRes { get; set; }
@@ -64,12 +70,12 @@ namespace BlockAnimTest
 
             Vec3d cameraPos = capi.World.Player.Entity.CameraPos;
 
-            IDisplayShaderProgram prog = blockAnimMod.PreparedDisplayShader(pos.X, pos.Y, pos.Z);
+            IStandardShaderProgram prog = blockAnimMod.PreparedDisplayShader(pos.X, pos.Y, pos.Z);
             
-            prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0];
-            prog.Resolution = Resolution;
-            prog.ScreenColors = display.TextureId;
-            prog.DisplayBrightness = 0.5f;
+            prog.Tex2D = display.TextureId;
+            //prog.Resolution = Resolution;
+            //prog.ScreenColors = display.TextureId;
+            //prog.DisplayBrightness = 0.5f;
 
             prog.ModelMatrix = ModelMat.Identity().Translate(pos.X - cameraPos.X, pos.Y - cameraPos.Y, pos.Z - cameraPos.Z).Values;
             prog.ViewMatrix = render.CameraMatrixOriginf;

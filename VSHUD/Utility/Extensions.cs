@@ -470,6 +470,13 @@ namespace VSHUD
             instance.SetField("sleepMs", ms);
 
             List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
+            Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((capi.World as ClientMain).GetField<ClientSystem[]>("clientSystems"));
+            foreach (var system in systems)
+            {
+                vanillaSystems.Push(system);
+            }
+
+            (capi.World as ClientMain).SetField("clientSystems", vanillaSystems.ToArray());
 
             thread = new Thread(() => instance.CallMethod("Process"));
             thread.IsBackground = true;

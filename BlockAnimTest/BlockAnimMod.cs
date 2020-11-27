@@ -45,7 +45,6 @@ namespace BlockAnimTest
             prog.RgbaTint = ColorUtil.WhiteArgbVec;
             prog.RgbaAmbientIn = capi.Render.AmbientColor;
             prog.RgbaLightIn = lightrgbs;
-            prog.RgbaBlockIn = ColorUtil.WhiteArgbVec;
             prog.RgbaFogIn = capi.Render.FogColor;
             prog.NormalShaded = 1;
             prog.ExtraGlow = 0;

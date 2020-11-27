@@ -10,7 +10,6 @@ uniform vec4 rgbaTint;
 uniform vec3 rgbaAmbientIn;
 uniform vec4 rgbaLightIn;
 uniform vec4 rgbaGlowIn;
-uniform vec4 rgbaBlockIn;
 uniform vec4 rgbaFogIn;
 uniform int extraGlow;
 uniform float fogMinIn;
@@ -31,7 +30,11 @@ out vec4 rgbaGlow;
 out float fogAmount;
 
 flat out int renderFlags;
-flat out vec3 normal;
+out vec3 normal;
+#if SSAOLEVEL > 0
+out vec4 fragPosition;
+out vec4 gnormal;
+#endif
 
 
 #include shadowcoords.vsh
@@ -53,9 +56,9 @@ void main(void)
 	renderFlags = glow | (flags & ~0xff);
 	rgbaGlow = rgbaGlowIn;
 	
-	color = rgbaTint * applyLight(rgbaAmbientIn, rgbaLightIn, colorIn * rgbaBlockIn, renderFlags, camPos);
+	color = rgbaTint * applyLight(rgbaAmbientIn, rgbaLightIn, renderFlags, camPos) * colorIn;
 	color.rgb = mix(color.rgb, rgbaGlowIn.rgb, glow / 255.0 * rgbaGlowIn.a);
-		
+	
 	rgbaFog = rgbaFogIn;
 	gl_Position = projectionMatrix * camPos;
 	calcShadowMapCoords(viewMatrix, worldPos);
@@ -66,4 +69,9 @@ void main(void)
 	
 	normal = unpackNormal(flags >> 15);
 	normal = normalize((modelMatrix * vec4(normal.x, normal.y, normal.z, 0)).xyz);
+	
+	#if SSAOLEVEL > 0
+		fragPosition = camPos;
+		gnormal = viewMatrix * vec4(normal, 0);
+	#endif
 }
