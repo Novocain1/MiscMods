@@ -455,13 +455,15 @@ namespace VSHUD
             threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
         }
 
-        public static void InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems)
+        public static void InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems) => capi.World.InjectClientThread(name, ms, systems);
+
+        public static void InjectClientThread(this IClientWorldAccessor world, string name, int ms, params ClientSystem[] systems)
         {
             object instance;
             Thread thread;
 
             instance = threadType.CreateInstance();
-            instance.SetField("game", capi.World as ClientMain);
+            instance.SetField("game", world as ClientMain);
             instance.SetField("threadName", name);
             instance.SetField("clientsystems", systems);
             instance.SetField("lastFramePassedTime", new Stopwatch());
@@ -469,14 +471,14 @@ namespace VSHUD
             instance.SetField("paused", false);
             instance.SetField("sleepMs", ms);
 
-            List<Thread> clientThreads = (capi.World as ClientMain).GetField<List<Thread>>("clientThreads");
-            Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((capi.World as ClientMain).GetField<ClientSystem[]>("clientSystems"));
+            List<Thread> clientThreads = (world as ClientMain).GetField<List<Thread>>("clientThreads");
+            Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((world as ClientMain).GetField<ClientSystem[]>("clientSystems"));
             foreach (var system in systems)
             {
                 vanillaSystems.Push(system);
             }
 
-            (capi.World as ClientMain).SetField("clientSystems", vanillaSystems.ToArray());
+            (world as ClientMain).SetField("clientSystems", vanillaSystems.ToArray());
 
             thread = new Thread(() => instance.CallMethod("Process"));
             thread.IsBackground = true;
