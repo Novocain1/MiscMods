@@ -37,7 +37,9 @@ namespace VSHUD
                 else if (es != null)
                 {
                     Shape loadedShape = es.Entity.Properties.Client.LoadedShape;
-                    api.Tesselator.TesselateShape(api.World.GetBlock(0), loadedShape, out MeshData mesh);
+                    var texPos = es.Entity.Properties.Client.Renderer as ITexPositionSource;
+                    if (texPos == null) return;
+                    api.Tesselator.TesselateShape("", loadedShape, out MeshData mesh, texPos);
                     MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
                 }
             });
