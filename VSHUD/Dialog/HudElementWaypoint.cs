@@ -111,6 +111,13 @@ namespace VSHUD
             var dynText = SingleComposer.GetDynamicText("text");
             dynText.Font.Color = dColor;
 
+            Vec4f newColor = new Vec4f();
+            ColorUtil.ToRGBAVec4f(waypoint.OwnColor, ref newColor);
+
+            float h = isAligned ? 2.0f : 1.0f;
+
+            newColor.Mul(new Vec4f(h, h, h, 1.0f));
+
             ElementBounds bounds = SingleComposer.GetDynamicText("text").Bounds;
 
             Vec3d pos = MatrixToolsd.Project(waypointPos, capi.Render.PerspectiveProjectionMat, capi.Render.PerspectiveViewMat, capi.Render.FrameWidth, capi.Render.FrameHeight);
@@ -142,11 +149,15 @@ namespace VSHUD
 
             SingleComposer.Bounds.absFixedX = pos.X - SingleComposer.Bounds.OuterWidth / 2;
             SingleComposer.Bounds.absFixedY = capi.Render.FrameHeight - pos.Y - SingleComposer.Bounds.OuterHeight;
+            
+            double xPos = (double)capi.Input.MouseX / capi.Render.FrameWidth;
+            double yPos = (double)capi.Input.MouseY / capi.Render.FrameHeight;
+            double fX = (SingleComposer.Bounds.absFixedX + (SingleComposer.Bounds.InnerWidth / 2)) / capi.Render.FrameWidth;
+            double fY = SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight - 0.01;
 
-            double yBounds = (SingleComposer.Bounds.absFixedY / capi.Render.FrameHeight) + 0.025;
-            double xBounds = (SingleComposer.Bounds.absFixedX / capi.Render.FrameWidth) + 0.065;
-
-            isAligned = ((yBounds > 0.52 && yBounds < 0.54) && (xBounds > 0.49 && xBounds < 0.51)) && !FloatyWaypointManagement.WaypointElements.Any(ui => ui.isAligned && ui != this);
+            bool alignTest = (xPos < fX + 0.01 && xPos > fX - 0.01 && yPos < fY + 0.01 && yPos > fY - 0.01);
+            
+            isAligned = alignTest && !FloatyWaypointManagement.WaypointElements.Any(ui => ui.isAligned && ui != this);
             displayText = !isClamped && (isAligned || distance < config.TitleRange || dialogText.Contains("*") || waypoint.OwnWaypoint.Pinned);
             
             if (displayText) 
@@ -157,8 +168,6 @@ namespace VSHUD
             if (texturesByIcon != null)
             {
                 IShaderProgram engineShader = capi.Render.GetEngineShader(EnumShaderProgram.Gui);
-                Vec4f newColor = new Vec4f();
-                ColorUtil.ToRGBAVec4f(waypoint.OwnColor, ref newColor);
 
                 engineShader.Uniform("rgbaIn", newColor);
                 engineShader.Uniform("extraGlow", 0);
@@ -234,11 +243,7 @@ namespace VSHUD
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            if (!ownDialog.IsOpened())
-            {
-
-            }
-            if (config.ShowPillars && ownDialog.IsOpened() && ownDialog.ShouldBeVisible)
+            if (config.ShowPillars && ownDialog.IsOpened() && ownDialog.ShouldBeVisible && !capi.HideGuis)
             {
                 counter += deltaTime;
                 Vec3d pos = config.PerBlockWaypoints ? waypoint.Position.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : waypoint.Position;
@@ -252,6 +257,10 @@ namespace VSHUD
                 ColorUtil.ToRGBAVec4f(waypoint.OwnColor, ref newColor);
                 float dist = (float)(waypoint.DistanceFromPlayer ?? 1.0f);
                 float scale = GameMath.Max(dist / ClientSettings.FieldOfView, 1.0f);
+
+                float h = ownDialog.isAligned ? 2.0f : 1.0f;
+
+                newColor.Mul(new Vec4f(h, h, h, 1.0f));
 
                 newColor.A = 0.9f;
                 prog.NormalShaded = 0;
