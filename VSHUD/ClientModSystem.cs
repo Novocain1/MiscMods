@@ -7,7 +7,7 @@ using Vintagestory.API.Common;
 
 namespace VSHUD
 {
-    class ClientModSystem : ModSystem
+    public class ClientModSystem : ModSystem
     {
         public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Client;
     }

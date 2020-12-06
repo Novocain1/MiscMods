@@ -23,7 +23,7 @@ using Vintagestory.Common;
 
 namespace VSHUD
 {
-    class WaypointUtils : ClientModSystem
+    public class WaypointUtils : ClientModSystem
     {
         ICoreClientAPI capi;
         public VSHUDConfig Config;
@@ -106,8 +106,6 @@ namespace VSHUD
             capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
 
-            capi.RegisterCommand("wpcfg", "Waypoint Configurtion", "[dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export|pillars]", new ClientChatCommandDelegate(CmdWaypointConfig));
-
             capi.Event.LevelFinalize += () =>
             {
                 var pillar = CubeMeshUtil.GetCube(0.1f, capi.World.BlockAccessor.MapSizeY, new Vec3f());
@@ -137,146 +135,8 @@ namespace VSHUD
                 capi.InjectClientThread("Floaty Waypoint Management", 30, new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
             };
         }
-
-        private void CmdWaypointConfig(int groupId, CmdArgs args)
-        {
-            doingConfigAction = true;
-            string arg = args.PopWord();
-            switch (arg)
-            {
-                case "deathdebug":
-                    Config.DebugDeathWaypoints = args.PopBool() ?? !Config.DebugDeathWaypoints;
-                    capi.ShowChatMessage(string.Format("Death waypoint debbuging set to {0}", Config.DebugDeathWaypoints));
-                    break;
-                case "dotrange":
-                    double? dr = args.PopDouble();
-                    Config.DotRange = dr != null ? (double)dr : Config.DotRange;
-                    capi.ShowChatMessage("Dot Range Set To " + Config.DotRange + " Meters.");
-                    break;
-                case "titlerange":
-                    double? tr = args.PopDouble();
-                    Config.TitleRange = tr != null ? (double)tr : Config.TitleRange;
-                    capi.ShowChatMessage("Title Range Set To " + Config.TitleRange + " Meters.");
-                    break;
-                case "perblockwaypoints":
-                    bool? pb = args.PopBool();
-                    Config.PerBlockWaypoints = pb != null ? (bool)pb : !Config.PerBlockWaypoints;
-                    capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
-                    break;
-                case "pdw":
-                    PurgeWaypointsByStrings("Player Death Waypoint", "*Player Death Waypoint*");
-                    break;
-                case "plt":
-                    PurgeWaypointsByStrings("Limits Test");
-                    break;
-                case "open":
-                    ViewWaypoints(new KeyCombination());
-                    break;
-                case "waypointprefix":
-                    bool? wp = args.PopBool();
-                    Config.WaypointPrefix = wp != null ? (bool)wp : !Config.WaypointPrefix;
-                    capi.ShowChatMessage("Waypoint Prefix Set To " + Config.WaypointPrefix + ".");
-                    break;
-                case "waypointid":
-                    bool? wi = args.PopBool();
-                    Config.WaypointID = wi != null ? (bool)wi : !Config.WaypointID;
-                    capi.ShowChatMessage("Waypoint ID Set To " + Config.WaypointID + ".");
-                    break;
-                case "purge":
-                    string s = args.PopWord();
-                    if (s == "reallyreallyconfirm") Purge();
-                    else capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
-                    break;
-                case "enableall":
-                    Config.DisabledColors.Clear();
-                    break;
-                case "save":
-                    break;
-                case "export":
-                    string path = (args.PopWord() ?? "waypoints") + ".json";
-                    using (TextWriter tw = new StreamWriter(path))
-                    {
-                        tw.Write(JsonConvert.SerializeObject(WaypointsRel, Formatting.Indented));
-                        tw.Close();
-                    }
-                    break;
-                case "import":
-                    string path1 = (args.PopWord() ?? "waypoints") + ".json";
-                    if (File.Exists(path1))
-                    {
-                        using (TextReader reader = new StreamReader(path1))
-                        {
-                            DummyWaypoint[] relative = JsonConvert.DeserializeObject<DummyWaypoint[]>(reader.ReadToEnd(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore});
-                            
-                            VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
-                            {
-                                for (int j = 0; j < relative.Length; j++)
-                                {
-                                    var val = relative[j];
-                                    if (WaypointsRel.Any(w =>
-                                    val.Position.AsBlockPos.X == w.Position.AsBlockPos.X &&
-                                    val.Position.AsBlockPos.Y == w.Position.AsBlockPos.Y &&
-                                    val.Position.AsBlockPos.Z == w.Position.AsBlockPos.Z
-                                    )) return;
-
-                                    string str = string.Format(CultureInfo.InvariantCulture, "/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", val.Icon, val.Position.X, val.Position.Y, val.Position.Z, val.Pinned, ColorUtil.Int2Hex(val.Color), val.Title);
-                                    capi.SendChatMessage(str);
-                                }
-                            }));
-                            reader.Close();
-                        }
-                    }
-                    break;
-                case "testlimits":
-                    int amount = args.PopInt() ?? 30;
-                    int maxY = args.PopInt() ?? 10;
-                    double radius = (args.PopInt() ?? 1000);
-
-                    VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
-                    {
-                        for (int i = 0; i < amount; i++)
-                        {
-                            double
-                            x = (capi.World.Rand.NextDouble() - 0.5) * radius,
-                            z = (capi.World.Rand.NextDouble() - 0.5) * radius,
-                            y = capi.World.BlockAccessor.GetRainMapHeightAt((int)x, (int)z);
-
-                            double r = x * x + z * z;
-                            if (r <= (radius * 0.5) * (radius * 0.5))
-                            {
-                                Vec3d pos = capi.World.Player.Entity.Pos.XYZ.AddCopy(new Vec3d(x, y, z));
-                                bool deathWaypoint = capi.World.Rand.NextDouble() > 0.8;
-
-                                string icon = deathWaypoint ? "rocks" : iconKeys[(int)(capi.World.Rand.NextDouble() * (iconKeys.Length - 1))];
-                                string title = deathWaypoint ? "Limits Test Player Death Waypoint" : "Limits Test Waypoint";
-
-                                string str = string.Format(CultureInfo.InvariantCulture, "/waypoint addati {0} ={1} ={2} ={3} {4} #{5} {6}", icon, pos.X, pos.Y, pos.Z, deathWaypoint, ColorStuff.RandomHexColorVClamp(capi, 0.5, 0.8), title);
-
-                                capi.SendChatMessage(str);
-                            }
-                            else i--;
-                        }
-                    }));
-                    break;
-                case "pillars":
-                    Config.ShowPillars = args.PopBool() ?? !Config.ShowPillars;
-                    capi.ShowChatMessage("Waypoint Pillars Set To " + Config.ShowPillars + ".");
-                    break;
-                default:
-                    capi.ShowChatMessage(Lang.Get("Syntax: .wpcfg [dotrange|titlerange|perblockwaypoints|purge|waypointprefix|waypointid|enableall|import|export|pillars]"));
-                    break;
-            }
-
-            doingConfigAction = false;
-
-            ConfigLoader.SaveConfig(capi);
-            
-            //Trick server into sending waypoints to the client even if they don't have their map opened.
-            capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500);
-        }
-
         
-        private bool ViewWaypoints(KeyCombination t1)
+        public bool ViewWaypoints(KeyCombination t1)
         {
             Config.FloatyWaypoints = !Config.FloatyWaypoints;
             ConfigLoader.SaveConfig(capi);
@@ -289,7 +149,7 @@ namespace VSHUD
             return true;
         }
 
-        public bool PurgeWaypointsByStrings(params string[] containsStrings)
+        internal bool PurgeWaypointsByStrings(params string[] containsStrings)
         {
             VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
             {
@@ -314,15 +174,22 @@ namespace VSHUD
                     var wpId = arr[i];
                     capi.SendChatMessage(string.Format("/waypoint remove {0}", wpId));
                 }
+
+                //Trick server into sending waypoints to the client even if they don't have their map opened.
+                capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
             }));
+
             return true;
         }
 
-        private void Purge()
+        internal void Purge()
         {
             VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
             {
                 for (int i = 0; i < Waypoints.Count; i++) capi.SendChatMessage("/waypoint remove 0");
+
+                //Trick server into sending waypoints to the client even if they don't have their map opened.
+                capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
             }));
         }
 

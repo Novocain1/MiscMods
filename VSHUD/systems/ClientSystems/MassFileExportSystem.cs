@@ -12,6 +12,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Common;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 
 namespace VSHUD
 {
@@ -26,12 +27,46 @@ namespace VSHUD
 
     abstract class Exportable : IExportable
     {
+        public Exportable(string filePath, string fileName = null)
+        {
+            FilePath = filePath;
+            FileName = fileName;
+        }
+
         public abstract bool Enabled { get; set; }
         public abstract bool Disposeable { get; set; }
         public abstract string FilePath { get; set; }
         public abstract string FileName { get; set; }
         public abstract void Export();
         public abstract void Dispose();
+    }
+
+    class ExportableJsonObject : Exportable
+    {
+        public object thing;
+
+        public ExportableJsonObject(object thing, string filePath) : base(filePath)
+        {
+            this.thing = thing;
+        }
+
+        public override bool Enabled { get; set; } = true;
+        public override bool Disposeable { get; set; } = true;
+        public override string FilePath { get; set; }
+        public override string FileName { get; set; }
+
+        public override void Dispose()
+        {
+        }
+
+        public override void Export()
+        {
+            using (TextWriter tw = new StreamWriter(FilePath + ".json"))
+            {
+                tw.Write(JsonConvert.SerializeObject(thing, Formatting.Indented));
+                tw.Close();
+            }
+        }
     }
 
     class ExportableChunkPart : ExportableMesh
@@ -51,11 +86,9 @@ namespace VSHUD
         public override string FilePath { get; set; }
         public override string FileName { get; set; }
 
-        public ExportableMesh(MeshData mesh, string filePath, string fileName)
+        public ExportableMesh(MeshData mesh, string filePath, string fileName) : base(filePath, fileName)
         {
             Mesh = mesh.Clone();
-            FilePath = filePath;
-            FileName = fileName;
         }
 
         public override void Export() => ExportAsObj();
