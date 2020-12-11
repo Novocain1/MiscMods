@@ -1,17 +1,16 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Input;
+using System.Threading;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace StandAloneBlockPhysics
@@ -44,12 +43,12 @@ namespace StandAloneBlockPhysics
             hasPhysics = true;
         }
 
-        public double getFriction()
+        public double GetFriction()
         {
             return friction;
         }
 
-        public bool getHasPhysics()
+        public bool GetHasPhysics()
         {
             return hasPhysics;
         }
@@ -88,9 +87,11 @@ namespace StandAloneBlockPhysics
     public class BlockPhysicsMod : ModSystem
     {
         ICoreServerAPI sapi;
-        ICoreAPI api;
 
         public PhysicsModConfig Config { get; private set; } = new PhysicsModConfig();
+
+        public const string patchCode = "Novocain.ModSystem.BlockPhysicsMod";
+        public Harmony harmonyInstance = new Harmony(patchCode);
 
         public void LoadConfig()
         {
@@ -104,149 +105,40 @@ namespace StandAloneBlockPhysics
 
         public override void Start(ICoreAPI api)
         {
-            this.api = api;
-
-            api.RegisterBlockBehaviorClass("UnstableFalling", typeof(AlteredBlockPhysics));
-            api.RegisterBlockBehaviorClass("LegacyUnstableFalling", typeof(BlockBehaviorUnstableFalling));
             api.RegisterBlockBehaviorClass("SupportBeam", typeof(BehaviorSupportBeam));
             api.RegisterBlockBehaviorClass("BreakIfFloating", typeof(BreakIfFloatingAndCollapse));
+            
+            harmonyInstance.PatchAll();
+        }
+
+        public override void Dispose()
+        {
+            harmonyInstance.UnpatchAll(patchCode);
         }
 
         public override void StartServerSide(ICoreServerAPI api)
         {
             sapi = api;
             LoadConfig();
-
-            api.World.RegisterGameTickListener(SuffocationAndStepWatch, 500);
-        }
-
-        public override void StartClientSide(ICoreClientAPI api)
-        {
-            AirBar airBar = new AirBar(api);
-            airBar.TryOpen();
-        }
-
-        public void SuffocationAndStepWatch(float dt)
-        {
-            foreach (var val in sapi.World.LoadedEntities)
-            {
-                Entity entity = val.Value;
-
-                if (entity is EntityItem || entity == null || entity.ServerPos == null || !entity.Alive) continue;
-
-                if (entity is EntityPlayer)
-                {
-                    EntityPlayer entityPlayer = entity as EntityPlayer;
-                    if (entityPlayer.Player.WorldData.CurrentGameMode != EnumGameMode.Survival) continue;
-                }
-
-                float height = entity.CollisionBox.Height;
-                BlockPos pos = entity.ServerPos.AsBlockPos;
-                double entityArea = entity.CollisionBox.Area();
-
-                if (sapi.World.Rand.NextDouble() > 0.9 && entityArea > 0.6)
-                {
-                    sapi.World.BlockAccessor.TriggerNeighbourBlockUpdate(pos);
-                }
-
-                ITreeAttribute attribs = entity.WatchedAttributes.GetOrAddTreeAttribute("health");
-                float? maxair = attribs.TryGetFloat("maxair");
-                float? currentair = attribs.TryGetFloat("currentair");
-
-                if (maxair == null || currentair == null)
-                {
-                    attribs.SetFloat("maxair", 1.0f);
-                    attribs.SetFloat("currentair", 1.0f);
-                    entity.WatchedAttributes.MarkPathDirty("health");
-                    continue;
-                }
-
-                if (InBlockBounds(entity.ServerPos.XYZ, height, out float suff))
-                {
-                    if (currentair > 0)
-                    {
-                        attribs.SetFloat("currentair", (float)currentair - suff);
-                        entity.WatchedAttributes.MarkPathDirty("health");
-                    }
-                    else
-                    {
-                        currentair = 0.0f;
-                        attribs.SetFloat("currentair", (float)currentair);
-
-                        DamageSource source = new DamageSource();
-                        source.Source = EnumDamageSource.Drown;
-                        entity.ReceiveDamage(source, (float)(sapi.World.Rand.NextDouble() * 2));
-                    }
-                }
-                else if (currentair < 1.0)
-                {
-                    attribs.SetFloat("currentair", (float)currentair + 0.25f);
-                    entity.WatchedAttributes.MarkPathDirty("health");
-                }
-                if (currentair > 1.0)
-                {
-                    currentair = 1.0f;
-                    attribs.SetFloat("currentair", (float)currentair);
-                }
-            }
-        }
-
-        public bool InBlockBounds(Vec3d vec, float height, out float suffocation)
-        {
-            suffocation = 0.0f;
-
-            vec.Sub(0.5, 0, 0.5).Add(0, height / 2.0, 0);
-
-            BlockPos pos = new BlockPos((int)Math.Round(vec.X), (int)Math.Round(vec.Y), (int)Math.Round(vec.Z));
-            Vec3d blockCenter = pos.ToVec3d().AddCopy(0.5, 0.5, 0.5);
-            Block block = sapi.World.BlockAccessor.GetBlock(pos);
-            double distance = Math.Sqrt(vec.SquareDistanceTo(blockCenter));
-            if (block.IsLiquid() && distance < 1.5)
-            {
-                suffocation = 0.01f;
-                return true;
-            }
-            if (block.Id == 0 || block.CollisionBoxes == null) return false;
-
-            for (int i = 0; i < block.CollisionBoxes.Length; i++)
-            {
-                suffocation = 0.5f;
-                if ((block.CollisionBoxes[i].Area() > 0.512) && distance < 1.11) return true;
-            }
-            return false;
         }
     }
 
-    public class AlteredBlockPhysics : BlockBehavior
+    public class BlockPhysics
     {
         Utilities util;
         BlockPos[] offset;
-        BlockPos[] cardinal;
         ModSystemBlockReinforcement blockReinforcement;
+        IWorldAccessor world;
 
-        public AlteredBlockPhysics(Block block) : base(block)
-        {
-        }
-
-
-        public override void OnLoaded(ICoreAPI api)
+        public BlockPhysics(ICoreAPI api)
         {
             util = new Utilities(api);
-            base.OnLoaded(api);
             blockReinforcement = api.ModLoader.GetModSystem<ModSystemBlockReinforcement>();
-
             offset = AreaMethods.AreaBelowOffsetList().ToArray();
-            cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
+            world = api.World;
         }
 
-        public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ref EnumHandling handled)
-        {
-            TryCollapse(world, pos);
-
-            base.OnBlockPlaced(world, pos, ref handled);
-        }
-
-        public PhysicsBlock getFrictionTableElement(ICoreAPI api, EnumBlockMaterial material)
+        public PhysicsBlock GetFrictionTableElement(ICoreAPI api, EnumBlockMaterial material)
         {
             PhysicsModConfig config = api.ModLoader.GetModSystem<BlockPhysicsMod>().Config;
             if (config.FrictionTable.TryGetValue(material, out double friction))
@@ -257,12 +149,12 @@ namespace StandAloneBlockPhysics
             return new PhysicsBlock(0.0);
         }
 
-        public double FindTotalFriction(IWorldAccessor world, BlockPos pos)
+        public double FindTotalFriction(IWorldAccessor world, BlockPos pos, Block block)
         {
             try
             {
                 util = new Utilities(world.Api);
-                double totalfriction = getFrictionTableElement(world.Api, block.BlockMaterial).getFriction();
+                double totalfriction = GetFrictionTableElement(world.Api, block.BlockMaterial).GetFriction();
                 BlockReinforcement r = null;
                 if (blockReinforcement != null)
                 {
@@ -284,14 +176,14 @@ namespace StandAloneBlockPhysics
                     for (int i = 0; i < util.cardinal.Length; i++)
                     {
                         Block iBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X + util.cardinal[i].X, pos.Y + util.cardinal[i].Y, pos.Z + util.cardinal[i].Z));
-                        totalfriction += getFrictionTableElement(world.Api, iBlock.BlockMaterial).getFriction();
+                        totalfriction += GetFrictionTableElement(world.Api, iBlock.BlockMaterial).GetFriction();
                     }
                     //subtract weight on block
                     for (int y = 0; y < world.BlockAccessor.MapSizeY - pos.Y; y++)
                     {
                         Block yBlock = world.BlockAccessor.GetBlock(new BlockPos(pos.X, pos.Y + y, pos.Z));
                         if (yBlock.IsReplacableBy(block)) break;
-                        double friction = getFrictionTableElement(world.Api, yBlock.BlockMaterial).getFriction();
+                        double friction = GetFrictionTableElement(world.Api, yBlock.BlockMaterial).GetFriction();
                         totalfriction -= 0.001;
                     }
                 }
@@ -303,95 +195,62 @@ namespace StandAloneBlockPhysics
             return 0;
         }
 
-        public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
+        public bool CanCollapse(BlockPos pos, Block block)
         {
-            cardinal = cardinal ?? AreaMethods.SphericalOffsetList(1).ToArray(); //if for whatever reason it's null
-            offset = offset ?? AreaMethods.AreaBelowOffsetList().ToArray();
+            if (FindTotalFriction(world, pos, block) >= 1.0) return false;
 
-            if (world.Side.IsServer())
+            BlockPos dPos = new BlockPos(pos.X, pos.Y - 1, pos.Z);
+            Block dBlock = world.BlockAccessor.GetBlock(dPos);
+
+            if (dBlock.IsReplacableBy(block))
             {
-                for (int i = 0; i < cardinal.Length; i++)
-                {
-                    if (world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).Id != 0)
-                    {
-                        world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).GetBehavior<AlteredBlockPhysics>()?.TryCollapse(world, pos.AddCopy(cardinal[i]));
-                        world.BlockAccessor.GetBlock(pos.AddCopy(cardinal[i])).OnNeighourBlockChange(world, pos.AddCopy(cardinal[i]), pos);
-                    }
-                }
-                TryCollapse(world, pos);
+                return true;
             }
-            base.OnBlockRemoved(world, pos, ref handling);
-        }
-
-        public void TryCollapse(IWorldAccessor world, BlockPos pos)
-        {
-            if (world.Side.IsClient()) return;
-
-            if (FindTotalFriction(world, pos) >= 1.0) return;
-
-            world.RegisterCallbackUnique((vworld, vpos, dt) =>
+            else
             {
-                BlockPos dPos = new BlockPos(pos.X, pos.Y - 1, pos.Z);
-                Block dBlock = world.BlockAccessor.GetBlock(dPos);
-
-                if (dBlock.IsReplacableBy(block))
+                if (dBlock.CollisionBoxes != null && block.CollisionBoxes != null)
                 {
-                    util.MoveBlock(pos, dPos);
+                    double area = 0;
+                    double dArea = 0;
+                    for (int i = 0; i < dBlock.CollisionBoxes.Length; i++) dArea += dBlock.CollisionBoxes[i].Area();
+                    for (int i = 0; i < block.CollisionBoxes.Length; i++) area += block.CollisionBoxes[i].Area();
+
+                    if (dArea < 0.8)
+                    {
+                        world.BlockAccessor.BreakBlock(pos, null);
+                    }
+                    else if (area >= dArea)
+                    {
+                        return CanMove(world, pos, block);
+                    }
                 }
                 else
                 {
-                    if (dBlock.CollisionBoxes != null && block.CollisionBoxes != null)
-                    {
-                        double area = 0;
-                        double dArea = 0;
-                        for (int i = 0; i < dBlock.CollisionBoxes.Length; i++) dArea += dBlock.CollisionBoxes[i].Area();
-                        for (int i = 0; i < block.CollisionBoxes.Length; i++) area += block.CollisionBoxes[i].Area();
-
-                        if (dArea < 0.8)
-                        {
-                            world.BlockAccessor.BreakBlock(pos, null);
-                        }
-                        else if (area >= dArea)
-                        {
-                            BeginMove(world, pos);
-                        }
-                    }
-                    else
-                    {
-                        BeginMove(world, pos);
-                    }
+                    return CanMove(world, pos, block);
                 }
-            }, pos, 30);
+            }
+
+            return false;
         }
 
-        public void BeginMove(IWorldAccessor world, BlockPos pos)
+        public bool CanMove(IWorldAccessor world, BlockPos pos, Block block)
         {
-            try
+            bool canMove = false;
+            for (int i = 0; i < offset.Length; i++)
             {
-                List<BlockPos> possiblePos = new List<BlockPos>();
-                for (int i = 0; i < offset.Length; i++)
-                {
-                    BlockPos offs = new BlockPos(pos.X + offset[i].X, pos.Y + offset[i].Y, pos.Z + offset[i].Z);
-                    Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
+                BlockPos offs = new BlockPos(pos.X + offset[i].X, pos.Y + offset[i].Y, pos.Z + offset[i].Z);
+                Block oBlock = world.BulkBlockAccessor.GetBlock(offs);
 
-                    if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
+                if (offs.Y < 0 || offs.Y > world.BlockAccessor.MapSizeY) continue;
 
-                    if (oBlock.IsReplacableBy(block))
-                    {
-                        possiblePos.Add(offs);
-                    }
-                }
-                if (possiblePos.Count() > 0)
+                if (oBlock.IsReplacableBy(block))
                 {
-                    BlockPos toPos = possiblePos[(int)Math.Round((world.Rand.NextDouble() * (possiblePos.Count - 1)))];
-                    Block toBlock = world.BulkBlockAccessor.GetBlock(toPos);
-                    util.MoveBlock(pos, toPos);
+                    canMove = true;
+                    break;
                 }
             }
-            catch (Exception)
-            {
-            }
 
+            return canMove;
         }
     }
 
@@ -506,18 +365,14 @@ namespace StandAloneBlockPhysics
     public class Utilities
     {
         IBlockAccessor bA;
-        IBulkBlockAccessor bbA;
         IWorldAccessor world;
-        ICoreAPI api;
         public BlockPos[] cardinal;
         public BlockPos[] supportarea;
 
         public Utilities(ICoreAPI api)
         {
-            this.api = api;
             world = api.World;
             bA = api.World.BlockAccessor;
-            bbA = api.World.BulkBlockAccessor;
             cardinal = AreaMethods.SphericalOffsetList(1).ToArray();
             supportarea = AreaMethods.LargeAreaBelowOffsetList().ToArray();
         }
@@ -561,7 +416,7 @@ namespace StandAloneBlockPhysics
                     BlockPos uPos = vPos.UpCopy();
                     Block uBlock = bA.GetBlock(uPos);
 
-                    if (!uBlock.IsReplacableBy(block) && uBlock.HasBehavior<AlteredBlockPhysics>())
+                    if (!uBlock.IsReplacableBy(block) && uBlock.HasBehavior<BlockBehaviorUnstableFalling>())
                     {
                         j++;
                         if (vBlock.IsReplacableBy(block)) i++;
@@ -570,39 +425,6 @@ namespace StandAloneBlockPhysics
                 });
 
             return i > limit || i >= j;
-        }
-
-        public void MoveBlock(BlockPos fromPos, BlockPos toPos)
-        {
-            Block block = bA.GetBlock(fromPos);
-            if (block.EntityClass != null)
-            {
-                TreeAttribute attribs = new TreeAttribute();
-                BlockEntity be = bA.GetBlockEntity(fromPos);
-                if (be != null)
-                {
-                    be.ToTreeAttributes(attribs);
-                    attribs.SetInt("posx", toPos.X);
-                    attribs.SetInt("posy", toPos.Y);
-                    attribs.SetInt("posz", toPos.Z);
-
-                    bA.SetBlock(0, fromPos);
-                    bA.SetBlock(block.BlockId, toPos);
-
-                    BlockEntity be2 = bA.GetBlockEntity(toPos);
-
-                    if (be2 != null) be2.FromTreeAtributes(attribs, api.World);
-                }
-            }
-            else
-            {
-                bA.SetBlock(0, fromPos);
-                bA.SetBlock(block.BlockId, toPos);
-                if (bA.GetBlock(toPos).Id != 0)
-                {
-                    api.World.SpawnCubeParticles(toPos, toPos.ToVec3d().Add(0.5), 4, 32);
-                }
-            }
         }
     }
 
@@ -619,14 +441,118 @@ namespace StandAloneBlockPhysics
         }
     }
 
-    public class HAX
+    public static class HackMan
     {
-        internal static object GetInstanceField(Type type, object instance, string fieldName)
+        public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
+        public static T CallMethod<T>(this object instance, string method, params object[] args) => (T)AccessTools.Method(instance.GetType(), method).Invoke(instance, args);
+        public static void CallMethod(this object instance, string method, params object[] args) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, args);
+        public static void CallMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method)?.Invoke(instance, null);
+        public static object CreateInstance(this Type type) => AccessTools.CreateInstance(type);
+        public static T[] GetFields<T>(this object instance)
         {
-            BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                | BindingFlags.Static;
-            FieldInfo field = type.GetField(fieldName, bindFlags);
-            return field.GetValue(instance);
+            List<T> fields = new List<T>();
+            var declaredFields = AccessTools.GetDeclaredFields(instance.GetType())?.Where((t) => t.FieldType == typeof(T));
+            foreach (var val in declaredFields)
+            {
+                fields.Add(instance.GetField<T>(val.Name));
+            }
+            return fields.ToArray();
+        }
+
+        public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
+        public static MethodInfo GetMethod(this object instance, string method) => AccessTools.Method(instance.GetType(), method);
+    }
+
+    static class ThreadStuff
+    {
+        static Type threadType;
+
+        static ThreadStuff()
+        {
+            var ts = AccessTools.GetTypesFromAssembly(Assembly.GetAssembly(typeof(ClientMain)));
+            threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
+        }
+
+        public static void InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems) => capi.World.InjectClientThread(name, ms, systems);
+
+        public static void InjectClientThread(this IClientWorldAccessor world, string name, int ms, params ClientSystem[] systems)
+        {
+            object instance;
+            Thread thread;
+
+            instance = threadType.CreateInstance();
+            instance.SetField("game", world as ClientMain);
+            instance.SetField("threadName", name);
+            instance.SetField("clientsystems", systems);
+            instance.SetField("lastFramePassedTime", new Stopwatch());
+            instance.SetField("totalPassedTime", new Stopwatch());
+            instance.SetField("paused", false);
+            instance.SetField("sleepMs", ms);
+
+            List<Thread> clientThreads = (world as ClientMain).GetField<List<Thread>>("clientThreads");
+            Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((world as ClientMain).GetField<ClientSystem[]>("clientSystems"));
+            foreach (var system in systems)
+            {
+                vanillaSystems.Push(system);
+            }
+
+            (world as ClientMain).SetField("clientSystems", vanillaSystems.ToArray());
+
+            thread = new Thread(() => instance.CallMethod("Process"));
+            thread.IsBackground = true;
+            thread.Start();
+            thread.Name = name;
+            clientThreads.Add(thread);
+        }
+    }
+
+    [HarmonyPatch(typeof(BlockBehaviorUnstableFalling), "TryFalling")]
+    class UnstableFallingPatch
+    {
+        public static bool Prefix()
+        {
+            //skip original method
+            return true;
+        }
+
+        public static void Postfix(BlockBehaviorUnstableFalling __instance, IWorldAccessor world, BlockPos pos, ref EnumHandling handling, ref string failureCode)
+        {
+            if (world.Side == EnumAppSide.Client) return;
+
+            Block block = __instance.block;
+
+            BlockPhysics physics = new BlockPhysics(world.Api);
+
+            if (physics.CanCollapse(pos, block))
+            {
+                AssetLocation fallSound = __instance.GetField<AssetLocation>("fallSound");
+                float impactDamageMul = __instance.GetField<float>("impactDamageMul");
+                float dustIntensity = __instance.GetField<float>("dustIntensity");
+
+                // Prevents duplication
+                Entity entity = world.GetNearestEntity(pos.ToVec3d().Add(0.5, 0.5, 0.5), 1, 1.5f, (e) =>
+                {
+                    return e is EntityBlockFalling && ((EntityBlockFalling)e).initialPos.Equals(pos);
+                });
+
+                if (entity == null)
+                {
+                    EntityBlockFalling entityblock = new EntityBlockFalling(block, world.BlockAccessor.GetBlockEntity(pos), pos, fallSound, impactDamageMul, true, dustIntensity);
+                    world.SpawnEntity(entityblock);
+                }
+                else
+                {
+                    handling = EnumHandling.PreventDefault;
+                    failureCode = "entityintersecting";
+                    return;
+                }
+
+                handling = EnumHandling.PreventSubsequent;
+                return;
+            }
+
+            handling = EnumHandling.PassThrough;
         }
     }
 }
