@@ -128,7 +128,7 @@ namespace ShaderTestMod
             {
                 capi.World.Calendar.SunPosition,
                 capi.World.Calendar.MoonPosition,
-                player.Entity.LocalPos.XYZ.ToVec3f(),
+                player.Entity.SidedPos.XYZ.ToVec3f(),
                 lPos != new BlockPos(0, -1, 0) ? lPos.ToVec3f().Add(0.5f,0.5f,0.5f) : new Vec3f(),
                 player.CurrentEntitySelection != null ? player.CurrentEntitySelection.Entity.Pos.XYZFloat : new Vec3f(),
             };
@@ -143,7 +143,7 @@ namespace ShaderTestMod
 
         public Matrixf ModelMat = new Matrixf();
 
-        public double RenderOrder => 0;
+        public double RenderOrder => 2.0;
 
         public int RenderRange => 1000;
 
