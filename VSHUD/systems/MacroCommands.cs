@@ -14,7 +14,7 @@ namespace VSHUD
     {
         public override void StartClientSide(ICoreClientAPI api)
         {
-            MacroManagerRef macroManager = new MacroManagerRef(api.MacroManager);
+            MacroManagerRef macroManager = new MacroManagerRef((api.World as ClientMain).GetField<MacroManager>("macroManager"));
 
             api.RegisterCommand("addmacro", "adds macro from string", ".addmacro alt ctrl shift keycode secondkeycode^macroname^first command^second command^nth command", (a, args) =>
             {
@@ -87,11 +87,11 @@ namespace VSHUD
     {
         public int MacroCount { get => Macros.Count; }
 
-        IMacroManager macroManager;
+        MacroManager macroManager;
         
-        public SortedDictionary<int, IMacroBase> Macros { get => macroManager.MacrosByIndex; }
+        public SortedDictionary<int, Macro> Macros { get => macroManager.MacrosByIndex; }
 
-        public MacroManagerRef(IMacroManager macroManager)
+        public MacroManagerRef(MacroManager macroManager)
         {
             this.macroManager = macroManager;   
         }
