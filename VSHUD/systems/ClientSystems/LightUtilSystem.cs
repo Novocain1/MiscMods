@@ -34,6 +34,12 @@ namespace VSHUD
 
         ConcurrentDictionary<BlockPos, int> colors = new ConcurrentDictionary<BlockPos, int>();
         ConcurrentQueue<BlockPos> emptyList = new ConcurrentQueue<BlockPos>();
+        
+        BlockPos start = new BlockPos();
+        BlockPos end = new BlockPos();
+        BlockPos dPos = new BlockPos();
+        BlockPos cPos = new BlockPos();
+        BlockPos uPos = new BlockPos();
 
         public void LightHighlight(BlockPos pos = null)
         {
@@ -49,12 +55,14 @@ namespace VSHUD
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
                 int rad = config.LightRadius;
-                BlockPos start = pos.AddCopy(-rad);
-                BlockPos end = pos.AddCopy(rad);
 
-                BlockPos dPos = new BlockPos();
-                BlockPos cPos = new BlockPos();
-                BlockPos uPos = new BlockPos();
+                start.X = pos.X - rad;
+                start.Y = pos.Y - rad;
+                start.Z = pos.Z - rad;
+
+                end.X = pos.X + rad;
+                end.Y = pos.Y + rad;
+                end.Z = pos.Z + rad;
 
                 capi.World.BlockAccessor.WalkBlocks(start, end, (block, iPos) =>
                 {
@@ -78,8 +86,6 @@ namespace VSHUD
 
                     if (blockEntityFarmland == null && config.LUShowAbove) cPos.Y++;
 
-
-                    //BlockPos cPos = blockEntityFarmland == null && config.LUShowAbove ? iPos.UpCopy() : iPos;
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
 
                     bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block) : true;
@@ -95,7 +101,7 @@ namespace VSHUD
                         {
                             int I = config.MXNutrients ? blockEntityFarmland.Nutrients.IndexOf(blockEntityFarmland.Nutrients.Max()) : blockEntityFarmland.Nutrients.IndexOf(blockEntityFarmland.Nutrients.Min());
                             var nuti = blockEntityFarmland.Nutrients[I];
-                            int scale = (int)((nuti / 50.0f) * 255.0f);
+                            int scale = (int)(nuti / 50.0f * 255.0f);
                             switch (I)
                             {
                                 case 0:
