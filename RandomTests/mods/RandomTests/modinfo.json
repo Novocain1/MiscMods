@@ -1,0 +1,10 @@
+{
+    "type": "code",
+	"name": "Random Tests",
+	"modid": "randomtests",
+	"description" : "Random Tests",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}

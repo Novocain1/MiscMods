@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarvestCraftLoader", "Harve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomGLSetter", "CustomGLSetter\CustomGLSetter.csproj", "{90617CB8-95ED-449F-91C1-23A1C2ECC437}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomTests", "RandomTests\RandomTests.csproj", "{A7DCD9D4-6E3E-4483-9507-731304A27FD7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{90617CB8-95ED-449F-91C1-23A1C2ECC437}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90617CB8-95ED-449F-91C1-23A1C2ECC437}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90617CB8-95ED-449F-91C1-23A1C2ECC437}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7DCD9D4-6E3E-4483-9507-731304A27FD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7DCD9D4-6E3E-4483-9507-731304A27FD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7DCD9D4-6E3E-4483-9507-731304A27FD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7DCD9D4-6E3E-4483-9507-731304A27FD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
