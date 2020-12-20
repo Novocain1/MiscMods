@@ -37,7 +37,6 @@ namespace RandomTests
 
 
             string treeType;
-            var test = world.BlockAccessor.GetBlock(blockSel.Position);
             Stack<BlockPos> foundPositions = __instance.FindTree(world, blockSel.Position, out treeType);
 
             Block leavesBranchyBlock = world.GetBlock(new AssetLocation("leavesbranchy-grown-" + treeType));
@@ -49,6 +48,9 @@ namespace RandomTests
                 __result = new Item().OnBlockBrokenWith(world, byEntity, itemslot, blockSel, dropQuantityMultiplier);
                 return;
             }
+
+            var chopFace = blockSel.Face;
+            var fallDirection = chopFace.IsHorizontal ? chopFace.Opposite : BlockFacing.HORIZONTALS_ANGLEORDER[world.Rand.Next(0, 3)];
 
             bool damageable = __instance.DamagedBy != null && __instance.DamagedBy.Contains(EnumItemDamageSource.BlockBreaking);
 
@@ -214,8 +216,8 @@ namespace RandomTests
 
                             addMesh.CustomInts = new CustomMeshDataPartInt()
                             {
-                                InterleaveOffsets = new int[leavesMesh.VerticesCount].Fill(1),
-                                InterleaveSizes = new int[leavesMesh.VerticesCount].Fill(1),
+                                InterleaveOffsets = new int[] { 1 },
+                                InterleaveSizes = new int[] { 1 },
                                 InterleaveStride = 4,
                                 Conversion = DataConversion.Integer
                             };
@@ -230,15 +232,20 @@ namespace RandomTests
                     }
 
                     world.BlockAccessor.SetBlock(0, pos);
+
+                    foreach (var vec in Vec3i.DirectAndIndirectNeighbours)
+                    {
+                        Block neighbor = world.BlockAccessor.GetBlock(pos.AddCopy(vec));
+                        if (neighbor.Code.Path.StartsWith("wildvine"))
+                        {
+                            world.BlockAccessor.SetBlock(0, pos.AddCopy(vec));
+                        }
+                    }
                 }
 
                 logMesh?.CompactBuffers();
                 leavesMesh?.WithColorMaps();
                 leavesMesh?.CompactBuffers();
-
-                var chopFace = blockSel.Face;
-
-                var fallDirection = chopFace.IsHorizontal ? chopFace.Opposite : BlockFacing.HORIZONTALS_ANGLEORDER[capi.World.Rand.Next(0, 3)];
 
                 if (logMesh != null)
                 {
@@ -260,6 +267,7 @@ namespace RandomTests
                 foreach (var toBreak in blocks)
                 {
                     toBreak.Key.OnBlockBroken(world, indexable[i], byPlayer, toBreak.Value);
+                    world.BlockAccessor.TriggerNeighbourBlockUpdate(indexable[i]);
                     i++;
                 }
 
