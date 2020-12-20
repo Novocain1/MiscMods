@@ -49,20 +49,43 @@ namespace VSHUD
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
                 int rad = config.LightRadius;
+                BlockPos start = pos.AddCopy(-rad);
+                BlockPos end = pos.AddCopy(rad);
 
-                capi.World.BlockAccessor.WalkBlocks(pos.AddCopy(-rad), pos.AddCopy(rad), (block, iPos) =>
+                BlockPos dPos = new BlockPos();
+                BlockPos cPos = new BlockPos();
+                BlockPos uPos = new BlockPos();
+
+                capi.World.BlockAccessor.WalkBlocks(start, end, (block, iPos) =>
                 {
                     if (block == null || iPos == null) return;
-                    BlockPos dPos = pos.SubCopy(iPos);
+                    
+                    dPos.X = pos.X - iPos.X; 
+                    dPos.Y = pos.Y - iPos.Y;
+                    dPos.Z = pos.Z - iPos.Z;
+                    
+                    if (!rad.InsideRadius(dPos.X, dPos.Y, dPos.Z)) return;
+                    
+                    cPos.X = iPos.X;
+                    cPos.Y = iPos.Y;
+                    cPos.Z = iPos.Z;
+
+                    uPos.X = iPos.X;
+                    uPos.Y = iPos.Y + 1;
+                    uPos.Z = iPos.Z;
+
                     BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(iPos) as BlockEntityFarmland;
 
-                    BlockPos cPos = blockEntityFarmland == null && config.LUShowAbove ? iPos.UpCopy() : iPos;
+                    if (blockEntityFarmland == null && config.LUShowAbove) cPos.Y++;
+
+
+                    //BlockPos cPos = blockEntityFarmland == null && config.LUShowAbove ? iPos.UpCopy() : iPos;
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
 
-                    bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(iPos.UpCopy()).IsReplacableBy(block) : true;
+                    bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block) : true;
                     bool opq = config.LUOpaque ? blockEntityFarmland != null || block.AllSidesOpaque : true;
 
-                    if (block.BlockId != 0 && rep && opq && rad.InsideRadius(dPos.X, dPos.Y, dPos.Z))
+                    if (block.BlockId != 0 && rep && opq)
                     {
                         int c = 0;
 
