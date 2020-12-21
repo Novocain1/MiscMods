@@ -34,6 +34,8 @@ namespace VSHUD
 
         ConcurrentDictionary<BlockPos, int> colors = new ConcurrentDictionary<BlockPos, int>();
         ConcurrentQueue<BlockPos> emptyList = new ConcurrentQueue<BlockPos>();
+        int tempColor = 0;
+
         
         BlockPos start = new BlockPos();
         BlockPos end = new BlockPos();
@@ -56,45 +58,30 @@ namespace VSHUD
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
                 int rad = config.LightRadius;
 
-                start.X = pos.X - rad;
-                start.Y = pos.Y - rad;
-                start.Z = pos.Z - rad;
-
-                end.X = pos.X + rad;
-                end.Y = pos.Y + rad;
-                end.Z = pos.Z + rad;
+                start.Set(pos.X - rad, pos.Y - rad, pos.Z - rad);
+                end.Set(pos.X + rad, pos.Y + rad, pos.Z + rad);
 
                 capi.World.BlockAccessor.WalkBlocks(start, end, (block, iPos) =>
                 {
-                    if (block == null || iPos == null) return;
-                    
-                    dPos.X = pos.X - iPos.X; 
-                    dPos.Y = pos.Y - iPos.Y;
-                    dPos.Z = pos.Z - iPos.Z;
+                    if (block == null || iPos == null || block.Id == 0) return;
+
+                    dPos.Set(pos.X - iPos.X, pos.Y - iPos.Y, pos.Z - iPos.Z);
                     
                     if (!rad.InsideRadius(dPos.X, dPos.Y, dPos.Z)) return;
-                    
-                    cPos.X = iPos.X;
-                    cPos.Y = iPos.Y;
-                    cPos.Z = iPos.Z;
-
-                    uPos.X = iPos.X;
-                    uPos.Y = iPos.Y + 1;
-                    uPos.Z = iPos.Z;
 
                     BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(iPos) as BlockEntityFarmland;
+                    bool abv = blockEntityFarmland == null && config.LUShowAbove;
 
-                    if (blockEntityFarmland == null && config.LUShowAbove) cPos.Y++;
+                    cPos.Set(iPos.X, abv ? iPos.Y + 1 : iPos.Y, iPos.Z);
+                    uPos.Set(iPos.X, iPos.Y + 1, iPos.Z);
 
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
 
                     bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block) : true;
                     bool opq = config.LUOpaque ? blockEntityFarmland != null || block.AllSidesOpaque : true;
 
-                    if (block.BlockId != 0 && rep && opq)
+                    if (rep && opq)
                     {
-                        int c = 0;
-
                         float fLevel = level / 32.0f;
                         int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
                         if (config.Nutrients && blockEntityFarmland != null)
@@ -105,13 +92,13 @@ namespace VSHUD
                             switch (I)
                             {
                                 case 0:
-                                    c = ColorUtil.ToRgba(alpha, 0, 0, scale);
+                                    tempColor = ColorUtil.ToRgba(alpha, 0, 0, scale);
                                     break;
                                 case 1:
-                                    c = ColorUtil.ToRgba(alpha, 0, scale, 0);
+                                    tempColor = ColorUtil.ToRgba(alpha, 0, scale, 0);
                                     break;
                                 case 2:
-                                    c = ColorUtil.ToRgba(alpha, scale, 0, 0);
+                                    tempColor = ColorUtil.ToRgba(alpha, scale, 0, 0);
                                     break;
                                 default:
                                     break;
@@ -119,10 +106,10 @@ namespace VSHUD
                         }
                         else
                         {
-                            c = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
+                            tempColor = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
                         }
 
-                        colors[iPos.Copy()] = c;
+                        colors[iPos.Copy()] = tempColor;
                     }
                 });
                 if (colors.Count < 1)
