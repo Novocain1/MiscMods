@@ -32,10 +32,23 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt) => LightHighlight();
 
-        ConcurrentDictionary<BlockPos, int> colors = new ConcurrentDictionary<BlockPos, int>();
+        ConcurrentStack<BlockPos> tempPositions = new ConcurrentStack<BlockPos>();
+        ConcurrentStack<int> tempColors = new ConcurrentStack<int>();
+
+        public void Reset()
+        {
+            tempPositions.Clear();
+            tempColors.Clear();
+        }
+
+        public void PushColor(BlockPos pos, int color)
+        {
+            tempPositions.Push(pos);
+            tempColors.Push(color);
+        }
+
         ConcurrentQueue<BlockPos> emptyList = new ConcurrentQueue<BlockPos>();
         int tempColor = 0;
-
         
         BlockPos start = new BlockPos();
         BlockPos end = new BlockPos();
@@ -52,8 +65,7 @@ namespace VSHUD
                     ClearLightLevelHighlights();
                     return;
                 }
-
-                colors.Clear();
+                Reset();
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
                 int rad = config.LightRadius;
@@ -109,16 +121,16 @@ namespace VSHUD
                             tempColor = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
                         }
 
-                        colors[iPos.Copy()] = tempColor;
+                        PushColor(iPos.Copy(), tempColor);
                     }
                 });
-                if (colors.Count < 1)
+                if (tempColors.Count < 1)
                 {
                     ClearLightLevelHighlights();
                     return;
                 }
 
-                capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, colors.Keys.ToList(), colors.Values.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary), "addLU");
+                capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, tempPositions.ToList(), tempColors.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary), "addLU");
             }
             catch (Exception) { }
         }
