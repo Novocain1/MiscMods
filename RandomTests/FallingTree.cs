@@ -33,6 +33,11 @@ namespace RandomTests
                 api.Shader.ReloadShaders();
             };
         }
+
+        public override void Dispose()
+        {
+            harmony?.UnpatchAll(PatchCode);
+        }
     }
 
     public static class Extensions
