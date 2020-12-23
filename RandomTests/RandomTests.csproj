@@ -158,9 +158,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="FallingTree.cs" />
     <Compile Include="FallingTreeRenderer.cs" />
     <Compile Include="FellTree.cs" />
+    <Compile Include="HackMan.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
