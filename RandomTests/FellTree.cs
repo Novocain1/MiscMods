@@ -70,14 +70,20 @@ namespace RandomTests
 
                         addMesh.CustomInts = new CustomMeshDataPartInt()
                         {
-                            InterleaveOffsets = new int[] { 1 },
-                            InterleaveSizes = new int[] { 1 },
-                            InterleaveStride = 4,
+                            InterleaveOffsets = new int[addMesh.VerticesCount],
+                            InterleaveSizes = new int[addMesh.VerticesCount],
+                            InterleaveStride = 8,
                             Conversion = DataConversion.Integer
                         };
-                        for (int j = 0; j < addMesh.VerticesCount; j++) addMesh.CustomInts.Add(colormap.Value);
 
-                        addMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
+                        for (int j = 0; j < addMesh.VerticesCount; j++)
+                        {
+                            addMesh.CustomInts.InterleaveOffsets[j] = j * 4;
+                            addMesh.CustomInts.InterleaveSizes[j] = 2;
+                            addMesh.CustomInts.Add(colormap.Value);
+                        }
+
+                        if (logMesh != null) addMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
 
                         if (leavesMesh == null) leavesMesh = addMesh;
                         else leavesMesh.AddMeshData(addMesh);
@@ -104,7 +110,6 @@ namespace RandomTests
                 dustParticles.ParticleModel = EnumParticleModel.Quad;
                 dustParticles.MinVelocity.Set(-0.4f + 4 * (float)windSpeed, -0.4f, -0.4f);
                 dustParticles.AddVelocity.Set(0.8f + 4 * (float)windSpeed, 1.2f, 0.8f);
-
             }
             else
             {
@@ -113,7 +118,6 @@ namespace RandomTests
                 dustParticles.MinVelocity.Set(-0.4f + (float)windSpeed, -0.4f, -0.4f);
                 dustParticles.AddVelocity.Set(0.8f + (float)windSpeed, 1.2f, 0.8f);
             }
-
 
             world.SpawnParticles(dustParticles);
         }
@@ -156,9 +160,9 @@ namespace RandomTests
             BlockPos originPos = blockSel.Position;
             Stack<BlockPos> breakable = new Stack<BlockPos>();
 
-            Queue<int> blockIds = new Queue<int>();
-            Queue<int> positions = new Queue<int>();
-            Queue<bool> bools = new Queue<bool>();
+            Stack<int> blockIds = new Stack<int>();
+            Stack<int> positions = new Stack<int>();
+            Stack<bool> bools = new Stack<bool>();
 
             while (foundPositions.Count > 0)
             {
@@ -171,15 +175,16 @@ namespace RandomTests
                 bool isLog = block.Code.Path.StartsWith("beehive-inlog-" + treeType) || block.Code.Path.StartsWith("log-resinharvested-" + treeType) || block.Code.Path.StartsWith("log-resin-" + treeType) || block.Code.Path.StartsWith("log-grown-" + treeType) || block.Code.Path.StartsWith("bamboo-grown-brown-segment") || block.Code.Path.StartsWith("bamboo-grown-green-segment");
                 bool isBranchy = block == leavesBranchyBlock;
                 bool isLeaves = block == leavesBlock || block.Code.Path == "bambooleaves-grown";
-                
-                bools.Enqueue(isLog);
-                bools.Enqueue(isBranchy);
-                bools.Enqueue(isLeaves);
 
-                blockIds.Enqueue(block.Id);
-                positions.Enqueue(pos.X);
-                positions.Enqueue(pos.Y);
-                positions.Enqueue(pos.Z);
+                bools.Push(isLeaves);
+                bools.Push(isBranchy);
+                bools.Push(isLog);
+
+                blockIds.Push(block.Id);
+
+                positions.Push(pos.Z);
+                positions.Push(pos.Y);
+                positions.Push(pos.X);
 
                 blocks.Push(new KeyValuePair<Block, float>(block, isLeaves ? leavesMul : (isBranchy ? leavesBranchyMul : 1)));
 
@@ -235,7 +240,7 @@ namespace RandomTests
 
             }, (int)(fallTime * 1000.0f));
 
-            if (blocksbroken > 35)
+            if (blocksbroken > 1)
             {
                 Vec3d pos = blockSel.Position.ToVec3d().Add(0.5, 0.5, 0.5);
                 world.PlaySoundAt(new AssetLocation("sounds/effect/treefell"), pos.X, pos.Y, pos.Z, byPlayer, false, 32, GameMath.Clamp(blocksbroken / 100f, 0.25f, 1));

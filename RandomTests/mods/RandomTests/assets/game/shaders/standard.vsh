@@ -5,7 +5,7 @@ layout(location = 0) in vec3 vertexPositionIn;
 layout(location = 1) in vec2 uvIn;
 layout(location = 2) in vec4 colorIn;
 layout(location = 3) in int flags;
-layout(location = 4) in int colormapData;
+layout(location = 5) in int colormapData;
 
 uniform vec4 rgbaTint;
 uniform vec3 rgbaAmbientIn;
