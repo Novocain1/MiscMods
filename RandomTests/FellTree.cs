@@ -21,8 +21,8 @@ namespace RandomTests
 
         static readonly MeshData[] LastGenerated = new MeshData[] { null, null };
 
-        public static MeshData LastLogs { get => LastGenerated[0]; }
-        public static MeshData LastLeaves { get => LastGenerated[1]; }
+        public static MeshData LastLogs { get => LastGenerated[0]; set => LastGenerated[0] = value; }
+        public static MeshData LastLeaves { get => LastGenerated[1]; set => LastGenerated[1] = value; }
 
         public static void GenTreeMeshesAndHide(ICoreClientAPI capi, BlockPos originPos, int[] blockIDs, int[] positions, bool[] bools)
         {
@@ -94,8 +94,8 @@ namespace RandomTests
             logMesh?.CompactBuffers();
             leavesMesh?.CompactBuffers();
 
-            LastGenerated[0] = logMesh;
-            LastGenerated[1] = leavesMesh;
+            LastLogs = logMesh;
+            LastLeaves = leavesMesh;
         }
 
         public static void SpawnLeaves(IClientWorldAccessor world, SimpleParticleProperties dustParticles, Block block, BlockPos pos, float windSpeed)
