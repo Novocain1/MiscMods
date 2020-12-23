@@ -24,14 +24,13 @@ namespace RandomTests
         public static MeshData LastLogs { get => LastGenerated[0]; }
         public static MeshData LastLeaves { get => LastGenerated[1]; }
 
-        public static void GenTreeMeshesAndHide(ICoreClientAPI capi, BlockPos originPos, int[] blockIDs, int[] positions, string treeType)
+        public static void GenTreeMeshesAndHide(ICoreClientAPI capi, BlockPos originPos, int[] blockIDs, int[] positions, bool[] bools)
         {
             var bA = capi.World.BlockAccessor;
+            var worldmap = (capi.World as ClientMain).GetField<ClientWorldMap>("WorldMap");
+
             MeshData logMesh = null;
             MeshData leavesMesh = null;
-
-            Block leavesBranchyBlock = capi.World.GetBlock(new AssetLocation("leavesbranchy-grown-" + treeType));
-            Block leavesBlock = capi.World.GetBlock(new AssetLocation("leaves-grown-" + treeType));
 
             BlockPos tempPos = new BlockPos();
 
@@ -50,9 +49,9 @@ namespace RandomTests
 
                 var block = capi.World.Blocks[id];
 
-                bool isLog = block.Code.Path.StartsWith("beehive-inlog-" + treeType) || block.Code.Path.StartsWith("log-resinharvested-" + treeType) || block.Code.Path.StartsWith("log-resin-" + treeType) || block.Code.Path.StartsWith("log-grown-" + treeType) || block.Code.Path.StartsWith("bamboo-grown-brown-segment") || block.Code.Path.StartsWith("bamboo-grown-green-segment");
-                bool isBranchy = block == leavesBranchyBlock;
-                bool isLeaves = block == leavesBlock || block.Code.Path == "bambooleaves-grown";
+                bool isLog = bools[i * 3 + 0];
+                bool isBranchy = bools[i * 3 + 1];
+                bool isLeaves = bools[i * 3 + 2];
 
                 if (capi.TesselatorManager.TesselateBlockAdv(block, out MeshData addMesh, x, y, z))
                 {
@@ -67,22 +66,21 @@ namespace RandomTests
                     }
                     else if (isLeaves || isBranchy)
                     {
-                        var worldmap = (capi.World as ClientMain).GetField<ClientWorldMap>("WorldMap");
                         ColorMapData colormap = worldmap.getColorMapData(block, x, y, z);
 
-                        if (leavesMesh == null) leavesMesh = addMesh;
-
-                        if (logMesh != null) leavesMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
-
-                        leavesMesh.CustomInts = new CustomMeshDataPartInt()
+                        addMesh.CustomInts = new CustomMeshDataPartInt()
                         {
                             InterleaveOffsets = new int[] { 1 },
                             InterleaveSizes = new int[] { 1 },
                             InterleaveStride = 4,
                             Conversion = DataConversion.Integer
                         };
+                        for (int j = 0; j < addMesh.VerticesCount; j++) addMesh.CustomInts.Add(colormap.Value);
 
-                        for (int j = 0; j < leavesMesh.VerticesCount; j++) leavesMesh.CustomInts.Add(colormap.Value);
+                        addMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
+
+                        if (leavesMesh == null) leavesMesh = addMesh;
+                        else leavesMesh.AddMeshData(addMesh);
                     }
                 }
             }
@@ -158,8 +156,9 @@ namespace RandomTests
             BlockPos originPos = blockSel.Position;
             Stack<BlockPos> breakable = new Stack<BlockPos>();
 
-            Stack<int> blockIds = new Stack<int>();
-            Stack<int> positions = new Stack<int>();
+            Queue<int> blockIds = new Queue<int>();
+            Queue<int> positions = new Queue<int>();
+            Queue<bool> bools = new Queue<bool>();
 
             while (foundPositions.Count > 0)
             {
@@ -173,10 +172,14 @@ namespace RandomTests
                 bool isBranchy = block == leavesBranchyBlock;
                 bool isLeaves = block == leavesBlock || block.Code.Path == "bambooleaves-grown";
                 
-                blockIds.Push(block.Id);
-                positions.Push(pos.X);
-                positions.Push(pos.Y);
-                positions.Push(pos.Z);
+                bools.Enqueue(isLog);
+                bools.Enqueue(isBranchy);
+                bools.Enqueue(isLeaves);
+
+                blockIds.Enqueue(block.Id);
+                positions.Enqueue(pos.X);
+                positions.Enqueue(pos.Y);
+                positions.Enqueue(pos.Z);
 
                 blocks.Push(new KeyValuePair<Block, float>(block, isLeaves ? leavesMul : (isBranchy ? leavesBranchyMul : 1)));
 
@@ -204,7 +207,7 @@ namespace RandomTests
 
             if (world.Side.IsClient())
             {
-                GenTreeMeshesAndHide(capi, originPos, blockIds.ToArray(), positions.ToArray(), treeType);
+                GenTreeMeshesAndHide(capi, originPos, blockIds.ToArray(), positions.ToArray(), bools.ToArray());
 
                 if (LastLogs != null)
                 {
