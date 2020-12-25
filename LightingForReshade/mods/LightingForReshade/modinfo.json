@@ -1,0 +1,11 @@
+{
+    "type": "code",
+	"name": "Lighting For Reshade",
+	"side": "Client",
+	"modid": "lightingforreshade",
+	"description" : "Higher Colors = Bloom",
+	"authors": ["Novocain"],
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}

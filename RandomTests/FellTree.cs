@@ -84,7 +84,6 @@ namespace RandomTests
                         }
 
                         if (logMesh != null) addMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
-
                         if (leavesMesh == null) leavesMesh = addMesh;
                         else leavesMesh.AddMeshData(addMesh);
                     }
