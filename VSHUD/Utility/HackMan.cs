@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace RandomTests
+namespace VSHUD
 {
     public static class HackMan
     {

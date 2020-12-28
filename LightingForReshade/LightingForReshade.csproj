@@ -31,6 +31,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\Lib\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>..\..\..\Lib\OpenTK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,8 +51,13 @@
       <HintPath>..\..\..\VintagestoryAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="VintagestoryLib">
+      <HintPath>..\..\..\VintagestoryLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HackMan.cs" />
     <Compile Include="ReloadShaders.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

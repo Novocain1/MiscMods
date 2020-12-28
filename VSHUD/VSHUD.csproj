@@ -110,6 +110,7 @@
     <Compile Include="Systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="Systems\ClientSystems\MassFileExportSystem.cs" />
     <Compile Include="Systems\FloatyDamage.cs" />
+    <Compile Include="Utility\HackMan.cs" />
     <Compile Include="Utility\Patches\ChunkPartGrabber.cs" />
     <Compile Include="Systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace RandomTests
+namespace LightingForReshade
 {
     public static class HackMan
     {
@@ -45,4 +45,5 @@ namespace RandomTests
         public static MethodInfo GetMethod(this object instance, string method, params Type[] parameters) => instance.GetMethod(method, parameters, null);
         public static MethodInfo GetMethod(this object instance, string method, Type[] parameters = null, Type[] generics = null) => AccessTools.Method(instance.GetType(), method, parameters, generics);
     }
+
 }
