@@ -104,11 +104,13 @@ namespace VSHUD
             {
                 if (bh.ToString() == "Vintagestory.ServerMods.BlockBehaviorOmniRotatable")
                 {
-                    rotateH = bh.properties["rotateH"].AsBool(rotateH);
-                    rotateV = bh.properties["rotateV"].AsBool(rotateV);
-                    rotateV4 = bh.properties["rotateV4"].AsBool(rotateV4);
-                    rotateSides = bh.properties["rotateSides"].AsBool(rotateSides);
-                    facing = bh.properties["facing"].AsString(facing);
+                    var props = JsonObject.FromJson(bh.propertiesAtString);
+
+                    rotateH = props["rotateH"].AsBool(rotateH);
+                    rotateV = props["rotateV"].AsBool(rotateV);
+                    rotateV4 = props["rotateV4"].AsBool(rotateV4);
+                    rotateSides = props["rotateSides"].AsBool(rotateSides);
+                    facing = props["facing"].AsString(facing);
                     return;
                 }
             }
@@ -383,7 +385,8 @@ namespace VSHUD
 
         public void UpdateProps(Block block)
         {
-            facingCode = block.GetBehavior<BlockBehaviorOmniAttachable>().properties["facingCode"].AsString("orientation");
+            JsonObject properties = JsonObject.FromJson(block.GetBehavior<BlockBehaviorOmniAttachable>().propertiesAtString);
+            facingCode = properties["facingCode"].AsString("orientation");
         }
 
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientatedBlock)
@@ -575,7 +578,8 @@ namespace VSHUD
     {
         public bool TryGetPlacedBlock(IWorldAccessor world, IPlayer byPlayer, Block block, BlockSelection blockSel, out Block orientedBlock)
         {
-            bool invertedPlacement = block.GetBehavior<BlockBehaviorPillar>().properties["invertedPlacement"].AsBool(false);
+            JsonObject properties = JsonObject.FromJson(block.GetBehavior<BlockBehaviorPillar>().propertiesAtString);
+            bool invertedPlacement = properties["invertedPlacement"].AsBool(false);
             string rotation = null;
             switch (blockSel.Face.Axis)
             {
