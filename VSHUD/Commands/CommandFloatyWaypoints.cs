@@ -171,8 +171,7 @@ namespace VSHUD.Commands
                                     capi.SendChatMessage(str);
                                 }
 
-                                //Trick server into sending waypoints to the client even if they don't have their map opened.
-                                capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => utils.MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+                                capi.SendMyWaypoints();
                             }));
                             reader.Close();
                         }
@@ -208,8 +207,7 @@ namespace VSHUD.Commands
                             else i--;
                         }
 
-                        //Trick server into sending waypoints to the client even if they don't have their map opened.
-                        capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => utils.MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+                        capi.SendMyWaypoints();
                     }));
                     break;
                 case EnumCmdArgsFloatyWaypoints.pillars:
@@ -222,9 +220,8 @@ namespace VSHUD.Commands
             }
             base.CallHandler(player, groupId, args);
             WaypointUtils.doingConfigAction = false;
-            
-            //Trick server into sending waypoints to the client even if they don't have their map opened.
-            capi.Event.RegisterCallback(dt => utils.MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500);
+
+            capi.SendMyWaypoints();
         }
     }
 }

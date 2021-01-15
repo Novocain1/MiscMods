@@ -420,6 +420,13 @@ namespace VSHUD
         {
             return (x * x + y * y + z * z) <= (rad * rad);
         }
+
+        //Politely asks the server to send waypoints to us even if we don't have our map opened.
+        public static void SendMyWaypoints(this ICoreClientAPI capi)
+        {
+            var MapManager = capi.ModLoader.GetModSystem<WorldMapManager>();
+            capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+        }
     }
 
     static class ThreadStuff

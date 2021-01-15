@@ -128,8 +128,7 @@ namespace VSHUD
                     }
                 });
 
-                //Trick server into sending waypoints to the client even if they don't have their map opened.
-                MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() });
+                capi.SendMyWaypoints();
 
                 capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
                 capi.InjectClientThread("Floaty Waypoint Management", 30, new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
@@ -175,8 +174,7 @@ namespace VSHUD
                     capi.SendChatMessage(string.Format("/waypoint remove {0}", wpId));
                 }
 
-                //Trick server into sending waypoints to the client even if they don't have their map opened.
-                capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+                capi.SendMyWaypoints();
             }));
 
             return true;
@@ -187,9 +185,8 @@ namespace VSHUD
             VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
             {
                 for (int i = 0; i < Waypoints.Count; i++) capi.SendChatMessage("/waypoint remove 0");
-
-                //Trick server into sending waypoints to the client even if they don't have their map opened.
-                capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+                
+                capi.SendMyWaypoints();
             }));
         }
 
