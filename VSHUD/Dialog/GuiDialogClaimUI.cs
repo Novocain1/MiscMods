@@ -14,8 +14,6 @@ namespace VSHUD
         {
             base.OnOwnPlayerDataReceived();
 
-            //ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 30, 0, 465, 500);
-            //ElementBounds bgBounds = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, -150, 465, 200);
             ElementBounds radialRoot = ElementBounds.Fixed(EnumDialogArea.LeftMiddle, 0, 0, 25, 25);
             ElementBounds dialogBounds = radialRoot.CopyOffsetedSibling(0, 0, 200, 100);
             ElementBounds bgBounds = dialogBounds.CopyOffsetedSibling();
