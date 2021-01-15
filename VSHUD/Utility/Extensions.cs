@@ -432,9 +432,9 @@ namespace VSHUD
             threadType = ts.Where((t, b) => t.Name == "ClientThread").Single();
         }
 
-        public static void InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems) => capi.World.InjectClientThread(name, ms, systems);
+        public static Thread InjectClientThread(this ICoreClientAPI capi, string name, int ms, params ClientSystem[] systems) => capi.World.InjectClientThread(name, ms, systems);
 
-        public static void InjectClientThread(this IClientWorldAccessor world, string name, int ms, params ClientSystem[] systems)
+        public static Thread InjectClientThread(this IClientWorldAccessor world, string name, int ms, params ClientSystem[] systems)
         {
             object instance;
             Thread thread;
@@ -462,6 +462,7 @@ namespace VSHUD
             thread.Start();
             thread.Name = name;
             clientThreads.Add(thread);
+            return thread;
         }
     }
 }

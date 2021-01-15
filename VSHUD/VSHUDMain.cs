@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -21,9 +22,9 @@ namespace VSHUD
             capi = api;
             api.Event.LevelFinalize += () =>
             {
-                api.Shader.ReloadShaders();
-                api.InjectClientThread("File Export", 30, new MassFileExportSystem(api.World as ClientMain));
-                api.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(api.World as ClientMain));
+                capi.Shader.ReloadShaders();
+                capi.InjectClientThread("File Export", 30, new MassFileExportSystem(capi.World as ClientMain));
+                capi.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(capi.World as ClientMain));
             };
         }
     }
