@@ -89,8 +89,8 @@ namespace VSHUD
 
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
 
-                    bool rep = config.LUSpawning ? blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block) : true;
-                    bool opq = config.LUOpaque ? blockEntityFarmland != null || block.AllSidesOpaque : true;
+                    bool rep = !config.LUSpawning || blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block);
+                    bool opq = !config.LUOpaque || blockEntityFarmland != null || block.AllSidesOpaque;
 
                     if (rep && opq)
                     {
