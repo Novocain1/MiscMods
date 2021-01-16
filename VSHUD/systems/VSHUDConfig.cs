@@ -67,26 +67,48 @@ namespace VSHUD
         public static VSHUDConfig Config { get; set; } = new VSHUDConfig();
         public override double ExecuteOrder() => 0.05;
 
+        private static bool allowSaving = true;
+
+
         public override void StartClientSide(ICoreClientAPI api)
         {
             capi = api;
-            LoadConfig();
+            allowSaving = LoadConfig();
             ChunkPartGrabber.Seed = api.World.Seed;
             var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
             ChunkPartGrabber.SpawnPos = spawnChunk;
+
+            api.RegisterCommand("vshudforcesave", "Force saves vshud user settings with the current settings state.", "", (a, b) => SaveConfig(true));
         }
 
-        public void LoadConfig() => LoadConfig(capi);
-        public void SaveConfig() => SaveConfig(capi);
+        public bool LoadConfig() => LoadConfig(capi);
+        public void SaveConfig(bool force = false) => SaveConfig(capi, force);
 
-        public static void LoadConfig(ICoreClientAPI capi)
+        public static bool LoadConfig(ICoreClientAPI capi)
         {
-            if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(capi); return; }
+            try
+            {
+                if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(capi); return true; }
 
-            Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
-            SaveConfig(capi);
+                Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
+                SaveConfig(capi);
+                return true;
+            }
+            catch (Exception)
+            {
+                capi.World.Logger.Notification("Error while parsing VSHUD configuration file, will use fallback settings. All changes to configuration in game will not be saved!");
+                capi.World.Logger.Notification("Use .vshudforcesave to fix.");
+                return false;
+            }
         }
 
-        public static void SaveConfig(ICoreClientAPI capi) => capi.StoreModConfig(Config, "vshud.json");
+        public static void SaveConfig(ICoreClientAPI capi, bool force = false)
+        {
+            if (allowSaving || force)
+            {
+                capi.StoreModConfig(Config, "vshud.json");
+                allowSaving = true;
+            }
+        }
     }
 }
