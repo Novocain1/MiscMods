@@ -288,7 +288,7 @@ namespace VSHUD
         {
             float offX = 0, offZ = 0;
 
-            if (block.RandomDrawOffset)
+            if (block.RandomDrawOffset > 0)
             {
                 offX = (GameMath.oaatHash(pos.X, 0, pos.Z) % 12) / 36f;
                 offZ = (GameMath.oaatHash(pos.X, 1, pos.Z) % 12) / 36f;

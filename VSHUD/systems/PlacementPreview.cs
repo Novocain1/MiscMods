@@ -111,15 +111,12 @@ namespace VSHUD
         public Matrixf ModelMat = new Matrixf();
         Block toBlock;
 
-        public PlacementPreviewHelper ph;
-
         Block itemPlacedBlock;
 
         public PlacementRenderer(ICoreClientAPI capi)
         {
             this.capi = capi;
             rpi = capi.Render;
-            ph = new PlacementPreviewHelper();
             
             itemActions[typeof(ItemStone)] = () => { itemPlacedBlock = capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")); };
             NonCulledTypes = new List<Type>()
@@ -261,8 +258,8 @@ namespace VSHUD
             if (selClone == null || invBlock == null || pos == null || !config.PRShow || Ignored || SneakCheck) return;
             selClone.Position = selClone.Position.GetBlock(capi).IsReplacableBy(invBlock) ? selClone.Position : selClone.Position.Offset(selClone.Face);
 
-            toBlock = ph.GetPlacedBlock(capi.World, player, invBlock, selClone);
-            if (toBlock == null) return;
+            toBlock = capi.World.BlockAccessor.GetBlock(SetBlockRedirect.blockId);
+            if (toBlock == null || toBlock.Id == 0) return;
             
             BlockPos adjPos = selClone.Position;
 
