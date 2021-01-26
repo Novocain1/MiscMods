@@ -143,16 +143,37 @@ namespace VSHUD
                 {
                     if (wp.Dirty)
                     {
-                        if (utils.WaypointsRel.Length > 0 && utils.WaypointsRel.Length >= wp.waypointID) 
+                        var state = utils.WaypointsRel.Select(a => new WaypointRelative(capi, new Waypoint()
                         {
-                            wp.waypoint = utils.WaypointsRel[wp.waypointID];
-                            wp.UpdateEditDialog();
-                            var dynText = wp.SingleComposer.GetDynamicText("text");
-                            dynText.Font.Color = wp.dColor;
-                            dynText.RecomposeText();
+                            Color = a.Color,
+                            Icon = a.Icon,
+                            OwningPlayerGroupId = a.OwningPlayerGroupId,
+                            OwningPlayerUid = a.OwningPlayerUid,
+                            Pinned = a.Pinned,
+                            Position = a.Position.Clone(),
+                            ShowInWorld = a.ShowInWorld,
+                            Text = a.Text,
+                            Title = a.Title
+                        }, a.Index)).ToArray();
 
-                            WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
-                            wp.Dirty = false;
+                        if (wp.waypointID <= state.Length && state.Length > 0) 
+                        {
+                            try
+                            {
+                                wp.waypoint = state[wp.waypointID];
+                                wp.UpdateEditDialog();
+                                var dynText = wp.SingleComposer.GetDynamicText("text");
+                                dynText.Font.Color = wp.dColor;
+                                dynText.RecomposeText();
+
+                                WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
+                                wp.Dirty = false;
+                            }
+                            catch (System.IndexOutOfRangeException ex)
+                            {
+
+                            }
+
                         }
                     }
                     else if (wp.displayText || wp.IsOpened())
@@ -255,13 +276,13 @@ namespace VSHUD
 
         public override void Dispose(ClientMain game)
         {
-            base.Dispose(game);
+            if (game != null) base.Dispose(game);
             foreach (var val in WaypointElements)
             {
-                val.TryClose();
-                val.Dispose();
+                val?.TryClose();
+                val?.Dispose();
             }
-            WaypointElements.Clear();
+            WaypointElements?.Clear();
         }
     }
 }
