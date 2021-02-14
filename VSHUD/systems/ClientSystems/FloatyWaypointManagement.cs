@@ -169,7 +169,7 @@ namespace VSHUD
                                 WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
                                 wp.Dirty = false;
                             }
-                            catch (System.IndexOutOfRangeException ex)
+                            catch (System.IndexOutOfRangeException)
                             {
 
                             }
