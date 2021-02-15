@@ -22,11 +22,6 @@ namespace VSHUD
     [HarmonyPatch(typeof(Block), "OnHeldIdle")]
     public class NewPlacementPreview
     {
-        static readonly Type[] knownBroken = new Type[]
-        {
-            
-        };
-
         public static void Postfix(Block __instance, ItemSlot slot, EntityAgent byEntity)
         {
             var player = (byEntity as EntityPlayer).Player;
@@ -34,7 +29,7 @@ namespace VSHUD
             {
                 if ((byEntity.World as ClientMain).ElapsedMilliseconds % 4 == 0)
                 {
-                    if (player?.CurrentBlockSelection != null && slot?.Itemstack != null && !knownBroken.Contains(__instance.GetType()))
+                    if (player?.CurrentBlockSelection != null && slot?.Itemstack != null)
                     {
                         SetBlockRedirect.setBlock = false;
 
@@ -70,26 +65,31 @@ namespace VSHUD
     [HarmonyPatch(typeof(BlockAccessorBase), "SpawnBlockEntity")]
     public class SpawnBlockEntityHalt
     {
-        public static bool Prefix() => SetBlockRedirect.setBlock;
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
     }
 
     [HarmonyPatch(typeof(BlockAccessorRelaxed), "ExchangeBlock")]
     public class ExchangeBlockHalt
     {
-        public static bool Prefix() => SetBlockRedirect.setBlock;
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
     }
 
     [HarmonyPatch(typeof(BlockAccessorRelaxed), "SetBlock")]
     public class SetBlockRedirect
-    {
+    {   
+        public static bool ShouldNotSkipOriginal { get => setBlock || CheckAppSideAnywhere.Side == EnumAppSide.Server; }
+
         public static bool setBlock = true;
+
         public static int blockId;
         public static int[] xyz = new int[3];
 
-        public static bool Prefix() => setBlock;
+        public static bool Prefix() => ShouldNotSkipOriginal;
 
         public static void Postfix(ref int blockId, BlockPos pos)
         {
+            if (ShouldNotSkipOriginal) return;
+
             SetBlockRedirect.blockId = setBlock ? 0 : blockId;
 
             xyz[0] = pos.X;
@@ -103,12 +103,14 @@ namespace VSHUD
     {
         [HarmonyPatch("TryPlaceBlock")]
         [HarmonyPrefix]
-        public static bool Disable() => false;
+        public static bool EnableOriginal() => CheckAppSideAnywhere.Side == EnumAppSide.Server;
 
         [HarmonyPatch("TryPlaceBlock")]
         [HarmonyPostfix]
         public static void TryPlaceBlock(BlockAngledGears __instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref string failureCode, ref bool __result)
         {
+            if (CheckAppSideAnywhere.Side == EnumAppSide.Server) return;
+
             __result = Fix(__instance, world, byPlayer, blockSel, ref failureCode);
         }
 

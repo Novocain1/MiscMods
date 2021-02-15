@@ -110,14 +110,15 @@
     <Compile Include="Systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="Systems\ClientSystems\MassFileExportSystem.cs" />
     <Compile Include="Systems\FloatyDamage.cs" />
+    <Compile Include="Utility\CheckAppSideAnywhere.cs" />
     <Compile Include="Utility\HackMan.cs" />
-    <Compile Include="Utility\Patches\ChunkPartGrabber.cs" />
+    <Compile Include="Systems\Patches\ChunkPartGrabber.cs" />
     <Compile Include="Systems\ClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClaimUI.cs" />
     <Compile Include="Dialog\GuiDialogClock.cs" />
     <Compile Include="Utility\AStarClient.cs" />
     <Compile Include="Utility\Extensions.cs" />
-    <Compile Include="Utility\ForPlacementPreview.cs" />
+    <Compile Include="Systems\Patches\ForPlacementPreview.cs" />
     <Compile Include="Systems\MacroCommands.cs" />
     <Compile Include="Systems\MeshTools.cs" />
     <Compile Include="Systems\PlacementPreview.cs" />
@@ -130,10 +131,10 @@
     <Compile Include="Systems\TapeMeasure.cs" />
     <Compile Include="Systems\VSHUDConfig.cs" />
     <Compile Include="Systems\WaypointUtils.cs" />
-    <Compile Include="Utility\Patches\ProduceFloatyDamages.cs" />
-    <Compile Include="Utility\Patches\TriggerRepopulation.cs" />
-    <Compile Include="Utility\VanillaPatches.cs" />
-    <Compile Include="ClientModSystem.cs" />
+    <Compile Include="Systems\Patches\ProduceFloatyDamages.cs" />
+    <Compile Include="Systems\Patches\TriggerRepopulation.cs" />
+    <Compile Include="Systems\VanillaPatches.cs" />
+    <Compile Include="Abstract\ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />
   </ItemGroup>
   <ItemGroup>
