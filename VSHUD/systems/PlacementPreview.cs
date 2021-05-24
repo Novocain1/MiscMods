@@ -159,7 +159,7 @@ namespace VSHUD
         {
             MeshData mesh;
             MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
-            var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(toBlock.Id) ? tesselatormanager.blockModelDatasLod0[toBlock.Id] : null;
+            var lod0 = toBlock.Lod0Mesh;
             var lod1 = tesselatormanager.blockModelDatas[toBlock.Id].Clone();
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];

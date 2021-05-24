@@ -129,7 +129,7 @@ namespace VSHUD
             if (largeGearEdge != null)
             {
                 BEMPMultiblock be = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BEMPMultiblock;
-                if (be != null) validLargeGear = be.Centre != null;
+                if (be != null) validLargeGear = be.Principal != null;
             }
 
             foreach (BlockFacing face in BlockFacing.ALLFACES)

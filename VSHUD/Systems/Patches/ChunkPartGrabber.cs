@@ -35,10 +35,10 @@ namespace VSHUD
             Initialized = true;
         }
 
-        public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod)
+        public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod, bool IsEdgePiece)
         {
-            string fileName = string.Format("{0} {1} {2} {3} lod{4}", chunkX, chunkY, chunkZ, pass, lod);
-            string filePath = Path.Combine(GamePaths.DataPath, "worldparts");
+            string fileName = string.Format("{0} {1} {2} {3} {4} lod{5}", pass, chunkX, chunkY, chunkZ, IsEdgePiece ? "Edge" : "Center", lod);
+            string filePath = Path.Combine(GamePaths.DataPath, "WorldParts");
             filePath = Path.Combine(filePath, Seed.ToString());
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
@@ -46,30 +46,32 @@ namespace VSHUD
             MassFileExportSystem.toExport.Push(new ExportableChunkPart(mesh, filePath, fileName));
         }
         
-        public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)
+        public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)
         {
             if (!Process) return;
             if (!Initialized) Initialize(__instance.GetField<ClientMain>("game").Api as ICoreClientAPI);
+            var centerParts = tessChunk.GetField<TesselatedChunkPart[]>("centerParts");
+            var edgeParts = tessChunk.GetField<TesselatedChunkPart[]>("edgeParts");
 
-            int i = 0;
-            foreach (var val in __result)
-            {
-                if (val == null) continue;
-                
-                var mesh0 = val.GetField<MeshData>("modelDataLod0").Clone();
-                var mesh1 = val.GetField<MeshData>("modelDataLod1").Clone();
-                var cPass = val.GetField<EnumChunkRenderPass>("pass");
+            if (centerParts != null) foreach(var val in centerParts) QueueUpChunkPart(val, chunkX, chunkY, chunkZ, false);
+            if (edgeParts != null) foreach (var val in edgeParts) QueueUpChunkPart(val, chunkX, chunkY, chunkZ, true);
+        }
 
-                mesh0.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z).Mul(32));
-                mesh1.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z).Mul(32));
-                mesh0.CompactBuffers();
-                mesh1.CompactBuffers();
+        public static void QueueUpChunkPart(TesselatedChunkPart part, int chunkX, int chunkY, int chunkZ, bool IsEdgePiece)
+        {
+            if (part == null) return;
 
-                if (mesh0.VerticesCount > 0) PushToStack(mesh0, chunkX, chunkY, chunkZ, cPass, 0);
-                if (mesh1.VerticesCount > 0) PushToStack(mesh1, chunkX, chunkY, chunkZ, cPass, 1);
+            var mesh0 = part.GetField<MeshData>("modelDataLod0")?.Clone();
+            var mesh1 = part.GetField<MeshData>("modelDataLod1")?.Clone();
+            var cPass = part.GetField<EnumChunkRenderPass>("pass");
 
-                i++;
-            }
+            mesh0?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            mesh1?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            mesh0?.CompactBuffers();
+            mesh1?.CompactBuffers();
+
+            if ((mesh0?.VerticesCount ?? 0) > 0) PushToStack(mesh0, chunkX, chunkY, chunkZ, cPass, 0, IsEdgePiece);
+            if ((mesh1?.VerticesCount ?? 0) > 0) PushToStack(mesh1, chunkX, chunkY, chunkZ, cPass, 1, IsEdgePiece);
         }
     }
 }

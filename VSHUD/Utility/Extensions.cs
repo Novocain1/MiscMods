@@ -355,7 +355,7 @@ namespace VSHUD
         {
             MeshData thismesh;
             ShapeTesselatorManager tesselatormanager = api.TesselatorManager as ShapeTesselatorManager;
-            var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(block.Id) ? tesselatormanager.blockModelDatasLod0[block.Id] : null;
+            var lod0 = block.Lod0Mesh;
             var lod1 = tesselatormanager.blockModelDatas[block.Id].Clone();
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[block.Id];
@@ -453,10 +453,10 @@ namespace VSHUD
             instance.SetField("lastFramePassedTime", new Stopwatch());
             instance.SetField("totalPassedTime", new Stopwatch());
             instance.SetField("paused", false);
-            instance.SetField("sleepMs", ms);
 
             List<Thread> clientThreads = (world as ClientMain).GetField<List<Thread>>("clientThreads");
             Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((world as ClientMain).GetField<ClientSystem[]>("clientSystems"));
+            
             foreach (var system in systems)
             {
                 vanillaSystems.Push(system);
@@ -464,11 +464,16 @@ namespace VSHUD
 
             (world as ClientMain).SetField("clientSystems", vanillaSystems.ToArray());
 
-            thread = new Thread(() => instance.CallMethod("Process"));
-            thread.IsBackground = true;
+            thread = new Thread(() => instance.CallMethod("Process"))
+            {
+                IsBackground = true,
+                Name = name
+            };
+            
             thread.Start();
-            thread.Name = name;
+            
             clientThreads.Add(thread);
+
             return thread;
         }
     }

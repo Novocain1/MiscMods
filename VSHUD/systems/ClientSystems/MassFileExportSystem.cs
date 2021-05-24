@@ -129,6 +129,36 @@ namespace VSHUD
                         tw.Write(string.Format("v {0} {1} {2}", Mesh.xyz[i * 3 + 0].ToString("F6"), Mesh.xyz[i * 3 + 1].ToString("F6"), Mesh.xyz[i * 3 + 2].ToString("F6")));
                     }
 
+                    for (int i = 0; i < Mesh.FlagsCount; i++)
+                    {
+                        tw.WriteLine();
+                        tw.Write(string.Format("vf {0}", Mesh.Flags[i].ToString()));
+                    }
+
+                    for (int i = 0; i < (Mesh.CustomBytes?.Count ?? 0); i++)
+                    {
+                        tw.WriteLine();
+                        tw.Write(string.Format("cb {0}", Mesh.CustomBytes.Values[i].ToString()));
+                    }
+
+                    for (int i = 0; i < (Mesh.CustomFloats?.Count ?? 0); i++)
+                    {
+                        tw.WriteLine();
+                        tw.Write(string.Format("cf {0}", Mesh.CustomFloats.Values[i].ToString("F6")));
+                    }
+
+                    for (int i = 0; i < (Mesh.CustomInts?.Count ?? 0); i++)
+                    {
+                        tw.WriteLine();
+                        tw.Write(string.Format("ci {0}", Mesh.CustomInts.Values[i].ToString()));
+                    }
+
+                    for (int i = 0; i < (Mesh.CustomShorts?.Count ?? 0); i++)
+                    {
+                        tw.WriteLine();
+                        tw.Write(string.Format("cs {0}", Mesh.CustomShorts.Values[i].ToString()));
+                    }
+
                     for (int i = 0; i < uvs.Length / 2; i++)
                     {
                         tw.WriteLine();
