@@ -19,8 +19,8 @@ namespace VSHUD
         public static void Initialize(ICoreClientAPI api)
         {
             api.Event.EnqueueMainThreadTask(() => {
-                string path = Path.Combine(GamePaths.DataPath, "worldparts");
-                path = Path.Combine(path, api.World.Seed.ToString(), "textures");
+                string path = Path.Combine(GamePaths.DataPath, "WorldParts");
+                path = Path.Combine(path, api.World.Seed.ToString(), "Textures");
                 Directory.CreateDirectory(path);
 
                 ClientMain game = (api.World as ClientMain);
@@ -37,9 +37,10 @@ namespace VSHUD
 
         public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod, bool IsEdgePiece)
         {
-            string fileName = string.Format("{0} {1} {2} {3} {4} lod{5}", pass, chunkX, chunkY, chunkZ, IsEdgePiece ? "Edge" : "Center", lod);
+            string fileName = string.Format("{0} {1} {2} {3} lod{4}", chunkX, chunkY, chunkZ, IsEdgePiece ? "Edge" : "Center", lod);
             string filePath = Path.Combine(GamePaths.DataPath, "WorldParts");
             filePath = Path.Combine(filePath, Seed.ToString());
+            filePath = Path.Combine(filePath, pass.ToString());
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
 
@@ -63,15 +64,25 @@ namespace VSHUD
 
             var mesh0 = part.GetField<MeshData>("modelDataLod0")?.Clone();
             var mesh1 = part.GetField<MeshData>("modelDataLod1")?.Clone();
+            var mesh2 = part.GetField<MeshData>("modelDataNotLod2Far")?.Clone();
+            var mesh3 = part.GetField<MeshData>("modelDataLod2Far")?.Clone();
+
             var cPass = part.GetField<EnumChunkRenderPass>("pass");
 
             mesh0?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
             mesh1?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            mesh2?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            mesh3?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+
             mesh0?.CompactBuffers();
             mesh1?.CompactBuffers();
+            mesh2?.CompactBuffers();
+            mesh3?.CompactBuffers();
 
             if ((mesh0?.VerticesCount ?? 0) > 0) PushToStack(mesh0, chunkX, chunkY, chunkZ, cPass, 0, IsEdgePiece);
             if ((mesh1?.VerticesCount ?? 0) > 0) PushToStack(mesh1, chunkX, chunkY, chunkZ, cPass, 1, IsEdgePiece);
+            if ((mesh2?.VerticesCount ?? 0) > 0) PushToStack(mesh2, chunkX, chunkY, chunkZ, cPass, 2, IsEdgePiece);
+            if ((mesh3?.VerticesCount ?? 0) > 0) PushToStack(mesh3, chunkX, chunkY, chunkZ, cPass, 3, IsEdgePiece);
         }
     }
 }
