@@ -19,17 +19,33 @@ using Vintagestory.ServerMods;
 
 namespace VSHUD
 {
-    [HarmonyPatch(typeof(Block), "OnHeldIdle")]
-    public class NewPlacementPreview
+    [HarmonyPatch(typeof(CollectibleObject), "OnHeldIdle")]
+    public class SetPlacementPreviewItem
     {
+        public static void Postfix(CollectibleObject __instance, ItemSlot slot, EntityAgent byEntity)
+        {
+            if (__instance.ItemClass == EnumItemClass.Item)
+            {
+                SetBlockRedirect.blockId = 0;
+            }
+        }
+    }
+
+
+    [HarmonyPatch(typeof(Block), "OnHeldIdle")]
+    public class SetPlacementPreviewBlock
+    {
+        static HashSet<Type> KnownBroken = new HashSet<Type>();
+
         public static void Postfix(Block __instance, ItemSlot slot, EntityAgent byEntity)
         {
-            var player = (byEntity as EntityPlayer).Player;
             if (byEntity.World.Side.IsClient())
             {
                 if ((byEntity.World as ClientMain).ElapsedMilliseconds % 4 == 0)
-                {
-                    if (player?.CurrentBlockSelection != null && slot?.Itemstack != null)
+                {   
+                    var player = (byEntity as EntityPlayer).Player;
+
+                    if (!KnownBroken.Contains(__instance.GetType()) && player?.CurrentBlockSelection != null && slot?.Itemstack != null)
                     {
                         SetBlockRedirect.setBlock = false;
 
@@ -45,7 +61,16 @@ namespace VSHUD
 
                         string fail = "";
 
-                        bool works = __instance.TryPlaceBlock(byEntity.World, player, slot.Itemstack, blockSel, ref fail);
+                        bool works = false;
+
+                        try
+                        {
+                            works = __instance.TryPlaceBlock(byEntity.World, player, slot.Itemstack, blockSel, ref fail);
+                        }
+                        catch (Exception)
+                        {
+                            KnownBroken.Add(__instance.GetType());
+                        }
 
                         if (blockSel.DidOffset)
                         {
@@ -90,115 +115,11 @@ namespace VSHUD
         {
             if (ShouldNotSkipOriginal) return;
 
-            SetBlockRedirect.blockId = setBlock ? 0 : blockId;
+            SetBlockRedirect.blockId = blockId;
 
             xyz[0] = pos.X;
             xyz[1] = pos.Y;
             xyz[2] = pos.Z;
-        }
-    }
-
-    [HarmonyPatch(typeof(BlockAngledGears))]
-    public class FixAngledGears
-    {
-        [HarmonyPatch("TryPlaceBlock")]
-        [HarmonyPrefix]
-        public static bool EnableOriginal() => CheckAppSideAnywhere.Side == EnumAppSide.Server;
-
-        [HarmonyPatch("TryPlaceBlock")]
-        [HarmonyPostfix]
-        public static void TryPlaceBlock(BlockAngledGears __instance, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref string failureCode, ref bool __result)
-        {
-            if (CheckAppSideAnywhere.Side == EnumAppSide.Server) return;
-
-            __result = Fix(__instance, world, byPlayer, blockSel, ref failureCode);
-        }
-
-        public static bool Fix(BlockAngledGears bAg, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref string failureCode)
-        {
-            Block blockExisting = world.BlockAccessor.GetBlock(blockSel.Position);
-            if (!bAg.CanPlaceBlock(world, byPlayer, blockSel, ref failureCode, blockExisting))
-            {
-                return false;
-            }
-
-            BlockFacing firstFace = null;
-            BlockFacing secondFace = null;
-            BlockMPMultiblockGear largeGearEdge = blockExisting as BlockMPMultiblockGear;
-            bool validLargeGear = false;
-            if (largeGearEdge != null)
-            {
-                BEMPMultiblock be = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BEMPMultiblock;
-                if (be != null) validLargeGear = be.Principal != null;
-            }
-
-            foreach (BlockFacing face in BlockFacing.ALLFACES)
-            {
-                if (validLargeGear && (face == BlockFacing.UP || face == BlockFacing.DOWN)) continue;
-                BlockPos pos = blockSel.Position.AddCopy(face);
-                IMechanicalPowerBlock block = world.BlockAccessor.GetBlock(pos) as IMechanicalPowerBlock;
-                if (block != null && block.HasMechPowerConnectorAt(world, pos, face.Opposite))
-                {
-                    if (firstFace == null)
-                    {
-                        firstFace = face;
-                    }
-                    else
-                    {
-                        if (face.IsAdjacent(firstFace))
-                        {
-                            secondFace = face;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (firstFace != null)
-            {
-                BlockPos firstPos = blockSel.Position.AddCopy(firstFace);
-                BlockEntity be = world.BlockAccessor.GetBlockEntity(firstPos);
-                IMechanicalPowerBlock neighbour = be?.Block as IMechanicalPowerBlock;
-
-                BEBehaviorMPAxle bempaxle = be?.GetBehavior<BEBehaviorMPAxle>();
-                if (bempaxle != null && !BEBehaviorMPAxle.IsAttachedToBlock(world.BlockAccessor, neighbour as Block, firstPos))
-                {
-                    failureCode = "axlemusthavesupport";
-                    return false;
-                }
-
-                BlockEntity largeGearBE = validLargeGear ? largeGearEdge.GearPlaced(world, blockSel.Position) : null;
-
-                Block toPlaceBlock = bAg.getGearBlock(world, validLargeGear, firstFace, secondFace);
-                //world.BlockAccessor.RemoveBlockEntity(blockSel.Position);  //## needed in 1.12, but not with new chunk BlockEntity Dictionary in 1.13
-                world.BlockAccessor.SetBlock(toPlaceBlock.BlockId, blockSel.Position);
-
-                if (secondFace != null)
-                {
-                    BlockPos secondPos = blockSel.Position.AddCopy(secondFace);
-                    IMechanicalPowerBlock neighbour2 = world.BlockAccessor.GetBlock(secondPos) as IMechanicalPowerBlock;
-                    neighbour2?.DidConnectAt(world, secondPos, secondFace.Opposite);
-                }
-
-                BEBehaviorMPAngledGears beAngledGear = world.BlockAccessor.GetBlockEntity(blockSel.Position)?.GetBehavior<BEBehaviorMPAngledGears>();
-                if (largeGearBE?.GetBehavior<BEBehaviorMPBase>() is BEBehaviorMPLargeGear3m largeGear) beAngledGear.AddToLargeGearNetwork(largeGear, firstFace);
-
-                //do this last even for the first face so that both neighbours are correctly set
-                neighbour?.DidConnectAt(world, firstPos, firstFace.Opposite);
-                if (beAngledGear != null)
-                {
-                    beAngledGear.newlyPlaced = true;
-                    if (!beAngledGear.tryConnect(firstFace) && secondFace != null) beAngledGear.tryConnect(secondFace);
-                    beAngledGear.newlyPlaced = false;
-
-                }
-
-                return true;
-            }
-
-            failureCode = "requiresaxle";
-
-            return false;
         }
     }
 }

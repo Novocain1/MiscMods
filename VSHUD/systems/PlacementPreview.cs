@@ -12,6 +12,7 @@ using Vintagestory.Common;
 using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
 using Vintagestory.API.Datastructures;
+using Vintagestory.GameContent.Mechanics;
 
 namespace VSHUD
 {
