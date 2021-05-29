@@ -196,6 +196,8 @@ namespace VSHUD
 
         public static void Clear<T>()
         {
+            if (toExport.IsEmpty) return;
+
             Stack<int> indices = new Stack<int>();
 
             int i = 0;
