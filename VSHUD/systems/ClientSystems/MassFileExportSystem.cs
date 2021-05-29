@@ -191,8 +191,6 @@ namespace VSHUD
     class MassFileExportSystem : ClientSystem
     {
         public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
-        
-        public static ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
 
         public static void Clear() => Clear<Exportable>();
 
@@ -231,46 +229,7 @@ namespace VSHUD
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
-        public override void OnSeperateThreadGameTick(float dt)
-        {
-            MoveToBottom();
-            ProcessStackedExportables();
-        }
-
-        public void MoveToBottom()
-        {
-            if (toExport.Count > 0)
-            {
-                var e = new Exportable[toExport.Count];
-                int s = toExport.TryPopRange(e);
-                int count = toExportLast.Count;
-
-                for (int i = 0; i < count; i++)
-                {
-                    if (toExportLast.TryPop(out Exportable exportable))
-                    {
-                        toExport.Push(exportable);
-                    }
-                }
-
-                if (s > 0)
-                {
-                    toExport.PushRange(e);
-                }
-            }
-            else
-            {
-                int count = toExportLast.Count;
-
-                for (int i = 0; i < count; i++)
-                {
-                    if (toExportLast.TryPop(out Exportable exportable))
-                    {
-                        toExport.Push(exportable);
-                    }
-                }
-            }
-        }
+        public override void OnSeperateThreadGameTick(float dt) => ProcessStackedExportables();
 
         public void ProcessStackedExportables()
         {
