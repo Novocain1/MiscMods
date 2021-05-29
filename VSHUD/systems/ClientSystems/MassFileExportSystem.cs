@@ -247,6 +247,7 @@ namespace VSHUD
                         Exportable[] exportables = new Exportable[toExport.Count];
                         toExport.TryPopRange(exportables);
                         toExport.Push(exportable);
+                        Array.Reverse(exportables);
                         toExport.PushRange(exportables);
                     }
                 }
