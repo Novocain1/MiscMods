@@ -192,6 +192,8 @@ namespace VSHUD
     {
         public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
+        public static void Clear() => Clear<Exportable>();
+
         public static void Clear<T>()
         {
             Stack<int> indices = new Stack<int>();
@@ -233,8 +235,7 @@ namespace VSHUD
         {
             for (int i = 0; i < toExport.Count; i++)
             {
-                bool success = toExport.TryPop(out Exportable exportable);
-                if (success)
+                if (toExport.TryPop(out Exportable exportable))
                 {
                     if (exportable.Enabled)
                     {
@@ -250,6 +251,12 @@ namespace VSHUD
                     }
                 }
             }
+        }
+
+        public override void Dispose(ClientMain game)
+        {
+            base.Dispose(game);
+            Clear();
         }
     }
 }

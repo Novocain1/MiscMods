@@ -32,43 +32,23 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\..\Lib\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="AnimatedGif">
-      <HintPath>..\..\..\Lib\AnimatedGif.dll</HintPath>
+      <HintPath>..\..\Lib\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="cairo-sharp">
-      <HintPath>..\..\..\Lib\cairo-sharp.dll</HintPath>
+      <HintPath>..\..\Lib\cairo-sharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="CommandLine">
-      <HintPath>..\..\..\Lib\CommandLine.dll</HintPath>
+      <HintPath>..\..\Lib\CommandLine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="csogg">
-      <HintPath>..\..\..\Lib\csogg.dll</HintPath>
+      <HintPath>..\..\Lib\csogg.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="csvorbis">
-      <HintPath>..\..\..\Lib\csvorbis.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\..\Lib\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Jint">
-      <HintPath>..\..\..\Lib\Jint.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Mono.Nat">
-      <HintPath>..\..\..\Lib\Mono.Nat.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Mono.Posix">
-      <HintPath>..\..\..\Lib\Mono.Posix.dll</HintPath>
+      <HintPath>..\..\Lib\csvorbis.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -76,30 +56,18 @@
       <HintPath>..\..\..\Lib\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Open.Nat">
-      <HintPath>..\..\..\Lib\Open.Nat.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="OpenTK">
-      <HintPath>..\..\..\Lib\OpenTK.dll</HintPath>
+      <HintPath>..\..\Lib\OpenTK.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="protobuf-net">
-      <HintPath>..\..\..\Lib\protobuf-net.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpAvi">
-      <HintPath>..\..\..\Lib\SharpAvi.dll</HintPath>
+      <HintPath>..\..\Lib\protobuf-net.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Core">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\Lib\System.Data.SQLite.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml.Linq">
@@ -121,39 +89,27 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Tavis.JsonPatch">
-      <HintPath>..\..\..\Lib\Tavis.JsonPatch.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Vintagestory">
-      <HintPath>..\..\..\Vintagestory.exe</HintPath>
+      <HintPath>..\..\Lib\Tavis.JsonPatch.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VintagestoryAPI">
-      <HintPath>..\..\..\VintagestoryAPI.dll</HintPath>
+      <HintPath>..\..\VintagestoryAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VintagestoryLib">
-      <HintPath>..\..\..\VintagestoryLib.dll</HintPath>
+      <HintPath>..\..\VintagestoryLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSCreativeMod">
-      <HintPath>..\..\..\Mods\VSCreativeMod.dll</HintPath>
+      <HintPath>..\..\Mods\VSCreativeMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSEssentials">
-      <HintPath>..\..\..\Mods\VSEssentials.dll</HintPath>
+      <HintPath>..\..\Mods\VSEssentials.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSSurvivalMod">
-      <HintPath>..\..\..\Mods\VSSurvivalMod.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="websocket-sharp">
-      <HintPath>..\..\..\Lib\websocket-sharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="xplatforminterface">
-      <HintPath>..\..\..\Lib\xplatforminterface.dll</HintPath>
+      <HintPath>..\..\Mods\VSSurvivalMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
