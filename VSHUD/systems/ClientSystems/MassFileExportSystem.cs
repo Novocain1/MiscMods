@@ -33,6 +33,7 @@ namespace VSHUD
             FileName = fileName;
         }
 
+        public long[] ID = new long[] { 0, 0 };
         public abstract bool Enabled { get; set; }
         public abstract bool Disposeable { get; set; }
         public abstract string FilePath { get; set; }
@@ -72,9 +73,14 @@ namespace VSHUD
     class ExportableChunkPart : ExportableMesh
     {
         public override bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
-
-        public ExportableChunkPart(MeshData mesh, string filePath, string fileName) : base(mesh, filePath, fileName)
+        public bool Is(ExportableChunkPart part)
         {
+            return ID[0] == part.ID[0] && ID[1] == part.ID[1];
+        }
+
+        public ExportableChunkPart(MeshData mesh, string filePath, string fileName, long[] id) : base(mesh, filePath, fileName)
+        {
+            ID = id;
         }
     }
 
@@ -221,6 +227,8 @@ namespace VSHUD
                 items[ind[i]] = null;
             }
 
+            Array.Reverse(items);
+
             foreach (var val in items)
             {
                 if (val != null) toExport.Push(val);
@@ -232,6 +240,54 @@ namespace VSHUD
         public override string Name => "File Export";
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
+
+        public void Prepare()
+        {
+            Stack<int> indices = new Stack<int>();
+            int i = 0;
+
+            foreach (var exportable in toExport)
+            {
+                if (exportable is ExportableChunkPart)
+                {
+                    ExportableChunkPart a = (ExportableChunkPart)exportable;
+
+                    foreach (var incoming in toExportLast)
+                    {
+                        if (incoming is ExportableChunkPart)
+                        {
+                            ExportableChunkPart b = (ExportableChunkPart)incoming;
+                            if (a.Is(b))
+                            {
+                                indices.Push(i);
+                                break;
+                            }
+                        }
+
+                    }
+                    i++;
+                }
+            }
+            
+            if (indices.Count == 0) return;
+
+            var ind = indices.ToArray();
+            var items = new Exportable[toExport.Count];
+            toExport.TryPopRange(items);
+
+            for (i = 0; i < ind.Length; i++)
+            {
+                items[ind[i]].Dispose();
+                items[ind[i]] = null;
+            }
+
+            Array.Reverse(items);
+
+            foreach (var val in items)
+            {
+                if (val != null) toExport.Push(val);
+            }
+        }
 
         public void PushToBottom()
         {
@@ -285,6 +341,7 @@ namespace VSHUD
             {
                 lock (toExportLast)
                 {
+                    Prepare();
                     PushToBottom();
                     ProcessStackedExportables();
                 }
