@@ -23,7 +23,7 @@ namespace VSHUD
             api.Event.LevelFinalize += () =>
             {
                 capi.Shader.ReloadShaders();
-                capi.InjectClientThread("File Export", 30, new MassFileExportSystem(capi.World as ClientMain));
+                capi.InjectClientThread("File Export", 1000, new MassFileExportSystem(capi.World as ClientMain));
                 capi.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(capi.World as ClientMain));
             };
         }

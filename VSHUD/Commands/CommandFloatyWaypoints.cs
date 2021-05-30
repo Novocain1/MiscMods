@@ -146,7 +146,10 @@ namespace VSHUD.Commands
                     break;
                 case EnumCmdArgsFloatyWaypoints.export:
                     string filePath = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints");
-                    MassFileExportSystem.toExport.Push(new ExportableJsonObject(utils.WaypointsRel, filePath));
+                    lock (MassFileExportSystem.toExport)
+                    {
+                        MassFileExportSystem.toExport.Push(new ExportableJsonObject(utils.WaypointsRel, filePath));
+                    }
                     break;
                 case EnumCmdArgsFloatyWaypoints.import:
                     string path1 = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints") + ".json";

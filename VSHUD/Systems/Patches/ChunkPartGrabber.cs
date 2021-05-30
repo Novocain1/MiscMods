@@ -44,7 +44,10 @@ namespace VSHUD
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
 
-            MassFileExportSystem.toExport.Push(new ExportableChunkPart(mesh, filePath, fileName));
+            lock (MassFileExportSystem.toExportLast)
+            {
+                MassFileExportSystem.toExportLast.Push(new ExportableChunkPart(mesh, filePath, fileName));
+            }
         }
         
         public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)

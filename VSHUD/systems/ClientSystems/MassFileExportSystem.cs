@@ -192,6 +192,8 @@ namespace VSHUD
     {
         public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
+        public static ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
+
         public static void Clear() => Clear<Exportable>();
 
         public static void Clear<T>()
@@ -231,7 +233,63 @@ namespace VSHUD
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
 
-        public override void OnSeperateThreadGameTick(float dt) => ProcessStackedExportables();
+        public void PushToBottom()
+        {
+            if (toExportLast.IsEmpty) return;
+            bool toExportWasEmpty = toExport.IsEmpty;
+
+            Exportable[] toExportFallback = new Exportable[toExport.Count];
+            Exportable[] toExportLastFallback = new Exportable[toExportLast.Count];
+
+            if (!toExportWasEmpty)
+            {
+                toExport.CopyTo(toExportFallback, 0);
+                Array.Reverse(toExportFallback);
+            }
+
+            toExportLast.CopyTo(toExportLastFallback, 0);
+            Array.Reverse(toExportLastFallback);
+
+            Exportable[] range = new Exportable[toExport.Count];
+
+
+            if (toExportWasEmpty || toExport.TryPopRange(range) == range.Length)
+            {
+                Exportable[] newRange = new Exportable[toExportLast.Count];
+
+                if (toExportLast.TryPopRange(newRange) == newRange.Length)
+                {
+                    toExport.PushRange(newRange);
+                }
+                else
+                {
+                    toExportLast.Clear();
+                    toExportLast.PushRange(toExportLastFallback);
+                };
+                if (!toExportWasEmpty)
+                {
+                    Array.Reverse(range);
+                    toExport.PushRange(range);
+                }
+            }
+            else if (!toExportWasEmpty)
+            {
+                toExport.Clear();
+                toExport.PushRange(toExportFallback);
+            }
+        }
+
+        public override void OnSeperateThreadGameTick(float dt)
+        {
+            lock (toExport)
+            {
+                lock (toExportLast)
+                {
+                    PushToBottom();
+                    ProcessStackedExportables();
+                }
+            }
+        }
 
         public void ProcessStackedExportables()
         {
