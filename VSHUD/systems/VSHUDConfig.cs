@@ -55,6 +55,7 @@ namespace VSHUD
         public float PROpacity { get; set; } = 0.8f;
 
         public bool FDShow { get; set; } = true;
+        public float FDRange { get; set; } = 100.0f;
 
         public ClockShowConfig ClockShowConfig { get; set; } = new ClockShowConfig();
 

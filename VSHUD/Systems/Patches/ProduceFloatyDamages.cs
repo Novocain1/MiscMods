@@ -21,9 +21,11 @@ namespace VSHUD
                     var entityPos = entity.Pos.XYZ.AddCopy(entity.LocalEyePos);
                     var blockSel = new BlockSelection();
                     var entitySel = new EntitySelection();
-                    
-                    BlockFilter bFilter = (pos, block) => block.CollisionBoxes != null;
 
+                    if (playerPos.DistanceTo(entityPos) > ConfigLoader.Config.FDRange) return false;
+
+                    BlockFilter bFilter = (pos, block) => block.CollisionBoxes != null;
+                    
                     api.World.RayTraceForSelection(playerPos, entityPos, ref blockSel, ref entitySel, bFilter);
 
                     return entitySel?.Entity?.Equals(entity) ?? false;
