@@ -19,6 +19,10 @@ namespace VSHUD
                         ConfigLoader.Config.FDShow = args.PopBool() ?? !ConfigLoader.Config.FDShow;
                         api.ShowChatMessage(string.Format("Floaty Damage Hud Element Generation Set To {0}", ConfigLoader.Config.FDShow));
                         break;
+                    case "range":
+                        ConfigLoader.Config.FDRange = args.PopFloat() ?? ConfigLoader.Config.FDRange;
+                        api.ShowChatMessage(string.Format("Floaty damage raycasting range set to {0}.", ConfigLoader.Config.FDRange));
+                        break;
                     default:
                         break;
                 }
