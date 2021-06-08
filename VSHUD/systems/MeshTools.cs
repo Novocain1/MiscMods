@@ -15,6 +15,14 @@ using OpenTK.Graphics.OpenGL;
 
 namespace VSHUD
 {
+    static class AssetExtensions
+    {
+        public static string GetSafeName(this AssetLocation asset)
+        {
+            return asset.ToShortString().Replace("/", "-");
+        }
+    }
+
     class MeshTools : ClientModSystem
     {
         ICoreClientAPI capi;
@@ -25,24 +33,32 @@ namespace VSHUD
             {
                 var bs = api.World.Player.CurrentBlockSelection;
                 var es = api.World.Player.CurrentEntitySelection;
-                string word = a.PopWord("object");
                 
-                lock (MassFileExportSystem.toExport)
+                MeshData mesh = null;
+                string name = a.PopWord();
+
+                if (bs != null)
                 {
-                    if (bs != null)
+                    var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
+                    name = name ?? asset.GetSafeName();
+                    
+                    api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out mesh);
+                }
+                else if (es != null)
+                {
+                    Shape loadedShape = es.Entity.Properties.Client.LoadedShape;
+                    var texPos = es.Entity.Properties.Client.Renderer as ITexPositionSource;
+                    if (texPos == null) return;
+                    
+                    name = name ?? es.Entity.Code.GetSafeName();
+                    api.Tesselator.TesselateShape("", loadedShape, out mesh, texPos);
+                }
+
+                if (mesh != null)
+                {
+                    lock (MassFileExportSystem.toExport)
                     {
-                        var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
-                        string name = asset.ToShortString().Replace("/", "-");
-                        api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
                         MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, name + ".obj"), name + ".obj"));
-                    }
-                    else if (es != null)
-                    {
-                        Shape loadedShape = es.Entity.Properties.Client.LoadedShape;
-                        var texPos = es.Entity.Properties.Client.Renderer as ITexPositionSource;
-                        if (texPos == null) return;
-                        api.Tesselator.TesselateShape("", loadedShape, out MeshData mesh, texPos);
-                        MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, es.Entity.Code.ToShortString() + ".obj"), es.Entity.Code.ToShortString() + ".obj"));
                     }
                 }
             });
@@ -70,23 +86,30 @@ namespace VSHUD
             {
                 var bs = api.World.Player.CurrentBlockSelection;
                 var es = api.World.Player.CurrentEntitySelection;
-                string word = a.PopWord("object");
+                
+                string name = a.PopWord();
+
+                MeshData mesh = null;
 
                 if (bs != null)
                 {
                     var asset = api.World.BlockAccessor.GetBlock(bs.Position).Shape.Base;
-                    api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out MeshData mesh);
-                    using (TextWriter tw = new StreamWriter(Path.Combine(GamePaths.DataPath, word + ".json")))
-                    {
-                        tw.Write(JsonConvert.SerializeObject(mesh, Formatting.Indented));
-                    }
+                    name = name ?? asset.GetSafeName();
+
+                    api.Tesselator.TesselateShape(api.World.GetBlock(0), (api.TesselatorManager as ShapeTesselatorManager).shapes[asset], out mesh);
                 }
                 else if (es != null)
                 {
-                    api.Tesselator.TesselateShape(api.World.GetBlock(0), es.Entity.Properties.Client.LoadedShape, out MeshData mesh);
-                    using (TextWriter tw = new StreamWriter(Path.Combine(GamePaths.DataPath, word + ".json")))
+                    name = name ?? es.Entity.Code.GetSafeName();
+
+                    api.Tesselator.TesselateShape(api.World.GetBlock(0), es.Entity.Properties.Client.LoadedShape, out mesh);
+                }
+
+                if (mesh != null)
+                {
+                    lock (MassFileExportSystem.toExport)
                     {
-                        tw.Write(JsonConvert.SerializeObject(mesh, Formatting.Indented));
+                        MassFileExportSystem.toExport.Push(new ExportableJsonObject(mesh, Path.Combine(GamePaths.DataPath, name)));
                     }
                 }
             });
