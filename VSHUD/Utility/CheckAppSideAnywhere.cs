@@ -6,7 +6,7 @@ namespace VSHUD
 {
     public class CheckAppSideAnywhere
     {
-        public static Dictionary<int, EnumAppSide> FastSideLookup = new Dictionary<int, EnumAppSide>();
+        private static Dictionary<int, EnumAppSide> FastSideLookup = new Dictionary<int, EnumAppSide>();
 
         public static void CacheCurrentThread()
         {
