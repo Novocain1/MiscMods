@@ -27,5 +27,10 @@ namespace VSHUD
                 capi.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(capi.World as ClientMain));
             };
         }
+
+        public override void Dispose()
+        {
+            CheckAppSideAnywhere.Dispose();
+        }
     }
 }
