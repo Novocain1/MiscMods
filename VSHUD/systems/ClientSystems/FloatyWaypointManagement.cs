@@ -198,8 +198,7 @@ namespace VSHUD
             capi.Event.EnqueueMainThreadTask(() =>
             {
                 var notif = capi.ModLoader.GetModSystem<ModSystemNotification>();
-                var elem = notif.CreateNotification(string.Format("Building Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")));
-                elem.expiryTime = 0.01f;
+                notif.CreateNotification(string.Format("Building Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")), null, 2.0f);
 
                 if (arr[i] != null) arr[i].waypoint = wp;
                 else arr[i] = new HudElementWaypoint(capi, wp);

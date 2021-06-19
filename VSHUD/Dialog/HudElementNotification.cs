@@ -13,30 +13,76 @@ namespace VSHUD
     {
         ICoreClientAPI capi;
         public Queue<HudElementNotification> Notifications { get; set; } = new Queue<HudElementNotification>();
+        public Queue<IncomingNotification> IncomingNotifications { get; set; } = new Queue<IncomingNotification>();
 
-        public HudElementNotification CreateNotification(string text)
-        {
-            var elem = new HudElementNotification(capi, text);
-            Notifications.Enqueue(elem);
-            return elem;
-        }
+        public int maxElements = 5;
 
-        public HudElementNotification CreateNotification(string text, double[] color)
+        public void CreateNotification(string text, double[] color = null, float expiryTime = 2.0f)
         {
-            var elem = new HudElementNotification(capi, text, color);
-            Notifications.Enqueue(elem);
-            return elem;
+            var notif = new IncomingNotification(text, color, expiryTime);
+            IncomingNotifications.Enqueue(notif);
         }
+        
+        long id;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
+
+            capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
+            {
+                CreateNotification(a);
+            });
+
+            //move to separate thread at some point
+            id = api.Event.RegisterGameTickListener((dt) =>
+            {
+                if (IncomingNotifications.Count > 0)
+                {
+                    if (Notifications.Count < maxElements)
+                    {
+                        for (int i = 0; i < maxElements - Notifications.Count; i++)
+                        {
+                            if (i > IncomingNotifications.Count) break;
+
+                            var notif = IncomingNotifications.Dequeue();
+                            var elem = new HudElementNotification(api, notif.text, notif.color, notif.expiryTime - dt);
+                            Notifications.Enqueue(elem);
+                        }
+                    }
+                    else
+                    {
+                        //yea
+                        Notifications.First().expiryTime = -0.1f;
+                    }
+                }
+            }, 30);
+
             api.RegisterCommand("notification", "creates client notification", "", (id, args) =>
             {
                 string text = args.PopAll();
                 text = text.Length < 1 ? "Notification" : text;
                 CreateNotification(text);
             });
+        }
+
+        public override void Dispose()
+        {
+            capi.Event.UnregisterGameTickListener(id);
+        }
+    }
+
+    class IncomingNotification
+    {
+        public string text;
+        public double[] color;
+        public float expiryTime;
+
+        public IncomingNotification(string text, double[] color = null, float expiryTime = 2.0f)
+        {
+            this.text = text;
+            this.color = color ?? new double[] { 1, 1, 1, 1 };
+            this.expiryTime = expiryTime;
         }
     }
 
@@ -53,26 +99,21 @@ namespace VSHUD
         public int Elements { get => Notifications.Count; }
         public int id;
 
-        public HudElementNotification(ICoreClientAPI capi, string text) : base(capi)
-        {
-            Construct(capi, text, new double[] { 1, 1, 1, 1 });
-        }
-
-        public HudElementNotification(ICoreClientAPI capi, string text, double[] color) : base(capi)
+        public HudElementNotification(ICoreClientAPI capi, string text, double[] color, float expiryTime) : base(capi)
         {
             Construct(capi, text, color);
+            this.expiryTime = expiryTime;
         }
 
         void Construct(ICoreClientAPI capi, string text, double[] color)
         {
             id = Elements;
-            expiryTime = 5.0f * (Elements + 1);
             
             font = CairoFont.WhiteDetailText();
 
-            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.RightBottom, 0, 0, text.Count() * 12, 15);
+            ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.RightTop, 0, 0, text.Count() * 12, 15);
 
-            ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.RightBottom, -10, -150, textBounds.fixedWidth, textBounds.fixedHeight);
+            ElementBounds dialogBounds = ElementBounds.Fixed(EnumDialogArea.RightTop, 0, 350, textBounds.fixedWidth, textBounds.fixedHeight);
 
             this.color = color;
             font.Color = color;
@@ -81,11 +122,11 @@ namespace VSHUD
 
             SingleComposer = capi.Gui
                 .CreateCompo("notification" + text + capi.Gui.OpenedGuis.Count + 1 + GetHashCode(), dialogBounds)
-                .AddDynamicText(text, font, EnumTextOrientation.Center, textBounds, "text")
+                .AddDynamicText(text, font, EnumTextOrientation.Right, textBounds, "text")
                 .Compose();
 
             var dynText = SingleComposer.GetDynamicText("text");
-            SingleComposer.Bounds.absOffsetY = id * dynText.Bounds.absInnerHeight;
+            SingleComposer.Bounds.absOffsetY = dynText.Bounds.absInnerHeight + (id * dynText.Bounds.absInnerHeight);
 
             TryOpen();
         }
@@ -100,7 +141,7 @@ namespace VSHUD
             dynText.Font = font.WithColor(new double[] { color[0], color[1], color[2], alpha }).WithStroke(new double[] { 0.0, 0.0, 0.0, alpha }, 1.0);
             dynText.RecomposeText();
 
-            expiryTime -= deltaTime;
+            if (id == 0) expiryTime -= deltaTime;
             if (expiryTime < 0)
             {
                 TryClose();
