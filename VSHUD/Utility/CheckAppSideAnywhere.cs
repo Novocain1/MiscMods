@@ -10,7 +10,7 @@ namespace VSHUD
 
         public static void CacheCurrentThread()
         {
-            if (Thread.CurrentThread.Name == "SingleplayerServer" || Thread.CurrentThread.Name.Contains("Server"))
+            if (Thread.CurrentThread.Name == "SingleplayerServer")
             {
                 FastSideLookup[Thread.CurrentThread.ManagedThreadId] = EnumAppSide.Server;
             }
@@ -22,12 +22,13 @@ namespace VSHUD
 
         private static EnumAppSide GetAppSide()
         {
-            if (!FastSideLookup.ContainsKey(Thread.CurrentThread.ManagedThreadId))
+            if (!FastSideLookup.TryGetValue(Thread.CurrentThread.ManagedThreadId, out EnumAppSide side))
             {
                 CacheCurrentThread();
+                side = FastSideLookup[Thread.CurrentThread.ManagedThreadId];
             }
 
-            return FastSideLookup[Thread.CurrentThread.ManagedThreadId];
+            return side;
         }
 
         public static EnumAppSide Side { get => GetAppSide(); }
