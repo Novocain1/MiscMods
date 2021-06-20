@@ -12,7 +12,12 @@ namespace VSHUD
 
         public ClientMain game;
 
-        public VSHUDTaskSystem(ClientMain game) : base(game) { this.game = game; }
+        public VSHUDTaskSystem(ClientMain game) : base(game) 
+        {
+            Actions = new ConcurrentQueue<Action>();
+            MainThreadActions = new ConcurrentQueue<Action>();
+            this.game = game; 
+        }
 
         public override string Name => "VSHUD Tasks";
 
@@ -43,7 +48,8 @@ namespace VSHUD
         public override void Dispose(ClientMain game)
         {
             base.Dispose(game);
-            Actions = new ConcurrentQueue<Action>();
+            Actions = null;
+            MainThreadActions = null;
         }
     }
 }

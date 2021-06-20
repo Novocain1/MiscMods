@@ -28,6 +28,8 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
+            
+            //move to separate thread at some point
             id = api.Event.RegisterGameTickListener((dt) =>
             {
                 if (IncomingNotifications.Count > 0)
