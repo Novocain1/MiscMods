@@ -28,7 +28,12 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
-            
+
+            capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
+            {
+                CreateNotification(a);
+            });
+
             //move to separate thread at some point
             id = api.Event.RegisterGameTickListener((dt) =>
             {
@@ -136,7 +141,7 @@ namespace VSHUD
             dynText.Font = font.WithColor(new double[] { color[0], color[1], color[2], alpha }).WithStroke(new double[] { 0.0, 0.0, 0.0, alpha }, 1.0);
             dynText.RecomposeText();
 
-            expiryTime -= deltaTime;
+            if (id == 0) expiryTime -= deltaTime;
             if (expiryTime < 0)
             {
                 TryClose();
