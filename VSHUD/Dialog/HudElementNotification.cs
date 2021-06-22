@@ -29,10 +29,10 @@ namespace VSHUD
         {
             this.capi = api;
 
-            capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
+            /*capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
             {
                 CreateNotification(a);
-            });
+            });*/
 
             //move to separate thread at some point
             id = api.Event.RegisterGameTickListener((dt) =>
