@@ -162,9 +162,11 @@ namespace VSHUD
             MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
             var lod0 = toBlock.Lod0Mesh;
             var lod1 = tesselatormanager.blockModelDatas[toBlock.Id].Clone();
+            var lod2 = toBlock.Lod2Mesh;
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
             var lod1alt = tesselatormanager.altblockModelDatasLod1[toBlock.Id];
+            var lod2alt = tesselatormanager.altblockModelDatasLod2[toBlock.Id];
 
 
             if (toBlock is BlockMeal)
@@ -189,16 +191,21 @@ namespace VSHUD
             {
                 long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, lod1alt.Length);
                 mesh = lod1alt[alternateIndex].Clone();
-                var lod = lod0alt?[alternateIndex].Clone();
+                var lod_0 = lod0alt?[alternateIndex].Clone();
+                var lod_2 = lod2alt?[alternateIndex].Clone();
 
-                if (lod != null && mesh != lod)
+                mesh.IndicesMax = mesh.Indices.Count();
+                if (lod_0 != null)
                 {
-                    mesh.IndicesMax = mesh.Indices.Count();
-                    lod.IndicesMax = lod.Indices.Count();
-
-                    mesh.AddMeshData(lod);
-                    mesh.CompactBuffers();
+                    lod_0.IndicesMax = lod_0.Indices.Count();
+                    if (!mesh.Equals(lod_0)) mesh.AddMeshData(lod_0);
                 }
+                if (lod_2 != null)
+                {
+                    lod_2.IndicesMax = lod_2.Indices.Count();
+                    if (!mesh.Equals(lod_2)) mesh.AddMeshData(lod_2);
+                }
+                mesh.CompactBuffers();
             }
             else
             { 
@@ -207,8 +214,14 @@ namespace VSHUD
                 if (lod0 != null)
                 {
                     lod0.IndicesMax = lod0.Indices.Count();
-                    if (mesh != lod0) mesh.AddMeshData(lod0);
+                    if (!mesh.Equals(lod0)) mesh.AddMeshData(lod0);
                 }
+                if (lod2 != null)
+                {
+                    lod2.IndicesMax = lod2.Indices.Count();
+                    if (!mesh.Equals(lod2)) mesh.AddMeshData(lod2);
+                }
+                mesh.CompactBuffers();
             }
 
             if (toBlock.RandomizeRotations)
@@ -275,6 +288,7 @@ namespace VSHUD
             Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);
+            prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0];
             prog.ModelMatrix = ModelMat
                 .Identity()
                 .Translate(adjPos.X - camPos.X, adjPos.Y - camPos.Y, adjPos.Z - camPos.Z)
@@ -283,10 +297,19 @@ namespace VSHUD
             
             prog.ViewMatrix = rpi.CameraMatrixOriginf;
             prog.ProjectionMatrix = rpi.CurrentProjectionMatrix;
-            Vec4f col;
+            Vec4f col = new Vec4f(1.0f, 1.0f, 1.0f, config.PROpacity);
 
-            if (config.PRTint) col = prog.RgbaTint = new Vec4f(1 + config.PRTintColor[0], 1 + config.PRTintColor[1], 1 + config.PRTintColor[2], config.PROpacity);
-            else prog.RgbaTint = col = new Vec4f(1, 1, 1, config.PROpacity);
+            //int color = toBlock.GetColor(capi, adjPos);
+            //ColorUtil.ToRGBAVec4f(color, ref col);
+
+            //col = new Vec4f(col.B * 4.0f, col.G * 4.0f, col.R * 4.0f, config.PROpacity);
+
+            if (config.PRTint)
+            {
+                col.Add(new Vec4f(config.PRTintColor[0], config.PRTintColor[1], config.PRTintColor[2], 0.0f));
+            }
+
+            prog.RgbaTint = col;
 
             prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
             prog.ExtraGlow = 255 / (int)(capi.World.Calendar.SunLightStrength * 64.0f);

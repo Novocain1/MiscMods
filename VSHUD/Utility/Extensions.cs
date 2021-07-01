@@ -421,6 +421,14 @@ namespace VSHUD
             return (x * x + y * y + z * z) <= (rad * rad);
         }
 
+        public static Vec4f Add(this Vec4f a, Vec4f b)
+        {
+            a.X += b.X;
+            a.Y += b.Y;
+            a.Z += b.Z;
+            return a;
+        }
+
         //Politely asks the server to send waypoints to us even if we don't have our map opened.
         public static void SendMyWaypoints(this ICoreClientAPI capi)
         {
