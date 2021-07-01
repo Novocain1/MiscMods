@@ -204,6 +204,9 @@ namespace VSHUD
                 else arr[i] = new HudElementWaypoint(capi, wp);
 
                 arr[i].UpdateEditDialog();
+
+                if (i == arr.Length - 1) notif.CreateNotification("Building Dialogs... 100.00%", null, 2.0f);
+
                 mainThreadProcessing = false;
 
             }, "");
