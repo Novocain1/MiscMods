@@ -82,7 +82,10 @@ namespace VSHUD
                             Config.ClockPosMod.Y = args.PopFloat() ?? Config.ClockPosMod.Y;
                             break;
                         case "timetype":
-                            Config.TimeType = args.PopEnum(Config.TimeType);
+                            var a = args.PopWord();
+                            Enum.TryParse(a, true, out EnumTimeType type);
+
+                            Config.TimeType = type;
                             break;
                         case "color":
                             string hex = args.PopWord(ColorUtil.Int2Hex(ColorUtil.WhiteArgb));
