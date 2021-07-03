@@ -23,6 +23,7 @@ namespace VSHUD
         public override void OnOwnPlayerDataReceived()
         {
             base.OnOwnPlayerDataReceived();
+            lastCol = Config.ClockColor;
 
             ElementBounds textBounds = ElementBounds.Fixed(EnumDialogArea.LeftTop, 5, 5, 400, 256);
 
@@ -37,8 +38,17 @@ namespace VSHUD
 
         }
 
+        int lastCol;
+
         public void UpdateText()
         {
+            if (lastCol != Config.ClockColor)
+            {
+                SingleComposer.GetDynamicText("clock").Font.Color = ColorUtil.ToRGBADoubles(Config.ClockColor);
+                SingleComposer.ReCompose();
+            }
+            lastCol = Config.ClockColor;
+
             BlockPos entityPos = capi.World.Player.Entity.Pos.AsBlockPos;
             ClimateCondition climate = capi.World.BlockAccessor.GetClimateAt(entityPos, EnumGetClimateMode.NowValues);
 
@@ -53,12 +63,16 @@ namespace VSHUD
             float stormGlitchStrength = data.GetField<float>("stormGlitchStrength");
             double stormActiveDays = data.GetField<double>("stormActiveTotalDays") - capi.World.Calendar.TotalDays;
             bool nowStormActive = data.GetField<bool>("nowStormActive");
+            
+            int h = Config.TimeType == EnumTimeType.TwelveHour ? (cal.FullHourOfDay > 12 ? cal.FullHourOfDay - 12 : cal.FullHourOfDay) : cal.FullHourOfDay;
+            h = h == 0 ? 12 : h;
 
-            string hour = cal.FullHourOfDay < 10 ? "0" + cal.FullHourOfDay : "" + cal.FullHourOfDay;
+            string hour = h < 10 ? "0" + h : "" + h;
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
             string dot = m % 2 == 0 ? ":" : " ";
             string minute = m < 10 ? "0" + m : "" + m;
-            string time = hour + dot + minute;
+            string ampm = Config.TimeType == EnumTimeType.TwelveHour ? (cal.FullHourOfDay < 12 ? "AM" : "PM") : "";
+            string time = string.Format("{0}{1}{2} {3}", hour, dot, minute, ampm);
 
             StringBuilder stringBuilder = new StringBuilder();
             

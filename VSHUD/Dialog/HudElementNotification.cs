@@ -28,7 +28,7 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
-
+            
             /*capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
             {
                 CreateNotification(a);

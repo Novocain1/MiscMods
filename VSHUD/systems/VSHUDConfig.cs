@@ -9,6 +9,11 @@ using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
+    public enum EnumTimeType
+    {
+        TwelveHour, TwentyFourHour
+    }
+
     public class ClockShowConfig
     {
         public bool Calendar { get; set; } = true;
@@ -19,8 +24,10 @@ namespace VSHUD
         public bool LocalTemporalStability { get; set; } = true;
         public bool PlayerTemporalStability { get; set; } = true;
         public bool TemporalStormInfo { get; set; } = true;
+        public EnumTimeType TimeType { get; set; } = EnumTimeType.TwentyFourHour;
 
         public Vec2f ClockPosMod { get; set; } = new Vec2f();
+        public int ClockColor { get; set; } = ColorUtil.WhiteArgb;
     }
 
     public class VSHUDConfig
