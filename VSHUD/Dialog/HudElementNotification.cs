@@ -29,10 +29,11 @@ namespace VSHUD
         {
             this.capi = api;
             
-            /*capi.Network.RegisterChannel("vdnotif").RegisterMessageType<string>().SetMessageHandler<string>((a) =>
+            capi.Network.RegisterChannel("VSHUD.Notification").RegisterMessageType<AssetLocation>().SetMessageHandler<AssetLocation>((a) =>
             {
-                CreateNotification(a);
-            });*/
+                string notification = a.ToShortString();
+                CreateNotification(notification);
+            });
 
             //move to separate thread at some point
             id = api.Event.RegisterGameTickListener((dt) =>
@@ -68,7 +69,7 @@ namespace VSHUD
 
         public override void Dispose()
         {
-            capi.Event.UnregisterGameTickListener(id);
+            capi?.Event.UnregisterGameTickListener(id);
         }
     }
 
