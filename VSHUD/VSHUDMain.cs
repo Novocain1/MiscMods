@@ -9,7 +9,7 @@ using Vintagestory.Client.NoObf;
     Description = "Automatically creates waypoints on player death, floaty waypoints, and other misc client side things",
     Side = "Client",
     Authors = new[] { "Novocain" },
-    Version = "2.0.6")]
+    Version = "2.0.7")]
 
 namespace VSHUD
 {

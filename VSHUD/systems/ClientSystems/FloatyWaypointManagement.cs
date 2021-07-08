@@ -44,7 +44,7 @@ namespace VSHUD
         {
             lock (WaypointElements)
             {
-                if (WaypointElements.Count > 0)
+                if (WaypointElements != null && WaypointElements.Count > 0)
                 {
                     string str = "";
                     var wps = new HudElementWaypoint[WaypointElements.Count];
