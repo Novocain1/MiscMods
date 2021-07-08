@@ -221,10 +221,13 @@ namespace VSHUD.Commands
                 case EnumCmdArgsFloatyWaypoints.shuffle:
                     lock (FloatyWaypointManagement.WaypointElements)
                     {
-                        HudElementWaypoint[] wps = new HudElementWaypoint[FloatyWaypointManagement.WaypointElements.Count];
-                        FloatyWaypointManagement.WaypointElements.TryPopRange(wps);
-                        wps.Shuffle(new LCGRandom(468963));
-                        FloatyWaypointManagement.WaypointElements.PushRange(wps);
+                        if (FloatyWaypointManagement.WaypointElements != null && FloatyWaypointManagement.WaypointElements.Count > 1)
+                        {
+                            HudElementWaypoint[] wps = new HudElementWaypoint[FloatyWaypointManagement.WaypointElements.Count];
+                            FloatyWaypointManagement.WaypointElements.TryPopRange(wps);
+                            wps.Shuffle(new LCGRandom(468963));
+                            FloatyWaypointManagement.WaypointElements.PushRange(wps);
+                        }
                     }
                     break;
                 default:
