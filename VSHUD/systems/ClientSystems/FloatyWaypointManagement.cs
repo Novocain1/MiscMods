@@ -56,7 +56,7 @@ namespace VSHUD
                         str += wp.waypoint.Title;
                         str += wp.waypoint.Index;
                     }
-                    return GameMath.Md5Hash(str);
+                    return ExtraMath.Sha512Hash(str);
                 }
                 else return null;
             }

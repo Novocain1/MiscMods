@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -434,6 +435,17 @@ namespace VSHUD
         {
             var MapManager = capi.ModLoader.GetModSystem<WorldMapManager>();
             capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
+        }
+    }
+
+    public static class ExtraMath
+    {
+        static SHA512 fiveTwelveHasher = SHA512.Create();
+
+        public static string Sha512Hash(string value)
+        {
+            var hash = fiveTwelveHasher.ComputeHash(SerializerUtil.Serialize(value));
+            return Encoding.Default.GetString(hash);
         }
     }
 

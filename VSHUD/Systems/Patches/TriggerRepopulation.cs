@@ -25,7 +25,7 @@ namespace VSHUD
                     str += i;
                 }
 
-                string incomingHash = GameMath.Md5Hash(str);
+                string incomingHash = ExtraMath.Sha512Hash(str);
 
                 if (currentHash == incomingHash)
                 {
