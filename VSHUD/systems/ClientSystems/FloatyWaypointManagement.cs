@@ -4,6 +4,8 @@ using Vintagestory.API.Client;
 using Vintagestory.GameContent;
 using System.Collections.Concurrent;
 using System.Linq;
+using System;
+using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
@@ -14,9 +16,9 @@ namespace VSHUD
 
         ICoreClientAPI capi;
         WaypointUtils utils;
-        public static bool repop = false;
+        public static bool forceRepop = false;
 
-        public static void TriggerRepopulation() => repop = true;
+        public static void TriggerRepopulation() => forceRepop = true;
 
         public FloatyWaypointManagement(ClientMain game, WaypointUtils utils) : base(game) 
         {
@@ -38,6 +40,28 @@ namespace VSHUD
             Update();
         }
 
+        public static string GetWaypointsHash()
+        {
+            lock (WaypointElements)
+            {
+                if (WaypointElements.Count > 0)
+                {
+                    string str = "";
+                    var wps = new HudElementWaypoint[WaypointElements.Count];
+                    WaypointElements.CopyTo(wps, 0);
+                    Array.Sort(wps, delegate (HudElementWaypoint a, HudElementWaypoint b) { return a.waypoint.Index.CompareTo(b.waypoint.Index); });
+
+                    foreach (var wp in wps)
+                    {
+                        str += wp.waypoint.Title;
+                        str += wp.waypoint.Index;
+                    }
+                    return GameMath.Md5Hash(str);
+                }
+                else return null;
+            }
+        }
+
         public override string Name => "Floaty Waypoint Management";
 
         public override EnumClientSystemType GetSystemType() => EnumClientSystemType.Misc;
@@ -48,6 +72,10 @@ namespace VSHUD
         {
             Update();
         }
+
+
+        public bool Dirty { get => WaypointElements.Any(a => a.Dirty); }
+
 
         public HudElementWaypoint[] Openable
         {
@@ -143,24 +171,11 @@ namespace VSHUD
                 {
                     if (wp.Dirty)
                     {
-                        var state = utils.WaypointsRel.Select(a => new WaypointRelative(capi, new Waypoint()
-                        {
-                            Color = a.Color,
-                            Icon = a.Icon,
-                            OwningPlayerGroupId = a.OwningPlayerGroupId,
-                            OwningPlayerUid = a.OwningPlayerUid,
-                            Pinned = a.Pinned,
-                            Position = a.Position.Clone(),
-                            ShowInWorld = a.ShowInWorld,
-                            Text = a.Text,
-                            Title = a.Title
-                        }, a.Index)).ToArray();
-
-                        if (wp.waypointID <= state.Length && state.Length > 0) 
+                        if (wp.waypointID <= utils.WaypointsRel.Length && utils.WaypointsRel.Length > 0) 
                         {
                             try
                             {
-                                wp.waypoint = state[wp.waypointID];
+                                wp.waypoint = utils.WaypointsRel[wp.waypointID];
                                 wp.UpdateEditDialog();
                                 var dynText = wp.SingleComposer.GetDynamicText("text");
                                 dynText.Font.Color = wp.dColor;
@@ -198,14 +213,17 @@ namespace VSHUD
             capi.Event.EnqueueMainThreadTask(() =>
             {
                 var notif = capi.ModLoader.GetModSystem<ModSystemNotification>();
-                notif.CreateNotification(string.Format("Building Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")), null, 2.0f);
+                notif.CreateNotification(string.Format("Rebuilding Waypoint Dialogs... {0}%", ((double)i / wpRel.Length * 100).ToString("F2")), null, 2.0f);
 
                 if (arr[i] != null) arr[i].waypoint = wp;
                 else arr[i] = new HudElementWaypoint(capi, wp);
 
                 arr[i].UpdateEditDialog();
 
-                if (i == arr.Length - 1) notif.CreateNotification("Building Dialogs... 100.00%", null, 2.0f);
+                if (i == arr.Length - 1)
+                {
+                    notif.CreateNotification("Rebuilding Waypoint Dialogs... 100.00%", null, 2.0f);
+                }
 
                 mainThreadProcessing = false;
 
@@ -219,8 +237,8 @@ namespace VSHUD
 
             if (utils.Config.FloatyWaypoints)
             {
-                if (repop) Repopulate();
-
+                Repopulate();
+                
                 foreach (var val in Closeable) CloseOnMainThread(val);
                 foreach (var val in Openable) OpenOnMainThread(val);
                 foreach (var val in Opened) RecomposeTextOnMainThread(val);
@@ -233,9 +251,9 @@ namespace VSHUD
 
         public void Repopulate()
         {
-            if (WaypointUtils.doingConfigAction || (WaypointElements.Count > 0 && WaypointElements.Count == utils.WaypointsRel.Length))
+            if (!forceRepop && (WaypointUtils.doingConfigAction || (WaypointElements.Count == utils.WaypointsRel.Length && !Dirty)))
             {
-                repop = false;
+                forceRepop = false;
                 return;
             }
 
@@ -270,8 +288,7 @@ namespace VSHUD
             }
 
             if (arr.Length > 0) WaypointElements.PushRange(arr);
-
-            repop = false;
+            forceRepop = false;
         }
 
         public void Dispose() => Dispose(capi.World as ClientMain);

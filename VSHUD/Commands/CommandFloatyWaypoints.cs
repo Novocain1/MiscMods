@@ -11,6 +11,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using Action = Vintagestory.API.Common.Action;
 
@@ -28,7 +29,7 @@ namespace VSHUD.Commands
 
     public enum EnumCmdArgsFloatyWaypoints
     {
-        deathdebug, dotrange, titlerange, perblockwaypoints, pdw, plt, open, waypointprefix, waypointid, purge, enableall, save, export, import, testlimits, pillars
+        deathdebug, dotrange, titlerange, perblockwaypoints, pdw, plt, open, waypointprefix, waypointid, purge, enableall, save, export, import, testlimits, pillars, shuffle
     }
 
     public class ClientChatCommandArgProvided : ClientChatCommand
@@ -216,6 +217,15 @@ namespace VSHUD.Commands
                 case EnumCmdArgsFloatyWaypoints.pillars:
                     Config.ShowPillars = args.PopBool() ?? !Config.ShowPillars;
                     capi.ShowChatMessage("Waypoint Pillars Set To " + Config.ShowPillars + ".");
+                    break;
+                case EnumCmdArgsFloatyWaypoints.shuffle:
+                    lock (FloatyWaypointManagement.WaypointElements)
+                    {
+                        HudElementWaypoint[] wps = new HudElementWaypoint[FloatyWaypointManagement.WaypointElements.Count];
+                        FloatyWaypointManagement.WaypointElements.TryPopRange(wps);
+                        wps.Shuffle(new LCGRandom(468963));
+                        FloatyWaypointManagement.WaypointElements.PushRange(wps);
+                    }
                     break;
                 default:
                     capi.ShowChatMessage(GetHelpMessage());

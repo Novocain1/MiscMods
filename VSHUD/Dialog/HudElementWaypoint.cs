@@ -14,6 +14,8 @@ namespace VSHUD
     {
         public bool Dirty { get; set; } = false;
 
+        public void MarkDirty() => Dirty = true;
+
         public Vec3d waypointPos { get => config.PerBlockWaypoints ? absolutePos.AsBlockPos.ToVec3d().SubCopy(0, 0.5, 0).Add(0.5) : absolutePos; }
         public Vec3d absolutePos { get => waypoint.Position.Clone(); }
         public string DialogTitle { get; set; }

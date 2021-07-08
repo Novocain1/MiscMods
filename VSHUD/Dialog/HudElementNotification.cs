@@ -31,8 +31,15 @@ namespace VSHUD
             
             capi.Network.RegisterChannel("VSHUD.Notification").RegisterMessageType<AssetLocation>().SetMessageHandler<AssetLocation>((a) =>
             {
-                string notification = a.ToShortString();
-                CreateNotification(notification);
+                try
+                {
+                    string notification = a.ToShortString();
+                    CreateNotification(notification);
+                }
+                catch (Exception)
+                {
+                    CreateNotification("Tried Parsing Bad Notification Packet, Ignoring.");
+                }
             });
 
             //move to separate thread at some point
