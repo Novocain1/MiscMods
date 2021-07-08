@@ -129,6 +129,7 @@
     <Compile Include="Systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="Systems\ClientSystems\MassFileExportSystem.cs" />
     <Compile Include="Systems\FloatyDamage.cs" />
+    <Compile Include="Systems\Patches\MarkDirtyFix.cs" />
     <Compile Include="Utility\CheckAppSideAnywhere.cs" />
     <Compile Include="Utility\HackMan.cs" />
     <Compile Include="Systems\Patches\ChunkPartGrabber.cs" />
