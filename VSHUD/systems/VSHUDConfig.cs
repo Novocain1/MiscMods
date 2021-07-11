@@ -60,6 +60,7 @@ namespace VSHUD
         public bool PRTint { get; set; } = false;
         public float[] PRTintColor { get; set; } = new float[] { 0, 0, 3 };
         public float PROpacity { get; set; } = 0.8f;
+        public bool PRDrawLines { get; set; } = true;
 
         public bool FDShow { get; set; } = true;
         public float FDRange { get; set; } = 100.0f;

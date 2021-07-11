@@ -32,7 +32,7 @@ namespace VSHUD
                 return true;
             });
 
-            api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|tinted|tintcolorhex|tintcolorrgb|tintdefault|opacity]", (id, args) =>
+            api.RegisterCommand("pconfig", "Config Placement Preview System", "[enabled|tinted|tintcolorhex|tintcolorrgb|tintdefault|opacity|drawlines]", (id, args) =>
             {
                 VSHUDConfig config = api.ModLoader.GetModSystem<WaypointUtils>().Config;
                 string arg = args.PopWord();
@@ -77,6 +77,10 @@ namespace VSHUD
                     case "tintdefault":
                         config.PRTintColor = new VSHUDConfig().PRTintColor;
                         break;
+                    case "drawlines":
+                        config.PRDrawLines = args.PopBool() ?? !config.PRDrawLines;
+                        api.ShowChatMessage("Drawing of preview mesh lines set to " + config.PRDrawLines);
+                        break;
                     default:
                         break;
                 }
@@ -108,6 +112,8 @@ namespace VSHUD
         public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
 
         MeshRef mRef;
+        MeshRef mRefTris;
+
         IRenderAPI rpi;
         public Matrixf ModelMat = new Matrixf();
         Block toBlock;
@@ -232,6 +238,11 @@ namespace VSHUD
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
             MeshData rotMesh = mesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, toBlock.GetRotY(playerPos, playerSelection), 0);
+            
+            mRefTris = rpi.UploadMesh(rotMesh);
+            
+            rotMesh.SetMode(EnumDrawMode.Lines);
+
             mRef = rpi.UploadMesh(rotMesh);
         }
 
@@ -242,6 +253,7 @@ namespace VSHUD
         public void Dispose()
         {
             mRef?.Dispose();
+            mRefTris?.Dispose();
         }
 
         public bool SneakCheck { get => SneakChecked && !player.Entity.Controls.Sneak; }
@@ -278,7 +290,7 @@ namespace VSHUD
             BlockPos adjPos = selClone.Position;
 
             UpdateBlockMesh(toBlock, adjPos);
-            if (mRef == null) return;
+            if (mRef == null || mRefTris == null) return;
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
@@ -316,9 +328,17 @@ namespace VSHUD
 
             prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
             prog.ExtraGlow = 255 / (int)(capi.World.Calendar.SunLightStrength * 64.0f);
-            
-            rpi.RenderMesh(mRef);
+            rpi.RenderMesh(mRefTris);
             prog.Stop();
+            
+            if (config.PRDrawLines)
+            {
+                prog.Use();
+                prog.RgbaTint = new Vec4f(col.R, col.G, col.B, 1.0f);
+                prog.ExtraGlow = 127;
+                rpi.RenderMesh(mRef);
+                prog.Stop();
+            }
 
             rpi.GlEnableCullFace();
         }
