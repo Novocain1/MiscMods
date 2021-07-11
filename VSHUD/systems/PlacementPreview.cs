@@ -310,6 +310,9 @@ namespace VSHUD
             }
 
             prog.RgbaTint = col;
+            
+            prog.SsaoAttn = 0;
+            prog.AlphaTest = 0.05f;
 
             prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
             prog.ExtraGlow = 255 / (int)(capi.World.Calendar.SunLightStrength * 64.0f);
