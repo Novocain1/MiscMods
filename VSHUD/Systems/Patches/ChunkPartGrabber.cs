@@ -57,16 +57,23 @@ namespace VSHUD
                 MassFileExportSystem.toExportLast.Push(new ExportableChunkPart(mesh, filePath, fileName, id));
             }
         }
-        
-        public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)
+
+        //public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)
+
+        public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, ref TesselatedChunkPart[] __result)
         {
             if (!Process) return;
             if (!Initialized) Initialize(__instance.GetField<ClientMain>("game").Api as ICoreClientAPI);
+
+            foreach (var val in __result) QueueUpChunkPart(val, chunkX, chunkY, chunkZ, false);
+
+            /*
             var centerParts = tessChunk.GetField<TesselatedChunkPart[]>("centerParts");
             var edgeParts = tessChunk.GetField<TesselatedChunkPart[]>("edgeParts");
 
             if (centerParts != null) foreach(var val in centerParts) QueueUpChunkPart(val, chunkX, chunkY, chunkZ, false);
             if (edgeParts != null) foreach (var val in edgeParts) QueueUpChunkPart(val, chunkX, chunkY, chunkZ, true);
+            */
         }
 
         public static void QueueUpChunkPart(TesselatedChunkPart part, int chunkX, int chunkY, int chunkZ, bool IsEdgePiece)
@@ -75,25 +82,25 @@ namespace VSHUD
 
             var mesh0 = part.GetField<MeshData>("modelDataLod0")?.Clone();
             var mesh1 = part.GetField<MeshData>("modelDataLod1")?.Clone();
-            var mesh2 = part.GetField<MeshData>("modelDataNotLod2Far")?.Clone();
-            var mesh3 = part.GetField<MeshData>("modelDataLod2Far")?.Clone();
+            //var mesh2 = part.GetField<MeshData>("modelDataNotLod2Far")?.Clone();
+            //var mesh3 = part.GetField<MeshData>("modelDataLod2Far")?.Clone();
 
             var cPass = part.GetField<EnumChunkRenderPass>("pass");
 
             mesh0?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
             mesh1?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
-            mesh2?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
-            mesh3?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            //mesh2?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
+            //mesh3?.Translate(new Vec3f(chunkX - SpawnPos.X, chunkY - SpawnPos.Y, chunkZ - SpawnPos.Z)?.Mul(32));
 
             mesh0?.CompactBuffers();
             mesh1?.CompactBuffers();
-            mesh2?.CompactBuffers();
-            mesh3?.CompactBuffers();
+            //mesh2?.CompactBuffers();
+            //mesh3?.CompactBuffers();
 
             if ((mesh0?.VerticesCount ?? 0) > 0) PushToStack(mesh0, chunkX, chunkY, chunkZ, cPass, 0, IsEdgePiece);
             if ((mesh1?.VerticesCount ?? 0) > 0) PushToStack(mesh1, chunkX, chunkY, chunkZ, cPass, 1, IsEdgePiece);
-            if ((mesh2?.VerticesCount ?? 0) > 0) PushToStack(mesh2, chunkX, chunkY, chunkZ, cPass, 2, IsEdgePiece);
-            if ((mesh3?.VerticesCount ?? 0) > 0) PushToStack(mesh3, chunkX, chunkY, chunkZ, cPass, 3, IsEdgePiece);
+            //if ((mesh2?.VerticesCount ?? 0) > 0) PushToStack(mesh2, chunkX, chunkY, chunkZ, cPass, 2, IsEdgePiece);
+            //if ((mesh3?.VerticesCount ?? 0) > 0) PushToStack(mesh3, chunkX, chunkY, chunkZ, cPass, 3, IsEdgePiece);
         }
     }
 }

@@ -356,7 +356,7 @@ namespace VSHUD
         {
             MeshData thismesh;
             ShapeTesselatorManager tesselatormanager = api.TesselatorManager as ShapeTesselatorManager;
-            var lod0 = block.Lod0Mesh;
+            var lod0 = tesselatormanager.blockModelDatasLod0[block.Id].Clone();
             var lod1 = tesselatormanager.blockModelDatas[block.Id].Clone();
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[block.Id];

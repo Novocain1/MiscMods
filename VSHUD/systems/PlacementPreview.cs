@@ -166,13 +166,13 @@ namespace VSHUD
         {
             MeshData mesh;
             MealMeshCache meshCache = capi.ModLoader.GetModSystem<MealMeshCache>();
-            var lod0 = toBlock.Lod0Mesh;
+            var lod0 = tesselatormanager.blockModelDatasLod0.ContainsKey(toBlock.Id) ? tesselatormanager.blockModelDatasLod0[toBlock.Id] : null;
             var lod1 = tesselatormanager.blockModelDatas[toBlock.Id].Clone();
-            var lod2 = toBlock.Lod2Mesh;
+            //var lod2 = toBlock.Lod2Mesh;
 
             var lod0alt = tesselatormanager.altblockModelDatasLod0[toBlock.Id];
             var lod1alt = tesselatormanager.altblockModelDatasLod1[toBlock.Id];
-            var lod2alt = tesselatormanager.altblockModelDatasLod2[toBlock.Id];
+            //var lod2alt = tesselatormanager.altblockModelDatasLod2[toBlock.Id];
 
 
             if (toBlock is BlockMeal)
@@ -198,7 +198,7 @@ namespace VSHUD
                 long alternateIndex = toBlock.RandomizeAxes == EnumRandomizeAxes.XYZ ? GameMath.MurmurHash3Mod(altPos.X, altPos.Y, altPos.Z, lod1alt.Length) : GameMath.MurmurHash3Mod(altPos.X, 0, altPos.Z, lod1alt.Length);
                 mesh = lod1alt[alternateIndex].Clone();
                 var lod_0 = lod0alt?[alternateIndex].Clone();
-                var lod_2 = lod2alt?[alternateIndex].Clone();
+                //var lod_2 = lod2alt?[alternateIndex].Clone();
 
                 mesh.IndicesMax = mesh.Indices.Count();
                 if (lod_0 != null)
@@ -206,11 +206,13 @@ namespace VSHUD
                     lod_0.IndicesMax = lod_0.Indices.Count();
                     if (!mesh.Equals(lod_0)) mesh.AddMeshData(lod_0);
                 }
+                /*
                 if (lod_2 != null)
                 {
                     lod_2.IndicesMax = lod_2.Indices.Count();
                     if (!mesh.Equals(lod_2)) mesh.AddMeshData(lod_2);
                 }
+                */
                 mesh.CompactBuffers();
             }
             else
@@ -222,11 +224,13 @@ namespace VSHUD
                     lod0.IndicesMax = lod0.Indices.Count();
                     if (!mesh.Equals(lod0)) mesh.AddMeshData(lod0);
                 }
+                /*
                 if (lod2 != null)
                 {
                     lod2.IndicesMax = lod2.Indices.Count();
                     if (!mesh.Equals(lod2)) mesh.AddMeshData(lod2);
                 }
+                */
                 mesh.CompactBuffers();
             }
 
