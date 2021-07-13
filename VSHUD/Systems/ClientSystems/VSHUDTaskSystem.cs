@@ -36,10 +36,13 @@ namespace VSHUD
 
         public void ProcessActions(ConcurrentQueue<Action> actions)
         {
-            for (int i = 0; i < actions.Count; i++)
+            if (actions != null)
             {
-                bool success = actions.TryDequeue(out Action action);
-                if (success) action.Invoke();
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    bool success = actions.TryDequeue(out Action action);
+                    if (success) action?.Invoke();
+                }
             }
         }
 
