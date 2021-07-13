@@ -164,7 +164,7 @@ namespace VSHUD
                 capi.SendMyWaypoints();
             }, "Exports waypoints as a JSON file located in your game data folder."));
 
-            RegisterSubCommand("export", new SubCommand((player, groupId, args) =>
+            RegisterSubCommand("import", new SubCommand((player, groupId, args) =>
             {
                 WaypointUtils.doingConfigAction = true;
 
