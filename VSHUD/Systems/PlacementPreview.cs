@@ -13,6 +13,7 @@ using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
 using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent.Mechanics;
+using OpenTK.Graphics.OpenGL;
 
 namespace VSHUD
 {
@@ -333,11 +334,15 @@ namespace VSHUD
             
             if (config.PRDrawLines)
             {
+                GL.LineWidth(4.0f / (float)camPos.DistanceTo(adjPos.ToVec3d()) * 2.0f);
+                
                 prog.Use();
                 prog.RgbaTint = new Vec4f(col.R, col.G, col.B, 1.0f);
                 prog.ExtraGlow = 127;
                 rpi.RenderMesh(mRef);
                 prog.Stop();
+                
+                GL.LineWidth(1.0f);
             }
 
             rpi.GlEnableCullFace();
