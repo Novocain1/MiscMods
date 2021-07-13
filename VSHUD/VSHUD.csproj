@@ -121,6 +121,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\CommandFloatyWaypoints.cs" />
+    <Compile Include="Commands\Common\ClientChatCommandExt.cs" />
+    <Compile Include="Commands\CommandRegistry.cs" />
+    <Compile Include="Commands\Common\SubCommand.cs" />
     <Compile Include="Dialog\HudElementNotification.cs" />
     <Compile Include="Dialog\HudElementFloatyDamage.cs" />
     <Compile Include="Systems\ClientSystems\FloatyWaypointManagement.cs" />

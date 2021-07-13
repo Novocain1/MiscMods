@@ -113,7 +113,8 @@ namespace VSHUD
         public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
 
         MeshRef mRef;
-        MeshRef mRefTris;
+
+        MeshRef targetPreview;
 
         IRenderAPI rpi;
         public Matrixf ModelMat = new Matrixf();
@@ -125,7 +126,8 @@ namespace VSHUD
         {
             this.capi = capi;
             rpi = capi.Render;
-            
+            targetPreview = rpi.UploadMesh(new MeshData(0, 0));
+
             itemActions[typeof(ItemStone)] = () => { itemPlacedBlock = capi.World.GetBlock(invItem.CodeWithPath("loosestones-" + invItem.LastCodePart() + "-free")); };
             NonCulledTypes = new List<Type>()
             {
@@ -240,10 +242,6 @@ namespace VSHUD
             shouldDispose = true;
             MeshData rotMesh = mesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, toBlock.GetRotY(playerPos, playerSelection), 0);
             
-            mRefTris = rpi.UploadMesh(rotMesh);
-            
-            rotMesh.SetMode(EnumDrawMode.Lines);
-
             mRef = rpi.UploadMesh(rotMesh);
         }
 
@@ -253,8 +251,7 @@ namespace VSHUD
 
         public void Dispose()
         {
-            mRef?.Dispose();
-            mRefTris?.Dispose();
+            if (shouldDispose) mRef?.Dispose();
         }
 
         public bool SneakCheck { get => SneakChecked && !player.Entity.Controls.Sneak; }
@@ -291,7 +288,7 @@ namespace VSHUD
             BlockPos adjPos = selClone.Position;
 
             UpdateBlockMesh(toBlock, adjPos);
-            if (mRef == null || mRefTris == null) return;
+            if (mRef == null) return;
             
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
@@ -302,6 +299,7 @@ namespace VSHUD
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);
             prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0];
+
             prog.ModelMatrix = ModelMat
                 .Identity()
                 .Translate(adjPos.X - camPos.X, adjPos.Y - camPos.Y, adjPos.Z - camPos.Z)
@@ -321,28 +319,36 @@ namespace VSHUD
             {
                 col.Add(new Vec4f(config.PRTintColor[0], config.PRTintColor[1], config.PRTintColor[2], 0.0f));
             }
-
-            prog.RgbaTint = col;
             
             prog.SsaoAttn = 0;
             prog.AlphaTest = 0.05f;
-
+            prog.RgbaTint = new Vec4f(col.R, col.G, col.B, config.PROpacity);
             prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
             prog.ExtraGlow = 255 / (int)(capi.World.Calendar.SunLightStrength * 64.0f);
-            rpi.RenderMesh(mRefTris);
+            rpi.RenderMesh(mRef);
             prog.Stop();
             
-            if (config.PRDrawLines)
+            if (mRef != null && config.PRDrawLines)
             {
-                GL.LineWidth(4.0f / (float)camPos.DistanceTo(adjPos.ToVec3d()) * 2.0f);
+                rpi.GLDisableDepthTest();
+                GL.Enable(EnableCap.LineSmooth);
                 
+                var origdrawmode = (mRef as VAO).drawMode;
+                (mRef as VAO).drawMode = PrimitiveType.LineLoop;
+                
+
                 prog.Use();
-                prog.RgbaTint = new Vec4f(col.R, col.G, col.B, 1.0f);
+                prog.Tex2D = rpi.GetOrLoadTexture(new AssetLocation("block/creative/col78.png"));
+                prog.RgbaTint = new Vec4f(col.R, col.G, col.B, config.PROpacity / 8.0f);
+                prog.RgbaGlowIn = new Vec4f(col.R, col.G, col.B, 1.0f);
                 prog.ExtraGlow = 127;
                 rpi.RenderMesh(mRef);
                 prog.Stop();
-                
-                GL.LineWidth(1.0f);
+
+                (mRef as VAO).drawMode = origdrawmode;
+
+                rpi.GLEnableDepthTest();
+                GL.Disable(EnableCap.LineSmooth);
             }
 
             rpi.GlEnableCullFace();
