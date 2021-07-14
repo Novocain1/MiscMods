@@ -41,6 +41,7 @@ namespace VSHUD
         public bool FloatyWaypoints { get; set; } = true;
         public bool DebugDeathWaypoints { get; set; } = false;
         public bool ShowPillars { get; set; } = true;
+        public bool Echo { get; set; } = false;
 
         public bool LightLevels { get; set; } = false;
         public EnumLightLevelType LightLevelType { get; set; } = EnumLightLevelType.OnlyBlockLight;

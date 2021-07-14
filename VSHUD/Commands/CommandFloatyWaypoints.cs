@@ -249,7 +249,7 @@ namespace VSHUD
 
                 WaypointUtils.doingConfigAction = false;
                 capi.SendMyWaypoints();
-            }, "Toggles the rendering of the pillars that accompany the floaty waypoint UIs."));
+            }, "Toggles the rendering of the pillars that accompany the floaty waypoint UIs. True/False"));
 
             RegisterSubCommand("shuffle", new SubCommand((player, groupId, args) =>
             {
@@ -269,6 +269,17 @@ namespace VSHUD
                 WaypointUtils.doingConfigAction = false;
                 capi.SendMyWaypoints();
             }, "Shuffles the internal floaty waypoint UI stack to debug if changes are handled correctly."));
+
+            RegisterSubCommand("echo", new SubCommand((player, groupId, args) =>
+            {
+                WaypointUtils.doingConfigAction = true;
+
+                config.Echo = (bool)args.PopBool(!config.Echo);
+                capi.ShowChatMessage(string.Format("Waypoint creation echoing set to {0}.", config.Echo));
+
+                WaypointUtils.doingConfigAction = false;
+                capi.SendMyWaypoints();
+            }, "Toggles the logging to chat of waypoint creation/deletion. Useful if you have a mod that creates many waypoints. True/False"));
         }
     }
 }

@@ -4,10 +4,10 @@ using Vintagestory.Client.NoObf;
 using HarmonyLib;
 using System.IO;
 using Vintagestory.API.Config;
-using System.Linq;
 
 namespace VSHUD
 {
+
     [HarmonyPatch(typeof(ChunkTesselator), "NowProcessChunks")]
     class ChunkPartGrabber
     {
