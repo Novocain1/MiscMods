@@ -7,7 +7,6 @@ using Vintagestory.API.Config;
 
 namespace VSHUD
 {
-
     [HarmonyPatch(typeof(ChunkTesselator), "NowProcessChunks")]
     class ChunkPartGrabber
     {

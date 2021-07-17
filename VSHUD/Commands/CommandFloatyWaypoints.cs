@@ -10,7 +10,7 @@ using Action = Vintagestory.API.Common.Action;
 
 namespace VSHUD
 {
-    public class CommandFloatyWaypoints : ClientChatCommandExt
+    public class CommandFloatyWaypoints : VSHUDCommand
     {
         public CommandFloatyWaypoints(ICoreClientAPI capi, WaypointUtils utils) : base(capi)
         {
@@ -19,155 +19,88 @@ namespace VSHUD
             
             RegisterSubCommand("deathdebug", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-                
                 config.DebugDeathWaypoints = args.PopBool() ?? !config.DebugDeathWaypoints;
                 capi.ShowChatMessage(string.Format("Death waypoint debbuging set to {0}", config.DebugDeathWaypoints));
-                
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Debug sending of death waypoint string, true/false."));
 
             RegisterSubCommand("dotrange", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 double? dr = args.PopDouble();
                 config.DotRange = dr != null ? (double)dr : config.DotRange;
                 capi.ShowChatMessage("Dot Range Set To " + config.DotRange + " Meters.");
-                
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Sets the dot range of floaty waypoints, any decimal value."));
 
             RegisterSubCommand("titlerange", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 double? tr = args.PopDouble();
                 config.TitleRange = tr != null ? (double)tr : config.TitleRange;
                 capi.ShowChatMessage("Title Range Set To " + config.TitleRange + " Meters.");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Sets the title range of floaty waypoints, any decimal value."));
 
             RegisterSubCommand("perblockwaypoints", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 bool? pb = args.PopBool();
                 config.PerBlockWaypoints = pb != null ? (bool)pb : !config.PerBlockWaypoints;
                 capi.ShowChatMessage("Per Block Waypoints Set To " + config.PerBlockWaypoints + ".");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Whether or not floaty waypoints are clamped to block positions, true/false."));
 
             RegisterSubCommand("pdw", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 utils.PurgeWaypointsByStrings("Player Death Waypoint", "*Player Death Waypoint*");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Purges death waypoints."));
 
             RegisterSubCommand("plt", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 utils.PurgeWaypointsByStrings("Limits Test");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Purges waypoints created by the testlimits debug command."));
 
             RegisterSubCommand("open", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 utils.ViewWaypoints(new KeyCombination());
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Opens floaty waypoints uis."));
 
             RegisterSubCommand("waypointprefix", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 bool? wp = args.PopBool();
                 config.WaypointPrefix = wp != null ? (bool)wp : !config.WaypointPrefix;
                 capi.ShowChatMessage("Waypoint Prefix Set To " + config.WaypointPrefix + ".");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Whether or not waypoints are prefixed with \"Waypoint:\", true/false"));
 
             RegisterSubCommand("waypointid", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 bool? wi = args.PopBool();
                 config.WaypointID = wi != null ? (bool)wi : !config.WaypointID;
                 capi.ShowChatMessage("Waypoint ID Set To " + config.WaypointID + ".");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Whether or not floaty waypoints are prefixed with their ID, true/false"));
 
             RegisterSubCommand("purge", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 string s = args.PopWord();
                 if (s == "reallyreallyconfirm") utils.Purge();
                 else capi.ShowChatMessage(Lang.Get("Are you sure you want to do that? It will remove ALL your waypoints, type \"reallyreallyconfirm\" to confirm."));
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
-            }, "Purges ALL your waypoints."));
+            }, "Deletes ALL your waypoints."));
 
             RegisterSubCommand("enableall", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 config.DisabledColors.Clear();
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Enables all waypoint colors."));
 
             RegisterSubCommand("save", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 ConfigLoader.SaveConfig(capi);
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Force save configuration file."));
 
             RegisterSubCommand("export", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 string filePath = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints");
                 lock (MassFileExportSystem.toExport)
                 {
                     MassFileExportSystem.toExport.Push(new ExportableJsonObject(utils.WaypointsRel, filePath));
                 }
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Exports waypoints as a JSON file located in your game data folder."));
 
             RegisterSubCommand("import", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 string path1 = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints") + ".json";
                 if (File.Exists(path1))
                 {
@@ -195,15 +128,10 @@ namespace VSHUD
                         reader.Close();
                     }
                 }
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Imports waypoints from a JSON file located in your game data folder, default name waypoints.json, if not, provide filename excluding .json."));
 
             RegisterSubCommand("testlimits", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 int amount = args.PopInt() ?? 30;
                 int maxY = args.PopInt() ?? 10;
                 double radius = (args.PopInt() ?? 1000);
@@ -235,26 +163,16 @@ namespace VSHUD
 
                     capi.SendMyWaypoints();
                 }));
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Creates and uploads many waypoints to the server to debug the limits of VSHUD's floaty waypoint rendering system, inputs 3 integers (amount, maxY, radius)."));
 
             RegisterSubCommand("pillars", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 config.ShowPillars = args.PopBool() ?? !config.ShowPillars;
                 capi.ShowChatMessage("Waypoint Pillars Set To " + config.ShowPillars + ".");
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Toggles the rendering of the pillars that accompany the floaty waypoint UIs. True/False"));
 
             RegisterSubCommand("shuffle", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 lock (FloatyWaypointManagement.WaypointElements)
                 {
                     if (FloatyWaypointManagement.WaypointElements != null && FloatyWaypointManagement.WaypointElements.Count > 1)
@@ -265,20 +183,12 @@ namespace VSHUD
                         FloatyWaypointManagement.WaypointElements.PushRange(wps);
                     }
                 }
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Shuffles the internal floaty waypoint UI stack to debug if changes are handled correctly."));
 
             RegisterSubCommand("echo", new SubCommand((player, groupId, args) =>
             {
-                WaypointUtils.doingConfigAction = true;
-
                 config.Echo = (bool)args.PopBool(!config.Echo);
                 capi.ShowChatMessage(string.Format("Waypoint creation echoing set to {0}.", config.Echo));
-
-                WaypointUtils.doingConfigAction = false;
-                capi.SendMyWaypoints();
             }, "Toggles the logging to chat of waypoint creation/deletion. Useful if you have a mod that creates many waypoints. True/False"));
         }
     }
