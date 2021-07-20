@@ -26,7 +26,17 @@ namespace VSHUD
         {
             if (__instance.ItemClass == EnumItemClass.Item)
             {
-                SetBlockRedirect.blockId = 0;
+                if (__instance is ItemStone)
+                {
+                    var loc0 = __instance.CodeWithPath("loosestones-" + __instance.LastCodePart() + "-free");
+                    var loc1 = __instance.CodeWithPath("loosestones-" + __instance.LastCodePart(1) + "-" + __instance.LastCodePart(0) + "-free");
+
+                    var block = byEntity.World.GetBlock(loc0);
+                    block = block ?? byEntity.World.GetBlock(loc1);
+
+                    if (block != null) block.OnHeldIdle(new DummySlot(new ItemStack(block)), byEntity);
+                }
+                else SetBlockRedirect.blockId = 0;
             }
         }
     }
@@ -41,6 +51,8 @@ namespace VSHUD
         {
             if (byEntity.World.Side.IsClient())
             {
+                if (!(slot is DummySlot) && slot is ItemSlotOffhand) return;
+
                 if ((byEntity.World as ClientMain).ElapsedMilliseconds % 4 == 0)
                 {   
                     var player = (byEntity as EntityPlayer).Player;

@@ -14,34 +14,33 @@ namespace VSHUD
     {
         public CommandFloatyWaypoints(ICoreClientAPI capi, WaypointUtils utils) : base(capi)
         {
-            VSHUDConfig config = ConfigLoader.Config;
             Command = "wpcfg";
-            
+
             RegisterSubCommand("deathdebug", new SubCommand((player, groupId, args) =>
             {
-                config.DebugDeathWaypoints = args.PopBool() ?? !config.DebugDeathWaypoints;
-                capi.ShowChatMessage(string.Format("Death waypoint debbuging set to {0}", config.DebugDeathWaypoints));
+                Config.DebugDeathWaypoints = args.PopBool() ?? !Config.DebugDeathWaypoints;
+                capi.ShowChatMessage(string.Format("Death waypoint debbuging set to {0}", Config.DebugDeathWaypoints));
             }, "Debug sending of death waypoint string, true/false."));
 
             RegisterSubCommand("dotrange", new SubCommand((player, groupId, args) =>
             {
                 double? dr = args.PopDouble();
-                config.DotRange = dr != null ? (double)dr : config.DotRange;
-                capi.ShowChatMessage("Dot Range Set To " + config.DotRange + " Meters.");
+                Config.DotRange = dr != null ? (double)dr : Config.DotRange;
+                capi.ShowChatMessage("Dot Range Set To " + Config.DotRange + " Meters.");
             }, "Sets the dot range of floaty waypoints, any decimal value."));
 
             RegisterSubCommand("titlerange", new SubCommand((player, groupId, args) =>
             {
                 double? tr = args.PopDouble();
-                config.TitleRange = tr != null ? (double)tr : config.TitleRange;
-                capi.ShowChatMessage("Title Range Set To " + config.TitleRange + " Meters.");
+                Config.TitleRange = tr != null ? (double)tr : Config.TitleRange;
+                capi.ShowChatMessage("Title Range Set To " + Config.TitleRange + " Meters.");
             }, "Sets the title range of floaty waypoints, any decimal value."));
 
             RegisterSubCommand("perblockwaypoints", new SubCommand((player, groupId, args) =>
             {
                 bool? pb = args.PopBool();
-                config.PerBlockWaypoints = pb != null ? (bool)pb : !config.PerBlockWaypoints;
-                capi.ShowChatMessage("Per Block Waypoints Set To " + config.PerBlockWaypoints + ".");
+                Config.PerBlockWaypoints = pb != null ? (bool)pb : !Config.PerBlockWaypoints;
+                capi.ShowChatMessage("Per Block Waypoints Set To " + Config.PerBlockWaypoints + ".");
             }, "Whether or not floaty waypoints are clamped to block positions, true/false."));
 
             RegisterSubCommand("pdw", new SubCommand((player, groupId, args) =>
@@ -62,15 +61,15 @@ namespace VSHUD
             RegisterSubCommand("waypointprefix", new SubCommand((player, groupId, args) =>
             {
                 bool? wp = args.PopBool();
-                config.WaypointPrefix = wp != null ? (bool)wp : !config.WaypointPrefix;
-                capi.ShowChatMessage("Waypoint Prefix Set To " + config.WaypointPrefix + ".");
+                Config.WaypointPrefix = wp != null ? (bool)wp : !Config.WaypointPrefix;
+                capi.ShowChatMessage("Waypoint Prefix Set To " + Config.WaypointPrefix + ".");
             }, "Whether or not waypoints are prefixed with \"Waypoint:\", true/false"));
 
             RegisterSubCommand("waypointid", new SubCommand((player, groupId, args) =>
             {
                 bool? wi = args.PopBool();
-                config.WaypointID = wi != null ? (bool)wi : !config.WaypointID;
-                capi.ShowChatMessage("Waypoint ID Set To " + config.WaypointID + ".");
+                Config.WaypointID = wi != null ? (bool)wi : !Config.WaypointID;
+                capi.ShowChatMessage("Waypoint ID Set To " + Config.WaypointID + ".");
             }, "Whether or not floaty waypoints are prefixed with their ID, true/false"));
 
             RegisterSubCommand("purge", new SubCommand((player, groupId, args) =>
@@ -82,7 +81,7 @@ namespace VSHUD
 
             RegisterSubCommand("enableall", new SubCommand((player, groupId, args) =>
             {
-                config.DisabledColors.Clear();
+                Config.DisabledColors.Clear();
             }, "Enables all waypoint colors."));
 
             RegisterSubCommand("save", new SubCommand((player, groupId, args) =>
@@ -167,8 +166,8 @@ namespace VSHUD
 
             RegisterSubCommand("pillars", new SubCommand((player, groupId, args) =>
             {
-                config.ShowPillars = args.PopBool() ?? !config.ShowPillars;
-                capi.ShowChatMessage("Waypoint Pillars Set To " + config.ShowPillars + ".");
+                Config.ShowPillars = args.PopBool() ?? !Config.ShowPillars;
+                capi.ShowChatMessage("Waypoint Pillars Set To " + Config.ShowPillars + ".");
             }, "Toggles the rendering of the pillars that accompany the floaty waypoint UIs. True/False"));
 
             RegisterSubCommand("shuffle", new SubCommand((player, groupId, args) =>
@@ -187,8 +186,8 @@ namespace VSHUD
 
             RegisterSubCommand("echo", new SubCommand((player, groupId, args) =>
             {
-                config.Echo = (bool)args.PopBool(!config.Echo);
-                capi.ShowChatMessage(string.Format("Waypoint creation echoing set to {0}.", config.Echo));
+                Config.Echo = (bool)args.PopBool(!Config.Echo);
+                capi.ShowChatMessage(string.Format("Waypoint creation echoing set to {0}.", Config.Echo));
             }, "Toggles the logging to chat of waypoint creation/deletion. Useful if you have a mod that creates many waypoints. True/False"));
         }
     }
