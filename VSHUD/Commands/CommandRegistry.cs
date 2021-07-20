@@ -9,6 +9,7 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             api.RegisterCommand(new CommandFloatyWaypoints(api, api.ModLoader.GetModSystem<WaypointUtils>()));
+            api.RegisterCommand(new CommandPlacementPreview(api));
         }
     }
 }
