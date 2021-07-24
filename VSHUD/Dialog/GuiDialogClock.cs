@@ -65,7 +65,7 @@ namespace VSHUD
             bool nowStormActive = data.GetField<bool>("nowStormActive");
             
             int h = Config.TimeType == EnumTimeType.TwelveHour ? (cal.FullHourOfDay > 12 ? cal.FullHourOfDay - 12 : cal.FullHourOfDay) : cal.FullHourOfDay;
-            h = h == 0 ? 12 : h;
+            if (Config.TimeType == EnumTimeType.TwelveHour) h = h == 0 ? 12 : h;
 
             string hour = h < 10 ? "0" + h : "" + h;
             int m = (int)(60 * (cal.HourOfDay - cal.FullHourOfDay));
