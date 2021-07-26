@@ -100,11 +100,11 @@ namespace VSHUD
 
             GuiDialogWaypointFrontEnd frontEnd = new GuiDialogWaypointFrontEnd(capi);
 
-            capi.Input.RegisterHotKey("viewwaypoints", "View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
-            capi.Input.SetHotKeyHandler("viewwaypoints", ViewWaypoints);
-            capi.Input.RegisterHotKey("culldeathwaypoints", "Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
-            capi.Input.RegisterHotKey("waypointfrontend", "Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
-            capi.Input.SetHotKeyHandler("waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
+            capi.Input.RegisterHotKey("vshud.viewwaypoints", "(VSHUD) View Waypoints", GlKeys.U, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("vshud.viewwaypoints", ViewWaypoints);
+            capi.Input.RegisterHotKey("vshud.culldeathwaypoints", "(VSHUD) Cull Death Waypoints", GlKeys.O, HotkeyType.GUIOrOtherControls);
+            capi.Input.RegisterHotKey("vshud.waypointfrontend", "(VSHUD) Open WaypointUtils GUI", GlKeys.P, HotkeyType.GUIOrOtherControls);
+            capi.Input.SetHotKeyHandler("vshud.waypointfrontend", a => { api.Event.RegisterCallback(d => frontEnd.Toggle(), 100); return true; });
 
             capi.Event.LevelFinalize += () =>
             {

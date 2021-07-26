@@ -120,6 +120,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Systems\AutoWaypoints.cs" />
     <Compile Include="Commands\CommandFloatyWaypoints.cs" />
     <Compile Include="Commands\CommandPlacementPreview.cs" />
     <Compile Include="Commands\Common\ClientChatCommandExt.cs" />

@@ -1,8 +1,7 @@
-﻿using System.Linq;
+﻿using System;
 using System.Threading;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.Client.NoObf;
 
 [assembly: ModInfo("VSHUD",
