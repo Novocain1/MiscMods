@@ -82,6 +82,16 @@ namespace LightingForReshade
                             while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}')
                             {
                                 //one deep for now
+                                if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '/')
+                                {
+                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '\n') functionLength++;
+                                }
+
+                                if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '*')
+                                {
+                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '*' && code[functionIndex + functionLength] != '/') functionLength++;
+                                }
+
                                 if (code[functionIndex + functionLength] == '{')
                                 {
                                     while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}') functionLength++;
@@ -116,7 +126,7 @@ namespace LightingForReshade
                                 }
                                 functionIndex++;
                             }
-                            shader.FragmentShader.Code = code = code.Insert(functionIndex - 1, fragpatch.Value.Post);
+                            shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Post);
                         }
                     }
 
