@@ -24,108 +24,108 @@ namespace LightingForReshade
         }
     }
 
-    /*
-    public class RenderToNewDepthBuffer : IRenderer
+    public class ShaderPatch
     {
-        ICoreClientAPI capi;
-        public FrameBufferRef BufferRef { get; private set; }
-        public ClientPlatformWindows Platform { get; private set; }
-        public ChunkRenderer ChunkRenderer { get; private set; }
-
-        public RenderToNewDepthBuffer(ICoreClientAPI capi)
+        public ShaderPatch(string pre, string post, bool replace)
         {
-            
-            this.capi = capi;
-            Platform = capi.World.GetField<ClientPlatformWindows>("Platform");
-            ChunkRenderer = capi.World.GetField<ChunkRenderer>("chunkRenderer");
-
-            SetupFrameBuffers();
-            Platform.WindowResized += (a, b) => SetupFrameBuffers();
-
-            capi.Event.RegisterRenderer(this, EnumRenderStage.Opaque);
+            Pre = pre;
+            Post = post;
+            Replace = replace;
         }
 
-        public void SetupFrameBuffers()
+        public string Pre { get; set; }
+        public string Post { get; set; }
+        public bool Replace { get; set; }
+    }
+
+    public class ShaderPatchFile
+    {
+        public ShaderPatchFile(Dictionary<string, ShaderPatch> fragment, Dictionary<string, ShaderPatch> vertex)
         {
-            if (BufferRef != null)
-            {
-                Platform.DisposeFrameBuffer(BufferRef);
-            }
-
-            int fbWidth = (int)(capi.Render.FrameWidth * ClientSettings.SSAA);
-            int fbHeight = (int)(capi.Render.FrameHeight * ClientSettings.SSAA);
-
-            BufferRef = new FrameBufferRef()
-            {
-                FboId = GL.GenFramebuffer(), Width = fbWidth, Height = fbHeight, DepthTextureId = GL.GenTexture(), ColorTextureIds = new[] {GL.GenTexture()} 
-            };
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, BufferRef.FboId);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2D, BufferRef.DepthTextureId, 0);
-            
-            GL.BindTexture(TextureTarget.Texture2D, BufferRef.ColorTextureIds[0]);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba16f, fbWidth, fbHeight, 0, PixelFormat.Rgba, PixelType.Float, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBorderColor, new[] { 1f, 1f, 1f, 1f });
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, BufferRef.ColorTextureIds[0], 0);
-
-            GL.DrawBuffer(DrawBufferMode.Back);
-
-            CheckFboStatus();   
+            Fragment = fragment;
+            Vertex = vertex;
         }
 
-        public void CheckFboStatus()
+        public Dictionary<string, ShaderPatch> Fragment { get; set; }
+        public Dictionary<string, ShaderPatch> Vertex { get; set; }
+    }
+
+    //additive shader patching
+    public class ShaderPatcher : ModSystem
+    {
+        public static AssetCategory shaderpatches = new AssetCategory("shaderpatches", false, EnumAppSide.Client);
+        
+        public override void StartClientSide(ICoreClientAPI api)
         {
-            Platform.CallMethod("CheckFboStatus", FramebufferTarget.Framebuffer, BufferRef.FboId.ToString());
-        }
-
-        public double RenderOrder => 1.0;
-
-        public int RenderRange => 1000;
-
-        public void Dispose()
-        {
-            if (BufferRef != null)
+            api.Event.LevelFinalize += () =>
             {
-                Platform.DisposeFrameBuffer(BufferRef);
-            }
-        }
+                api.Shader.ReloadShaders();
 
-        [Obsolete]
-        public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
-        {
-            var active = capi.Render.CurrentActiveShader;
-            active?.Stop();
-            var opq = capi.Render.GetEngineShader(EnumShaderProgram.Chunkopaque);
-
-            Platform.LoadFrameBuffer(BufferRef);
-            Platform.ClearFrameBuffer(BufferRef, false);
-
-            capi.Render.GlPushMatrix();
-            capi.Render.GlLoadMatrix(capi.Render.CameraMatrixOrigin);
-
-            opq.Use();
-
-            opq.UniformMatrix("projectionMatrix", capi.Render.CurrentProjectionMatrix);
-            opq.UniformMatrix("modelViewMatrix", capi.Render.CurrentModelviewMatrix);
-
-            foreach (var pass in ChunkRenderer.poolsByRenderPass)
-            {
-                foreach (var pool in pass)
+                foreach (var val in api.Assets.GetMany("shaderpatches"))
                 {
-                    pool.Render(capi.World.Player.Entity.CameraPos, "origin");
+                    var patchfile = val.ToObject<ShaderPatchFile>();
+                    string shaderName = val.Name.Split('.').First();
+                    var shader = api.Shader.GetProgramByName(shaderName) ?? api.Render.GetEngineShader((EnumShaderProgram)Enum.Parse(typeof(EnumShaderProgram), shaderName, true));
+
+                    foreach (var fragpatch in patchfile.Fragment)
+                    {
+                        string code = shader.FragmentShader.Code;
+                        int functionIndex = code.IndexOf(fragpatch.Key + "()");
+
+                        if (fragpatch.Value.Replace)
+                        {
+                            while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
+                            functionIndex++;
+
+                            int functionLength = 0;
+
+                            while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}')
+                            {
+                                //one deep for now
+                                if (code[functionIndex + functionLength] == '{')
+                                {
+                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}') functionLength++;
+                                }
+                                functionLength++;
+                            }
+
+                            string func = code.Substring(functionIndex, functionLength);
+                            code = shader.FragmentShader.Code.Replace(func, fragpatch.Value.Pre + fragpatch.Value.Post);
+                        }
+                        else
+                        {
+                            while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
+                            shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Pre);
+
+                            while (functionIndex < code.Length && code[functionIndex] != '}')
+                            {
+                                //one deep for now
+                                if (code[functionIndex] == '/' && code[functionIndex + 1] == '/')
+                                {
+                                    while (functionIndex < code.Length && code[functionIndex] != '\n') functionIndex++;
+                                }
+
+                                if (code[functionIndex] == '/' && code[functionIndex + 1] == '*')
+                                {
+                                    while (functionIndex < code.Length && code[functionIndex] != '*' && code[functionIndex] != '/' ) functionIndex++;
+                                }
+
+                                if (code[functionIndex] == '{')
+                                {
+                                    while (functionIndex < code.Length && code[functionIndex] != '}') functionIndex++;
+                                }
+                                functionIndex++;
+                            }
+                            shader.FragmentShader.Code = code = code.Insert(functionIndex - 1, fragpatch.Value.Post);
+                        }
+                    }
+
+                    if (shader.Compile())
+                    {
+
+                    }
                 }
-            }
-
-            opq.Stop();
-
-            capi.Render.GlPopMatrix();
-            Platform.UnloadFrameBuffer(BufferRef);
-
-            active?.Use();
+            };
         }
     }
-    */
 }
