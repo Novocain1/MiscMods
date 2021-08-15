@@ -3,8 +3,10 @@
         "shadername": "chunkopaque",
         "fragment": {
             "main": {
-                "pre": "",
-                "post": "\toutColor.rgb = vec3(1) - outColor.rgb;\r\n",
+                "pre": null,
+                "post": [
+                  "outColor.rgb = vec3(1) - outColor.rgb;"
+                ],
                 "replace": false
             }
         },
@@ -20,15 +22,17 @@
         "shadername": "chunkopaque",
         "fragment": {
             "main": {
-                "pre": "",
-                "post": "\toutColor.rgb = vec3(1, 0, 0);\r\n",
+                "pre": null,
+                "post": [
+                    "outColor.rgb = vec3(1, 0, 0);"
+                ],
                 "replace": false
             }
         },
         "vertex": {
             "main": {
-                "pre": "",
-                "post": "",
+                "pre": null,
+                "post": null,
                 "replace": false
             }
         }

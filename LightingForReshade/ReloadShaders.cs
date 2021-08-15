@@ -26,15 +26,15 @@ namespace LightingForReshade
 
     public class ShaderPatch
     {
-        public ShaderPatch(string pre, string post, bool replace)
+        public ShaderPatch(string[] pre, string[] post, bool replace)
         {
             Pre = pre;
             Post = post;
             Replace = replace;
         }
 
-        public string Pre { get; set; }
-        public string Post { get; set; }
+        public string[] Pre { get; set; }
+        public string[] Post { get; set; }
         public bool Replace { get; set; }
     }
 
@@ -66,7 +66,6 @@ namespace LightingForReshade
 
             api.Event.ReloadShader += () =>
             {
-
                 foreach (var val in api.Assets.GetMany("shaderpatches"))
                 {
                     var patchfile = val.ToObject<ShaderPatchFile[]>();
@@ -79,6 +78,26 @@ namespace LightingForReshade
                         {
                             string code = shader.FragmentShader.Code;
                             int functionIndex = code.IndexOf(fragpatch.Key + "()");
+                            string preCode = null;
+                            string postCode = null;
+
+                            if (fragpatch.Value.Pre != null)
+                            {
+                                foreach (var cmd in fragpatch.Value.Pre)
+                                {
+                                    preCode += '\t' + cmd + "\r\n";
+                                }
+                            }
+
+                            if (fragpatch.Value.Post != null)
+                            {
+                                foreach (var cmd in fragpatch.Value.Post)
+                                {
+                                    postCode += '\t' + cmd + "\r\n";
+                                }
+                            }
+                            preCode = preCode ?? "";
+                            postCode = postCode ?? "";
 
                             if (fragpatch.Value.Replace)
                             {
@@ -108,12 +127,12 @@ namespace LightingForReshade
                                 }
 
                                 string func = code.Substring(functionIndex, functionLength);
-                                code = shader.FragmentShader.Code.Replace(func, fragpatch.Value.Pre + fragpatch.Value.Post);
+                                code = shader.FragmentShader.Code.Replace(func, preCode + postCode);
                             }
                             else
                             {
                                 while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
-                                shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Pre);
+                                shader.FragmentShader.Code = code = code.Insert(functionIndex, preCode);
 
                                 while (functionIndex < code.Length && code[functionIndex] != '}')
                                 {
@@ -134,7 +153,7 @@ namespace LightingForReshade
                                     }
                                     functionIndex++;
                                 }
-                                shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Post);
+                                shader.FragmentShader.Code = code = code.Insert(functionIndex, postCode);
                             }
                         }
 
