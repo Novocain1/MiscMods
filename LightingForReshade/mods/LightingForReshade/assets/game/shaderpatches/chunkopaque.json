@@ -12,8 +12,8 @@
         },
         "vertex": {
             "main": {
-                "pre": "",
-                "post": "",
+                "pre": null,
+                "post": null,
                 "replace": false
             }
         }
