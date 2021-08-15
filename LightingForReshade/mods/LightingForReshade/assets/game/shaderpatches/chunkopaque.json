@@ -1,16 +1,36 @@
-{
-    "fragment": {
-        "main": {
-            "pre": "",
-            "post": "\toutColor.rgb = vec3(1,0,0);\r\n",
-            "replace": false
+[
+    {
+        "shadername": "chunkopaque",
+        "fragment": {
+            "main": {
+                "pre": "",
+                "post": "\toutColor.rgb = vec3(1) - outColor.rgb;\r\n",
+                "replace": false
+            }
+        },
+        "vertex": {
+            "main": {
+                "pre": "",
+                "post": "",
+                "replace": false
+            }
         }
     },
-    "vertex": {
-        "main": {
-            "pre": "",
-            "post": "",
-            "replace": false
+    {
+        "shadername": "chunkopaque",
+        "fragment": {
+            "main": {
+                "pre": "",
+                "post": "\toutColor.rgb = vec3(1, 0, 0);\r\n",
+                "replace": false
+            }
+        },
+        "vertex": {
+            "main": {
+                "pre": "",
+                "post": "",
+                "replace": false
+            }
         }
     }
-}
+]

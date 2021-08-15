@@ -40,12 +40,14 @@ namespace LightingForReshade
 
     public class ShaderPatchFile
     {
-        public ShaderPatchFile(Dictionary<string, ShaderPatch> fragment, Dictionary<string, ShaderPatch> vertex)
+        public ShaderPatchFile(string shaderName, Dictionary<string, ShaderPatch> fragment, Dictionary<string, ShaderPatch> vertex)
         {
             Fragment = fragment;
             Vertex = vertex;
+            ShaderName = shaderName;
         }
 
+        public string ShaderName { get; set; }
         public Dictionary<string, ShaderPatch> Fragment { get; set; }
         public Dictionary<string, ShaderPatch> Vertex { get; set; }
     }
@@ -60,81 +62,89 @@ namespace LightingForReshade
             api.Event.LevelFinalize += () =>
             {
                 api.Shader.ReloadShaders();
+            };
+
+            api.Event.ReloadShader += () =>
+            {
 
                 foreach (var val in api.Assets.GetMany("shaderpatches"))
                 {
-                    var patchfile = val.ToObject<ShaderPatchFile>();
-                    string shaderName = val.Name.Split('.').First();
-                    var shader = api.Shader.GetProgramByName(shaderName) ?? api.Render.GetEngineShader((EnumShaderProgram)Enum.Parse(typeof(EnumShaderProgram), shaderName, true));
-
-                    foreach (var fragpatch in patchfile.Fragment)
+                    var patchfile = val.ToObject<ShaderPatchFile[]>();
+                    foreach (var patch in patchfile)
                     {
-                        string code = shader.FragmentShader.Code;
-                        int functionIndex = code.IndexOf(fragpatch.Key + "()");
+                        string shaderName = patch.ShaderName;
+                        var shader = api.Shader.GetProgramByName(shaderName) ?? api.Render.GetEngineShader((EnumShaderProgram)Enum.Parse(typeof(EnumShaderProgram), shaderName, true));
 
-                        if (fragpatch.Value.Replace)
+                        foreach (var fragpatch in patch.Fragment)
                         {
-                            while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
-                            functionIndex++;
+                            string code = shader.FragmentShader.Code;
+                            int functionIndex = code.IndexOf(fragpatch.Key + "()");
 
-                            int functionLength = 0;
-
-                            while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}')
+                            if (fragpatch.Value.Replace)
                             {
-                                //one deep for now
-                                if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '/')
-                                {
-                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '\n') functionLength++;
-                                }
-
-                                if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '*')
-                                {
-                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '*' && code[functionIndex + functionLength] != '/') functionLength++;
-                                }
-
-                                if (code[functionIndex + functionLength] == '{')
-                                {
-                                    while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}') functionLength++;
-                                }
-                                functionLength++;
-                            }
-
-                            string func = code.Substring(functionIndex, functionLength);
-                            code = shader.FragmentShader.Code.Replace(func, fragpatch.Value.Pre + fragpatch.Value.Post);
-                        }
-                        else
-                        {
-                            while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
-                            shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Pre);
-
-                            while (functionIndex < code.Length && code[functionIndex] != '}')
-                            {
-                                //one deep for now
-                                if (code[functionIndex] == '/' && code[functionIndex + 1] == '/')
-                                {
-                                    while (functionIndex < code.Length && code[functionIndex] != '\n') functionIndex++;
-                                }
-
-                                if (code[functionIndex] == '/' && code[functionIndex + 1] == '*')
-                                {
-                                    while (functionIndex < code.Length && code[functionIndex] != '*' && code[functionIndex] != '/' ) functionIndex++;
-                                }
-
-                                if (code[functionIndex] == '{')
-                                {
-                                    while (functionIndex < code.Length && code[functionIndex] != '}') functionIndex++;
-                                }
+                                while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
                                 functionIndex++;
+
+                                int functionLength = 0;
+
+                                while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}')
+                                {
+                                    //one deep for now
+                                    if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '/')
+                                    {
+                                        while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '\n') functionLength++;
+                                    }
+
+                                    if (code[functionIndex + functionLength] == '/' && code[functionIndex + functionLength + 1] == '*')
+                                    {
+                                        while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '*' && code[functionIndex + functionLength] != '/') functionLength++;
+                                    }
+
+                                    if (code[functionIndex + functionLength] == '{')
+                                    {
+                                        while (functionIndex + functionLength < code.Length && code[functionIndex + functionLength] != '}') functionLength++;
+                                    }
+                                    functionLength++;
+                                }
+
+                                string func = code.Substring(functionIndex, functionLength);
+                                code = shader.FragmentShader.Code.Replace(func, fragpatch.Value.Pre + fragpatch.Value.Post);
                             }
-                            shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Post);
+                            else
+                            {
+                                while (functionIndex < code.Length && code[functionIndex] != '{') functionIndex++;
+                                shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Pre);
+
+                                while (functionIndex < code.Length && code[functionIndex] != '}')
+                                {
+                                    //one deep for now
+                                    if (code[functionIndex] == '/' && code[functionIndex + 1] == '/')
+                                    {
+                                        while (functionIndex < code.Length && code[functionIndex] != '\n') functionIndex++;
+                                    }
+
+                                    if (code[functionIndex] == '/' && code[functionIndex + 1] == '*')
+                                    {
+                                        while (functionIndex < code.Length && code[functionIndex] != '*' && code[functionIndex] != '/') functionIndex++;
+                                    }
+
+                                    if (code[functionIndex] == '{')
+                                    {
+                                        while (functionIndex < code.Length && code[functionIndex] != '}') functionIndex++;
+                                    }
+                                    functionIndex++;
+                                }
+                                shader.FragmentShader.Code = code = code.Insert(functionIndex, fragpatch.Value.Post);
+                            }
                         }
-                    }
 
-                    if (shader.Compile())
-                    {
+                        if (shader.Compile())
+                        {
 
+                        }
                     }
                 }
+                return true;
             };
         }
     }
