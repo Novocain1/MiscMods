@@ -7,8 +7,8 @@
     <ProjectGuid>{633EB38F-A404-4477-83B3-7111868D149B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JarLoaderTest</RootNamespace>
-    <AssemblyName>JarLoaderTest</AssemblyName>
+    <RootNamespace>JarLoader</RootNamespace>
+    <AssemblyName>JarLoader</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

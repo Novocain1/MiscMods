@@ -21,7 +21,7 @@ using System.Globalization;
 using ICSharpCode.SharpZipLib.Zip;
 using Vintagestory.API.Server;
 
-namespace VSMod
+namespace JarLoader
 {
     class ForgeJarLoader : ModSystem
     {
