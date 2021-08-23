@@ -1,38 +1,13 @@
 [
     {
-        "shadername": "chunkopaque",
+        "shadername": "chunkliquid",
         "fragment": {
-            "main": {
+            "drawPixel": {
                 "pre": null,
                 "post": [
-                  "outColor.rgb = vec3(1) - outColor.rgb;"
+                    "float findBright = max(outAccu.r, max(outAccu.g, outAccu.b));",
+                    "outGlow.r = findBright;"
                 ],
-                "replace": false
-            }
-        },
-        "vertex": {
-            "main": {
-                "pre": null,
-                "post": null,
-                "replace": false
-            }
-        }
-    },
-    {
-        "shadername": "chunkopaque",
-        "fragment": {
-            "main": {
-                "pre": null,
-                "post": [
-                    "outColor.rgb = vec3(1, 0, 0);"
-                ],
-                "replace": false
-            }
-        },
-        "vertex": {
-            "main": {
-                "pre": null,
-                "post": null,
                 "replace": false
             }
         }

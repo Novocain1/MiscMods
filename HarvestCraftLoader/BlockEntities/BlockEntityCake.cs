@@ -33,10 +33,10 @@ namespace HarvestCraftLoader
             eatenState = (EnumCakeEatenState)Enum.Parse(typeof(EnumCakeEatenState), Block.Variant["eaten"]);
         }
 
-        public override void FromTreeAtributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
+        public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
         {
             eatenState = (EnumCakeEatenState)tree.GetInt("eatenstate");
-            base.FromTreeAtributes(tree, worldAccessForResolve);
+            base.FromTreeAttributes(tree, worldAccessForResolve);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)

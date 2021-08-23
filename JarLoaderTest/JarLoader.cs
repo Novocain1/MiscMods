@@ -62,7 +62,7 @@ namespace VSMod
 
         public void LoadForgeJars()
         {
-            DirectoryInfo info = new DirectoryInfo(Path.Combine(GamePaths.Binaries, "ForgeMods"));
+            DirectoryInfo info = new DirectoryInfo(Path.Combine(GamePaths.DataPath, "ForgeMods"));
             FastZip fastZip = new FastZip();
 
             foreach (var jar in info.EnumerateFiles())
@@ -85,8 +85,8 @@ namespace VSMod
 
                     foreach (var domain in domainInfo.EnumerateDirectories())
                     {
-                        api.World.Logger.StoryEvent("Adding path origin '{0}'...", domain.Name);
-                        api.Assets.AddPathOrigin(domain.Name, domain.FullName);
+                        api.World.Logger.StoryEvent("Adding mod origin '{0}'...", domain.Name);
+                        api.Assets.AddModOrigin(domain.Name, domain.FullName);
                     }
                 }
                 catch (Exception ex)

@@ -26,8 +26,8 @@ namespace HarvestCraftLoader
 
                 IPlayer byPlayer = null;
                 if (byEntity is EntityPlayer) byPlayer = byEntity.World.PlayerByUid(((EntityPlayer)byEntity).PlayerUID);
+                bool planted = (be as BlockEntityFarmland).TryPlant(cropBlock);
 
-                bool planted = (bool)((BlockEntityFarmland)be).CallMethod("TryPlant", cropBlock);
                 if (planted)
                 {
                     byEntity.World.PlaySoundAt(new AssetLocation("sounds/block/plant"), pos.X, pos.Y, pos.Z, byPlayer);

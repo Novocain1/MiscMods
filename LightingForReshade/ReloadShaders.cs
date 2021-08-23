@@ -66,6 +66,7 @@ namespace LightingForReshade
 
             api.Event.ReloadShader += () =>
             {
+                api.Assets.Reload(shaderpatches);
                 foreach (var val in api.Assets.GetMany("shaderpatches"))
                 {
                     var patchfile = val.ToObject<ShaderPatchFile[]>();
@@ -74,8 +75,8 @@ namespace LightingForReshade
                     {
                         string shaderName = patch.ShaderName;
                         var shader = api.Shader.GetProgramByName(shaderName) ?? api.Render.GetEngineShader((EnumShaderProgram)Enum.Parse(typeof(EnumShaderProgram), shaderName, true));
-                        PatchShader(EnumShaderType.FragmentShader, patch, shader.FragmentShader);
-                        PatchShader(EnumShaderType.VertexShader, patch, shader.VertexShader);
+                        if (patch.Fragment != null) PatchShader(EnumShaderType.FragmentShader, patch, shader.FragmentShader);
+                        if (patch.Vertex != null) PatchShader(EnumShaderType.VertexShader, patch, shader.VertexShader);
                         if (shader.Compile())
                         {
                             api.Logger.Notification(string.Format("Successfully patched shader {0} from shader patch file {1} with the index of {2}.", shaderName, val.Name, i));

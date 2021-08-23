@@ -28,6 +28,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JarLoaderTest", "JarLoaderTest\JarLoaderTest.csproj", "{633EB38F-A404-4477-83B3-7111868D149B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HarvestCraftLoader", "HarvestCraftLoader\HarvestCraftLoader.csproj", "{8C79CD65-D7A4-4C6E-98B6-0903F806991D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{633EB38F-A404-4477-83B3-7111868D149B} = {633EB38F-A404-4477-83B3-7111868D149B}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomGLSetter", "CustomGLSetter\CustomGLSetter.csproj", "{90617CB8-95ED-449F-91C1-23A1C2ECC437}"
 EndProject

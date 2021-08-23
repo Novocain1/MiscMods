@@ -6,9 +6,9 @@ namespace HarvestCraftLoader
 {
     public class BlockPlantFix : Block
     {
-        public override void OnJsonTesselation(ref MeshData sourceMesh, BlockPos pos, int[] chunkExtIds, ushort[] chunkLightExt, int extIndex3d)
+        public override void OnJsonTesselation(ref MeshData sourceMesh, ref int[] lightRgbsByCorner, BlockPos pos, Block[] chunkExtBlocks, int extIndex3d)
         {
-            int sunLightLevel = chunkLightExt[extIndex3d] & 31;
+            int sunLightLevel = lightRgbsByCorner[extIndex3d] & 31;
             bool waveOff = sunLightLevel < 14;
 
             if (VertexFlags.GrassWindWave)
@@ -16,7 +16,6 @@ namespace HarvestCraftLoader
                 setLeaveWaveFlags(sourceMesh, waveOff);
             }
         }
-
 
         void setLeaveWaveFlags(MeshData sourceMesh, bool off)
         {
@@ -53,7 +52,7 @@ namespace HarvestCraftLoader
         }
 
 
-        public override void OnNeighourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
+        public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos)
         {
             if (!CanPlantStay(world.BlockAccessor, pos))
             {
@@ -81,7 +80,7 @@ namespace HarvestCraftLoader
 
             if (EntityClass == "Sapling")
             {
-                color = capi.ApplyColorTintOnRgba(1, color, pos.X, pos.Y, pos.Z);
+                color = capi.World.ApplyColorMapOnRgba(this.ClimateColorMap, this.SeasonColorMap, color, pos.X, pos.Y, pos.Z);
             }
 
             return color;
