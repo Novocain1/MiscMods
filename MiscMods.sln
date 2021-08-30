@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomTests", "RandomTests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightingForReshade", "LightingForReshade\LightingForReshade.csproj", "{952E520F-FC61-4FEE-B6F8-77642B18537D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldGenTests", "WorldGenTests\WorldGenTests.csproj", "{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +110,10 @@ Global
 		{952E520F-FC61-4FEE-B6F8-77642B18537D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{952E520F-FC61-4FEE-B6F8-77642B18537D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{952E520F-FC61-4FEE-B6F8-77642B18537D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{633EB38F-A404-4477-83B3-7111868D149B}</ProjectGuid>
+    <ProjectGuid>{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JarLoader</RootNamespace>
-    <AssemblyName>JarLoader</AssemblyName>
+    <RootNamespace>WorldGenTests</RootNamespace>
+    <AssemblyName>WorldGenTests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,36 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="cairo-sharp">
-      <HintPath>..\..\..\Lib\cairo-sharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CommandLine">
-      <HintPath>..\..\..\Lib\CommandLine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="csogg">
-      <HintPath>..\..\..\Lib\csogg.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="csvorbis">
-      <HintPath>..\..\..\Lib\csvorbis.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\..\Lib\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\Lib\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="OpenTK">
-      <HintPath>..\..\..\Lib\OpenTK.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="protobuf-net">
-      <HintPath>..\..\..\Lib\protobuf-net.dll</HintPath>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\Lib\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -73,37 +44,30 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tavis.JsonPatch">
-      <HintPath>..\..\..\Lib\Tavis.JsonPatch.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="VintagestoryAPI">
-      <HintPath>..\..\..\VintagestoryAPI.dll</HintPath>
+      <HintPath>..\..\VintagestoryAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VintagestoryLib">
-      <HintPath>..\..\..\VintagestoryLib.dll</HintPath>
+      <HintPath>..\..\VintagestoryLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSCreativeMod">
-      <HintPath>..\..\..\Mods\VSCreativeMod.dll</HintPath>
+      <HintPath>..\..\Mods\VSCreativeMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSEssentials">
-      <HintPath>..\..\..\Mods\VSEssentials.dll</HintPath>
+      <HintPath>..\..\Mods\VSEssentials.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VSSurvivalMod">
-      <HintPath>..\..\..\Mods\VSSurvivalMod.dll</HintPath>
+      <HintPath>..\..\Mods\VSSurvivalMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="JarLoader.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="mods\VSMod\modinfo.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
