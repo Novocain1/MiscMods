@@ -34,7 +34,7 @@ namespace WorldGenTests
         {
             this.api = api;
 
-            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 32, 255);
+            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 16, 255);
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
@@ -62,20 +62,26 @@ namespace WorldGenTests
                 for (int z = 0; z < chunksize; z++)
                 {
                     int posY = heightMap[z * chunksize + x];
-                    
-                    float veinRRel = GameMath.BiLerp((veinUpLeft & ~0xFFFFFF00) >> 00, (veinUpRight & ~0xFFFFFF00) >> 00, (veinBotLeft & ~0xFFFFFF00) >> 00, (veinBotRight & ~0xFFFFFF00) >> 00, (float)x / chunksize, (float)z / chunksize) / 255f;
-                    float veinGRel = GameMath.BiLerp((veinUpLeft & ~0xFFFF00FF) >> 08, (veinUpRight & ~0xFFFF00FF) >> 08, (veinBotLeft & ~0xFFFF00FF) >> 08, (veinBotRight & ~0xFFFF00FF) >> 08, (float)x / chunksize, (float)z / chunksize) / 255f;
-                    float veinBRel = GameMath.BiLerp((veinUpLeft & ~0xFF00FFFF) >> 16, (veinUpRight & ~0xFF00FFFF) >> 16, (veinBotLeft & ~0xFF00FFFF) >> 16, (veinBotRight & ~0xFF00FFFF) >> 16, (float)x / chunksize, (float)z / chunksize) / 255f;
-                    float veinARel = GameMath.BiLerp((veinUpLeft & ~0x00FFFFFF) >> 24, (veinUpRight & ~0x00FFFFFF) >> 24, (veinBotLeft & ~0x00FFFFFF) >> 24, (veinBotRight & ~0x00FFFFFF) >> 24, (float)x / chunksize, (float)z / chunksize) / 255f;
 
-                    int chunkY = 142 / chunksize;
-                    int lY = 142 % chunksize;
-                    int index3d = (chunksize * lY + z) * chunksize + x;
-                    int blockId = chunks[chunkY].Blocks[index3d];
+                    int veinAtPos = veinMap.GetUnpaddedInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
 
-                    if (veinRRel > 0.5f)
+                    float veinRRel = ((veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
+
+                    if (veinRRel > 0.0f)
                     {
-                        chunks[chunkY].Blocks[index3d] = 1;
+                        int chunkY = 142 / chunksize;
+                        int lY = 142 % chunksize;
+                        float depth = veinRRel - 0.7843137254901961f;
+
+                        for (int dY = -2; dY < 2; dY++)
+                        {
+                            int y = lY + dY;
+                            int absDY = Math.Abs(dY);
+
+                            int index3d = (chunksize * y + z) * chunksize + x;
+                            int blockId = chunks[chunkY].Blocks[index3d];
+                            if (depth * absDY < 0.5) chunks[chunkY].Blocks[index3d] = 1;
+                        }
                     }
                     else
                     {
@@ -87,10 +93,7 @@ namespace WorldGenTests
 
         public void DebugRGBMap(ICoreServerAPI api, IServerPlayer player)
         {
-            int[] colors = OreVeinLayer.GenLayer(0, 0, 512, 512);
-
             var chunk = api.WorldManager.GetChunk(player.Entity.ServerPos.AsBlockPos);
-
 
             IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunk.MapChunk.MapRegion.GetModdata("OreVeinData"));
 
@@ -119,6 +122,7 @@ namespace WorldGenTests
                 ),
                 Size = regionSize + 2 * pad,
                 BottomRightPadding = 1,
+                TopLeftPadding = 1
             };
             mapRegion.SetModdata("OreVeinData", SerializerUtil.Serialize(data));
         }
