@@ -37,36 +37,69 @@ namespace WorldGenTests
             OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 32, 255);
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
+
+            api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
         
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
-            IntDataMap2D veinData = SerializerUtil.Deserialize<IntDataMap2D>(chunks[0].MapChunk.MapRegion.GetModdata("OreVeinData"));
+            IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunks[0].MapChunk.MapRegion.GetModdata("OreVeinData"));
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
             int chunksize = api.World.BlockAccessor.ChunkSize;
 
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
+            float veinStep = (float)veinMap.InnerSize / regionChunkSize;
+            
+            int veinUpLeft = veinMap.GetInt((int)(rdx * veinStep), (int)(rdz * veinStep));
+            int veinUpRight = veinMap.GetInt((int)(rdx * veinStep + veinStep), (int)(rdz * veinStep));
+            int veinBotLeft = veinMap.GetInt((int)(rdx * veinStep), (int)(rdz * veinStep + veinStep));
+            int veinBotRight = veinMap.GetInt((int)(rdx * veinStep + veinStep), (int)(rdz * veinStep + veinStep));
 
             for (int x = 0; x < chunksize; x++)
             {
                 for (int z = 0; z < chunksize; z++)
                 {
+                    int posY = heightMap[z * chunksize + x];
+                    
+                    float veinRRel = GameMath.BiLerp((veinUpLeft & ~0xFFFFFF00) >> 00, (veinUpRight & ~0xFFFFFF00) >> 00, (veinBotLeft & ~0xFFFFFF00) >> 00, (veinBotRight & ~0xFFFFFF00) >> 00, (float)x / chunksize, (float)z / chunksize) / 255f;
+                    float veinGRel = GameMath.BiLerp((veinUpLeft & ~0xFFFF00FF) >> 08, (veinUpRight & ~0xFFFF00FF) >> 08, (veinBotLeft & ~0xFFFF00FF) >> 08, (veinBotRight & ~0xFFFF00FF) >> 08, (float)x / chunksize, (float)z / chunksize) / 255f;
+                    float veinBRel = GameMath.BiLerp((veinUpLeft & ~0xFF00FFFF) >> 16, (veinUpRight & ~0xFF00FFFF) >> 16, (veinBotLeft & ~0xFF00FFFF) >> 16, (veinBotRight & ~0xFF00FFFF) >> 16, (float)x / chunksize, (float)z / chunksize) / 255f;
+                    float veinARel = GameMath.BiLerp((veinUpLeft & ~0x00FFFFFF) >> 24, (veinUpRight & ~0x00FFFFFF) >> 24, (veinBotLeft & ~0x00FFFFFF) >> 24, (veinBotRight & ~0x00FFFFFF) >> 24, (float)x / chunksize, (float)z / chunksize) / 255f;
 
+                    int chunkY = 142 / chunksize;
+                    int lY = 142 % chunksize;
+                    int index3d = (chunksize * lY + z) * chunksize + x;
+                    int blockId = chunks[chunkY].Blocks[index3d];
+
+                    if (veinRRel > 0.5f)
+                    {
+                        chunks[chunkY].Blocks[index3d] = 1;
+                    }
+                    else
+                    {
+
+                    }
                 }
             }
         }
 
-        public void DebugRGBMap(ICoreServerAPI api)
+        public void DebugRGBMap(ICoreServerAPI api, IServerPlayer player)
         {
             int[] colors = OreVeinLayer.GenLayer(0, 0, 512, 512);
+
+            var chunk = api.WorldManager.GetChunk(player.Entity.ServerPos.AsBlockPos);
+
+
+            IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunk.MapChunk.MapRegion.GetModdata("OreVeinData"));
+
             Bitmap bmp = new Bitmap(512, 512);
             for (int x = 0; x < 512; x++)
             {
                 for (int y = 0; y < 512; y++)
                 {
-                    bmp.SetPixel(x, y, Color.FromArgb(colors[y * 512 + x]));
+                    bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
                 }
             }
             bmp.Save("noise.png", ImageFormat.Png);
@@ -75,17 +108,17 @@ namespace WorldGenTests
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
             int pad = TerraGenConfig.geoProvMapPadding;
-
+            int regionSize = api.WorldManager.RegionSize;
             IntDataMap2D data = new IntDataMap2D()
             {
                 Data = OreVeinLayer.GenLayer(
-                    regionX * 512 - pad,
-                    regionZ * 512 - pad,
-                    512 + 2 * pad,
-                    512 + 2 * pad
+                    regionX * regionSize - pad,
+                    regionZ * regionSize - pad,
+                    regionSize + 2 * pad,
+                    regionSize + 2 * pad
                 ),
-                Size = 513,
-                BottomRightPadding = 1
+                Size = regionSize + 2 * pad,
+                BottomRightPadding = 1,
             };
             mapRegion.SetModdata("OreVeinData", SerializerUtil.Serialize(data));
         }
@@ -127,20 +160,19 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        double nR = noisegen.Noise(xCoord + x, zCoord + z, thresholds);
+                        double nRX = xCoord + x + 0000000;
+
+                        double nRZ = zCoord + z + 0000000;
 
                         double nGX = xCoord + x + 5498987;
-                        nGX *= 0.25;
 
                         double nGZ = zCoord + z + 5498987;
-                        nGZ *= 0.25;
 
                         double nBX = xCoord + x + 2987992;
-                        nBX *= 0.25;
 
                         double nBZ = zCoord + z + 2987992;
-                        nBZ *= 0.25;
 
+                        double nR = noisegen.Noise(nRX, nRZ, thresholds);
                         double nG = noisegen.Noise(nGX, nGZ, thresholds);
                         double nB = noisegen.Noise(nBX, nBZ, thresholds);
 
@@ -160,20 +192,19 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        double nR = noisegen.Noise(xCoord + x, zCoord + z);
-                        
+                        double nRX = xCoord + x + 0000000;
+
+                        double nRZ = zCoord + z + 0000000;
+
                         double nGX = xCoord + x + 5498987;
-                        nGX *= 0.25;
 
                         double nGZ = zCoord + z + 5498987;
-                        nGZ *= 0.25;
 
                         double nBX = xCoord + x + 2987992;
-                        nBX *= 0.25;
 
                         double nBZ = zCoord + z + 2987992;
-                        nBZ *= 0.25;
 
+                        double nR = noisegen.Noise(nRX, nRZ);
                         double nG = noisegen.Noise(nGX, nGZ);
                         double nB = noisegen.Noise(nBX, nBZ);
 
@@ -201,20 +232,19 @@ namespace WorldGenTests
             {
                 for (int x = 0; x < sizeX; ++x)
                 {
-                    double nR = noisegen.Noise(xCoord + x, zCoord + z, thresholds);
+                    double nRX = xCoord + x + 0000000;
+
+                    double nRZ = zCoord + z + 0000000;
 
                     double nGX = xCoord + x + 5498987;
-                    nGX *= 0.25;
 
                     double nGZ = zCoord + z + 5498987;
-                    nGZ *= 0.25;
 
                     double nBX = xCoord + x + 2987992;
-                    nBX *= 0.25;
 
                     double nBZ = zCoord + z + 2987992;
-                    nBZ *= 0.25;
 
+                    double nR = noisegen.Noise(nRX, nRZ, thresholds);
                     double nG = noisegen.Noise(nGX, nGZ, thresholds);
                     double nB = noisegen.Noise(nBX, nBZ, thresholds);
 
