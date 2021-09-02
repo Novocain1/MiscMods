@@ -34,7 +34,7 @@ namespace WorldGenTests
         {
             this.api = api;
 
-            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 16, 255);
+            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 64, 255);
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
@@ -51,11 +51,6 @@ namespace WorldGenTests
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
             float veinStep = (float)veinMap.InnerSize / regionChunkSize;
-            
-            int veinUpLeft = veinMap.GetInt((int)(rdx * veinStep), (int)(rdz * veinStep));
-            int veinUpRight = veinMap.GetInt((int)(rdx * veinStep + veinStep), (int)(rdz * veinStep));
-            int veinBotLeft = veinMap.GetInt((int)(rdx * veinStep), (int)(rdz * veinStep + veinStep));
-            int veinBotRight = veinMap.GetInt((int)(rdx * veinStep + veinStep), (int)(rdz * veinStep + veinStep));
 
             for (int x = 0; x < chunksize; x++)
             {
@@ -63,11 +58,11 @@ namespace WorldGenTests
                 {
                     int posY = heightMap[z * chunksize + x];
 
-                    int veinAtPos = veinMap.GetUnpaddedInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
+                    int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
 
                     float veinRRel = ((veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
 
-                    if (veinRRel > 0.0f)
+                    if (veinRRel > 0.6f)
                     {
                         int chunkY = 142 / chunksize;
                         int lY = 142 % chunksize;
@@ -110,19 +105,18 @@ namespace WorldGenTests
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
-            int pad = TerraGenConfig.geoProvMapPadding;
             int regionSize = api.WorldManager.RegionSize;
             IntDataMap2D data = new IntDataMap2D()
             {
                 Data = OreVeinLayer.GenLayer(
-                    regionX * regionSize - pad,
-                    regionZ * regionSize - pad,
-                    regionSize + 2 * pad,
-                    regionSize + 2 * pad
+                    regionX * regionSize,
+                    regionZ * regionSize,
+                    regionSize + 2,
+                    regionSize + 2
                 ),
-                Size = regionSize + 2 * pad,
-                BottomRightPadding = 1,
-                TopLeftPadding = 1
+                Size = regionSize + 2,
+                BottomRightPadding = 0,
+                TopLeftPadding = 0
             };
             mapRegion.SetModdata("OreVeinData", SerializerUtil.Serialize(data));
         }
@@ -154,6 +148,103 @@ namespace WorldGenTests
         }
 
 
+        public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
+        {
+            double nR, nG, nB, nA;
+
+            double nRX = xCoord + x + 0000000;
+            double nRZ = zCoord + z + 0000000;
+            double nGX = xCoord + x + 5498987;
+            double nGZ = zCoord + z + 5498987;
+            double nBX = xCoord + x + 2987992;
+            double nBZ = zCoord + z + 2987992;
+            double nAX = xCoord + x + 4987462;
+            double nAZ = zCoord + z + 4987462;
+
+            if (thresholds != null)
+            {
+                nR = noisegen.Noise(nRX, nRZ, thresholds);
+                nG = noisegen.Noise(nGX, nGZ, thresholds);
+                nB = noisegen.Noise(nBX, nBZ, thresholds);
+                nA = noisegen.Noise(nAX, nAZ, thresholds);
+            }
+            else
+            {
+                nR = noisegen.Noise(nRX, nRZ);
+                nG = noisegen.Noise(nGX, nGZ);
+                nB = noisegen.Noise(nBX, nBZ);
+                nA = noisegen.Noise(nAX, nAZ);
+            }
+
+            bool inverse = (flags & 0b10000) > 0;
+
+            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2.0);
+            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2.0);
+            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2.0);
+            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2.0);
+
+            byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
+            byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
+            byte b = (byte)GameMath.Clamp(multiplier * nB, 0, 255);
+            byte a = (byte)GameMath.Clamp(multiplier * nA, 0, 255);
+
+            int rgba = b | g << 8 | r << 16 | a << 24;
+
+            return inverse ? ~rgba : rgba;
+        }
+
+        public int GetRGBAScribbleNoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null, int depth = 8)
+        {
+            double nR, nG, nB, nA;
+            nR = nG = nB = nA = 0.0;
+
+            double nRX = xCoord + x + 0000000;
+            double nRZ = zCoord + z + 0000000;
+            double nGX = xCoord + x + 5498987;
+            double nGZ = zCoord + z + 5498987;
+            double nBX = xCoord + x + 2987992;
+            double nBZ = zCoord + z + 2987992;
+            double nAX = xCoord + x + 4987462;
+            double nAZ = zCoord + z + 4987462;
+
+            for (int i = 1; i < depth; i++)
+            {
+                double nRt, nGt, nBt, nAt;
+                nRt = nGt = nBt = nAt = 0.0;
+
+                if (thresholds != null)
+                {
+                    nRt = noisegen.Noise(nRX * i, nRZ * i, thresholds) / depth;
+                    nGt = noisegen.Noise(nGX * i, nGZ * i, thresholds) / depth;
+                    nBt = noisegen.Noise(nBX * i, nBZ * i, thresholds) / depth;
+                    nAt = noisegen.Noise(nAX * i, nAZ * i, thresholds) / depth;
+                }
+                else
+                {
+                    nRt = noisegen.Noise(nRX * i, nRZ * i) / depth;
+                    nGt = noisegen.Noise(nGX * i, nGZ * i) / depth;
+                    nBt = noisegen.Noise(nBX * i, nBZ * i) / depth;
+                    nAt = noisegen.Noise(nAX * i, nAZ * i) / depth;
+                }
+
+                nR += (flags & 0b00001) > 0 ? Math.Abs((nRt * depth - 0.5) * 2.0) / depth : nRt;
+                nG += (flags & 0b00010) > 0 ? Math.Abs((nGt * depth - 0.5) * 2.0) / depth : nGt;
+                nB += (flags & 0b00100) > 0 ? Math.Abs((nBt * depth - 0.5) * 2.0) / depth : nBt;
+                nA += (flags & 0b01000) > 0 ? Math.Abs((nAt * depth - 0.5) * 2.0) / depth : nAt;
+            }
+
+            bool inverse = (flags & 0b10000) > 0;
+
+            byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
+            byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
+            byte b = (byte)GameMath.Clamp(multiplier * nB, 0, 255);
+            byte a = (byte)GameMath.Clamp(multiplier * nA, 0, 255);
+
+            int rgba = b | g << 8 | r << 16 | a << 24;
+
+            return inverse ? ~rgba : rgba;
+        }
+
         public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
         {
             int[] outData = new int[sizeX * sizeZ];
@@ -164,29 +255,8 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        double nRX = xCoord + x + 0000000;
-
-                        double nRZ = zCoord + z + 0000000;
-
-                        double nGX = xCoord + x + 5498987;
-
-                        double nGZ = zCoord + z + 5498987;
-
-                        double nBX = xCoord + x + 2987992;
-
-                        double nBZ = zCoord + z + 2987992;
-
-                        double nR = noisegen.Noise(nRX, nRZ, thresholds);
-                        double nG = noisegen.Noise(nGX, nGZ, thresholds);
-                        double nB = noisegen.Noise(nBX, nBZ, thresholds);
-
-                        int r = (int)GameMath.Clamp(multiplier * (1.0 - Math.Abs((nR - 0.5) * 2.0)), 0, 255);
-                        r = r > 200 ? r : 0;
-
-                        int g = (int)GameMath.Clamp(multiplier * (1.0 - nG), 0, 255);
-                        int b = (int)GameMath.Clamp(multiplier * (1.0 - nB), 0, 255);
-
-                        outData[z * sizeX + x] = b | g << 8 | r << 16 | 0xFF << 24;
+                        int flags = 0b10001;
+                        outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
             }
@@ -196,29 +266,8 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        double nRX = xCoord + x + 0000000;
-
-                        double nRZ = zCoord + z + 0000000;
-
-                        double nGX = xCoord + x + 5498987;
-
-                        double nGZ = zCoord + z + 5498987;
-
-                        double nBX = xCoord + x + 2987992;
-
-                        double nBZ = zCoord + z + 2987992;
-
-                        double nR = noisegen.Noise(nRX, nRZ);
-                        double nG = noisegen.Noise(nGX, nGZ);
-                        double nB = noisegen.Noise(nBX, nBZ);
-
-                        int r = (int)GameMath.Clamp(multiplier * (1.0 - Math.Abs((nR - 0.5) * 2.0)), 0, 255);
-                        r = r > 200 ? r : 0;
-                        
-                        int g = (int)GameMath.Clamp(multiplier * (1.0 - nG), 0, 255);
-                        int b = (int)GameMath.Clamp(multiplier * (1.0 - nB), 0, 255);
-
-                        outData[z * sizeX + x] = b | g << 8 | r << 16 | 0xFF << 24;
+                        int flags = 0b10001;
+                        outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags);
                     }
                 }
             }
@@ -236,29 +285,8 @@ namespace WorldGenTests
             {
                 for (int x = 0; x < sizeX; ++x)
                 {
-                    double nRX = xCoord + x + 0000000;
-
-                    double nRZ = zCoord + z + 0000000;
-
-                    double nGX = xCoord + x + 5498987;
-
-                    double nGZ = zCoord + z + 5498987;
-
-                    double nBX = xCoord + x + 2987992;
-
-                    double nBZ = zCoord + z + 2987992;
-
-                    double nR = noisegen.Noise(nRX, nRZ, thresholds);
-                    double nG = noisegen.Noise(nGX, nGZ, thresholds);
-                    double nB = noisegen.Noise(nBX, nBZ, thresholds);
-
-                    int r = (int)GameMath.Clamp(multiplier * (1.0 - Math.Abs((nR - 0.5) * 2.0)), 0, 255);
-                    r = r > 200 ? r : 0;
-
-                    int g = (int)GameMath.Clamp(multiplier * (1.0 - nG), 0, 255);
-                    int b = (int)GameMath.Clamp(multiplier * (1.0 - nB), 0, 255);
-
-                    outData[z * sizeX + x] = b | g << 8 | r << 16 | 0xFF << 24;
+                    int flags = 0b10001;
+                    outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags, thresholds);
                 }
             }
 
