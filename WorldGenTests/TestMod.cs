@@ -60,13 +60,15 @@ namespace WorldGenTests
 
                     float veinRRel = ((veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
                     float veinGRel = ((veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
+                    float veinARel = ((veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
 
-                    if (veinRRel > 0.8f)
+                    if (veinRRel > 0.85f)
                     {
                         int chunkY = 142 / chunksize;
                         int lY = 142 % chunksize;
+                        int depth = (int)GameMath.Max(1, (veinARel * 6));
 
-                        for (int dY = -2; dY < 2; dY++)
+                        for (int dY = -depth; dY < depth; dY++)
                         {
                             int y = lY + dY;
                             y += (int)(16.0 * (veinGRel - 0.5f));
@@ -76,7 +78,8 @@ namespace WorldGenTests
 
                             int index3d = (chunksize * y + z) * chunksize + x;
                             int blockId = chunks[chunkY].Blocks[index3d];
-                            if (absDY == 0 || (absDY > 0 && veinRRel > 0.85) || (absDY > 1 && veinRRel > 0.90)) chunks[chunkY].Blocks[index3d] = 1;
+                            
+                            chunks[chunkY].Blocks[index3d] = 1;
                         }
                     }
                     else
@@ -106,7 +109,7 @@ namespace WorldGenTests
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
-            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 64, 255);
+            OreVeinLayer = new MapLayerOreVeins(api.World.Seed, 8, 0.0f, 255, 64, 512, 64, 64, 32.0);
             int regionSize = api.WorldManager.RegionSize;
             IntDataMap2D data = new IntDataMap2D()
             {
@@ -131,20 +134,33 @@ namespace WorldGenTests
 
     public class MapLayerOreVeins : MapLayerBase
     {
-        NormalizedSimplexNoise noisegen;
+        NormalizedSimplexNoise noisegenA, noisegenR, noisegenG, noisegenB;
+        double ridgedMul;
 
         float multiplier;
         double[] thresholds;
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int multiplier) : base(seed)
+        public MapLayerOreVeins(long seed, int octaves, float persistence, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 2.0) : base(seed)
         {
-            noisegen = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scale, persistence, seed + 12321);
+            this.ridgedMul = ridgedMul;
+
+            noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
+            noisegenR = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
+            noisegenG = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
+            noisegenB = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
+
             this.multiplier = multiplier;
         }
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int multiplier, double[] thresholds) : base(seed)
+        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 2.0) : base(seed)
         {
-            noisegen = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scale, persistence, seed + 12321);
+            this.ridgedMul = ridgedMul;
+
+            noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
+            noisegenR = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
+            noisegenG = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
+            noisegenB = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
+
             this.multiplier = multiplier;
             this.thresholds = thresholds;
         }
@@ -154,36 +170,36 @@ namespace WorldGenTests
         {
             double nR, nG, nB, nA;
 
-            double nRX = xCoord + x + 0000000;
-            double nRZ = zCoord + z + 0000000;
-            double nGX = xCoord + x + 5498987;
-            double nGZ = zCoord + z + 5498987;
-            double nBX = xCoord + x + 2987992;
-            double nBZ = zCoord + z + 2987992;
-            double nAX = xCoord + x + 4987462;
-            double nAZ = zCoord + z + 4987462;
+            double nRX = xCoord + x;
+            double nRZ = zCoord + z;
+            double nGX = xCoord + x;
+            double nGZ = zCoord + z;
+            double nBX = xCoord + x;
+            double nBZ = zCoord + z;
+            double nAX = xCoord + x;
+            double nAZ = zCoord + z;
 
             if (thresholds != null)
             {
-                nR = noisegen.Noise(nRX, nRZ, thresholds);
-                nG = noisegen.Noise(nGX, nGZ, thresholds);
-                nB = noisegen.Noise(nBX, nBZ, thresholds);
-                nA = noisegen.Noise(nAX, nAZ, thresholds);
+                nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                nB = noisegenB.Noise(nBX, nBZ, thresholds);
             }
             else
             {
-                nR = noisegen.Noise(nRX, nRZ);
-                nG = noisegen.Noise(nGX, nGZ);
-                nB = noisegen.Noise(nBX, nBZ);
-                nA = noisegen.Noise(nAX, nAZ);
+                nA = noisegenA.Noise(nAX, nAZ);
+                nR = noisegenR.Noise(nRX, nRZ);
+                nG = noisegenG.Noise(nGX, nGZ);
+                nB = noisegenB.Noise(nBX, nBZ);
             }
 
             bool inverse = (flags & 0b10000) > 0;
 
-            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2.0);
-            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2.0);
-            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2.0);
-            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2.0);
+            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
 
             byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
             byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
@@ -212,20 +228,20 @@ namespace WorldGenTests
             for (int i = 1; i <= depth; i++)
             {
                 double nRt, nGt, nBt, nAt;
-                nRt = nGt = nBt = nAt = 0.0;
+
                 if (thresholds != null)
                 {
-                    nRt = noisegen.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
-                    nGt = noisegen.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
-                    nBt = noisegen.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
-                    nAt = noisegen.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
+                    nRt = noisegenR.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
+                    nGt = noisegenG.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
+                    nBt = noisegenB.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
+                    nAt = noisegenA.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
                 }
                 else
                 {
-                    nRt = noisegen.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
-                    nGt = noisegen.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
-                    nBt = noisegen.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
-                    nAt = noisegen.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
+                    nRt = noisegenR.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
+                    nGt = noisegenG.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
+                    nBt = noisegenB.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
+                    nAt = noisegenA.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
                 }
 
                 nR += (flags & 0b00001) > 0 ? Math.Abs((nRt * depth - 0.5) * 2.0) / depth : nRt;
