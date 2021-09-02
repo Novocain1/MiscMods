@@ -33,8 +33,6 @@ namespace WorldGenTests
         public override void StartServerSide(ICoreServerAPI api)
         {
             this.api = api;
-
-            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 64, 255);
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
@@ -61,21 +59,24 @@ namespace WorldGenTests
                     int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
 
                     float veinRRel = ((veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
+                    float veinGRel = ((veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
 
-                    if (veinRRel > 0.6f)
+                    if (veinRRel > 0.8f)
                     {
                         int chunkY = 142 / chunksize;
                         int lY = 142 % chunksize;
-                        float depth = veinRRel - 0.7843137254901961f;
 
                         for (int dY = -2; dY < 2; dY++)
                         {
                             int y = lY + dY;
+                            y += (int)(16.0 * (veinGRel - 0.5f));
                             int absDY = Math.Abs(dY);
+                            
+                            if (y < 0) continue;
 
                             int index3d = (chunksize * y + z) * chunksize + x;
                             int blockId = chunks[chunkY].Blocks[index3d];
-                            if (depth * absDY < 0.5) chunks[chunkY].Blocks[index3d] = 1;
+                            if (absDY == 0 || (absDY > 0 && veinRRel > 0.85) || (absDY > 1 && veinRRel > 0.90)) chunks[chunkY].Blocks[index3d] = 1;
                         }
                     }
                     else
@@ -105,6 +106,7 @@ namespace WorldGenTests
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
+            OreVeinLayer = new MapLayerOreVeins(api.World.Seed + 49055687, 8, 0.0f, 64, 255);
             int regionSize = api.WorldManager.RegionSize;
             IntDataMap2D data = new IntDataMap2D()
             {
@@ -193,7 +195,7 @@ namespace WorldGenTests
             return inverse ? ~rgba : rgba;
         }
 
-        public int GetRGBAScribbleNoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null, int depth = 8)
+        public int GetRGBAScribbleNoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null, int depth = 2)
         {
             double nR, nG, nB, nA;
             nR = nG = nB = nA = 0.0;
@@ -207,24 +209,23 @@ namespace WorldGenTests
             double nAX = xCoord + x + 4987462;
             double nAZ = zCoord + z + 4987462;
 
-            for (int i = 1; i < depth; i++)
+            for (int i = 1; i <= depth; i++)
             {
                 double nRt, nGt, nBt, nAt;
                 nRt = nGt = nBt = nAt = 0.0;
-
                 if (thresholds != null)
                 {
-                    nRt = noisegen.Noise(nRX * i, nRZ * i, thresholds) / depth;
-                    nGt = noisegen.Noise(nGX * i, nGZ * i, thresholds) / depth;
-                    nBt = noisegen.Noise(nBX * i, nBZ * i, thresholds) / depth;
-                    nAt = noisegen.Noise(nAX * i, nAZ * i, thresholds) / depth;
+                    nRt = noisegen.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
+                    nGt = noisegen.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
+                    nBt = noisegen.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
+                    nAt = noisegen.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
                 }
                 else
                 {
-                    nRt = noisegen.Noise(nRX * i, nRZ * i) / depth;
-                    nGt = noisegen.Noise(nGX * i, nGZ * i) / depth;
-                    nBt = noisegen.Noise(nBX * i, nBZ * i) / depth;
-                    nAt = noisegen.Noise(nAX * i, nAZ * i) / depth;
+                    nRt = noisegen.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
+                    nGt = noisegen.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
+                    nBt = noisegen.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
+                    nAt = noisegen.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
                 }
 
                 nR += (flags & 0b00001) > 0 ? Math.Abs((nRt * depth - 0.5) * 2.0) / depth : nRt;
@@ -256,7 +257,7 @@ namespace WorldGenTests
                     for (int x = 0; x < sizeX; ++x)
                     {
                         int flags = 0b10001;
-                        outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags, thresholds);
+                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
             }
@@ -267,7 +268,7 @@ namespace WorldGenTests
                     for (int x = 0; x < sizeX; ++x)
                     {
                         int flags = 0b10001;
-                        outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags);
+                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
             }
@@ -286,7 +287,7 @@ namespace WorldGenTests
                 for (int x = 0; x < sizeX; ++x)
                 {
                     int flags = 0b10001;
-                    outData[z * sizeX + x] = GetRGBAScribbleNoise(xCoord, x, zCoord, z, flags, thresholds);
+                    outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                 }
             }
 
