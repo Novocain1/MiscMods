@@ -1,0 +1,12 @@
+{
+	"type": "code",
+	"name": "Gravel Sand Fix",
+	"side": "client",
+	"modid": "gravelsandfix",
+	"description": "Fixes sand and gravel to be less tiled.",
+	"authors": [
+		"Novocain"
+	],
+	"version": "1.0.1",
+	"dependencies": {}
+}
