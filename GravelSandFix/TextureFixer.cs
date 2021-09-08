@@ -32,7 +32,7 @@ namespace GravelSandFix
     [HarmonyPatch(typeof(ClientMain), "OnServerBlocksItemsReceived")]
     public class PatchTextures
     {
-        public static Dictionary<AssetLocation, AssetLocation> PatchingBlocks = new Dictionary<AssetLocation, AssetLocation>()
+        public static readonly Dictionary<AssetLocation, AssetLocation> PatchingBlocks = new Dictionary<AssetLocation, AssetLocation>()
         {
             {  new AssetLocation("game:muddygravel"), new AssetLocation("game:block/soil/tileless/muddygravel*") },
             {  new AssetLocation("game:peat"), new AssetLocation("game:block/soil/tileless/peat*") },
