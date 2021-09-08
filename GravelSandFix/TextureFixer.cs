@@ -41,7 +41,7 @@ namespace GravelSandFix
         };
 
         [HarmonyPrefix]
-        public static void PreFix(ref IList<Block> blocks, ref IList<Item> items)
+        public static void PreFix(ref IList<Block> blocks)
         {
             foreach (Block block in blocks)
             {
