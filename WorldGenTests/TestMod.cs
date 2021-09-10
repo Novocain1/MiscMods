@@ -43,6 +43,7 @@ namespace WorldGenTests
         {
             IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunks[0].MapChunk.MapRegion.GetModdata("OreVeinData"));
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
+            
             int chunksize = api.World.BlockAccessor.ChunkSize;
 
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
@@ -54,32 +55,32 @@ namespace WorldGenTests
             {
                 for (int z = 0; z < chunksize; z++)
                 {
-                    int posY = heightMap[z * chunksize + x];
+                    int heightY = heightMap[z * chunksize + x];
 
                     int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
 
-                    float veinRRel = ((veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
-                    float veinGRel = ((veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
-                    float veinARel = ((veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
+                    float veinARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
+                    float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
+                    float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
+                    float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
 
                     if (veinRRel > 0.85f)
                     {
-                        int chunkY = 142 / chunksize;
-                        int lY = 142 % chunksize;
-                        int depth = (int)GameMath.Max(1, (veinARel * 6));
+                        int y = (int)(veinGRel * heightY) / 2;
 
-                        for (int dY = -depth; dY < depth; dY++)
+                        int depth = (int)(veinARel * 4);
+
+                        for (int dy = -depth; dy < depth; dy++)
                         {
-                            int y = lY + dY;
-                            y += (int)(16.0 * (veinGRel - 0.5f));
-                            int absDY = Math.Abs(dY);
-                            
-                            if (y < 0) continue;
+                            if (y + dy > 0 && y + dy < api.WorldManager.MapSizeY)
+                            {
+                                int chunkY = (y + dy) / chunksize;
+                                int lY = (y + dy) % chunksize;
 
-                            int index3d = (chunksize * y + z) * chunksize + x;
-                            int blockId = chunks[chunkY].Blocks[index3d];
-                            
-                            chunks[chunkY].Blocks[index3d] = 1;
+                                int index3d = (chunksize * lY + z) * chunksize + x;
+                                int blockId = chunks[chunkY].Blocks[index3d];
+                                chunks[chunkY].Blocks[index3d] = 0;
+                            }
                         }
                     }
                     else
