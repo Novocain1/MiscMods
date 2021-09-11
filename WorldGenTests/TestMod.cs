@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
@@ -22,7 +23,7 @@ namespace WorldGenTests
 
         const string patchCode = "Novocain.ModSystem.TestMod";
 
-        MapLayerBase OreVeinLayer;
+        public override double ExecuteOrder() { return 0.3; }
 
         public override void Start(ICoreAPI api)
         {
@@ -38,10 +39,14 @@ namespace WorldGenTests
 
             api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
-        
+
+        DepositVariant[] Deposits;
+
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
-            IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunks[0].MapChunk.MapRegion.GetModdata("OreVeinData"));
+            var veinMaps = chunks[0].MapChunk.MapRegion.GetVeinMaps();
+            var oreMaps = chunks[0].MapChunk.MapRegion.OreMaps;
+
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
             
             int chunksize = api.World.BlockAccessor.ChunkSize;
@@ -49,87 +54,144 @@ namespace WorldGenTests
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
-            float veinStep = (float)veinMap.InnerSize / regionChunkSize;
+            
+            int i = 0;
 
-            for (int x = 0; x < chunksize; x++)
+            foreach (var vein in veinMaps)
             {
-                for (int z = 0; z < chunksize; z++)
+                var deposit = Deposits[i];
+
+                Dictionary<int, ResolvedDepositBlock> placeBlockByInBlockId = deposit.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("placeBlockByInBlockId");
+                Dictionary<int, ResolvedDepositBlock> surfaceBlockByInBlockId = deposit.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("surfaceBlockByInBlockId");
+
+                var oreMap = oreMaps[vein.Key];
+
+                var veinMap = vein.Value;
+
+                float veinStep = (float)veinMap.InnerSize / regionChunkSize;
+                float oreStep = (float)oreMap.InnerSize / regionChunkSize;
+
+                for (int x = 0; x < chunksize; x++)
                 {
-                    int heightY = heightMap[z * chunksize + x];
-
-                    int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
-
-                    float veinARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
-                    float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
-                    float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
-                    float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
-
-                    if (veinRRel > 0.85f)
+                    for (int z = 0; z < chunksize; z++)
                     {
-                        int y = (int)(veinGRel * heightY) / 2;
+                        int heightY = heightMap[z * chunksize + x];
 
-                        int depth = (int)(veinARel * 4);
+                        int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
 
-                        for (int dy = -depth; dy < depth; dy++)
+                        float veinARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
+                        float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
+                        float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
+                        float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
+                        
+                        int oreUpLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep));
+                        int oreUpRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep));
+                        int oreBotLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep + oreStep));
+                        int oreBotRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep + oreStep));
+
+                        float oreMapRel = GameMath.BiLerp(oreUpLeft, oreUpRight, oreBotLeft, oreBotRight, (float)x / chunksize, (float)z / chunksize) / 255f;
+
+                        if (oreMapRel > 0.00f && veinRRel > 0.85f)
                         {
-                            if (y + dy > 0 && y + dy < api.WorldManager.MapSizeY)
-                            {
-                                int chunkY = (y + dy) / chunksize;
-                                int lY = (y + dy) % chunksize;
+                            int y = (int)(veinGRel * heightY) / 2;
 
-                                int index3d = (chunksize * lY + z) * chunksize + x;
-                                int blockId = chunks[chunkY].Blocks[index3d];
-                                chunks[chunkY].Blocks[index3d] = 0;
+                            int depth = (int)(veinARel * 4);
+
+                            for (int dy = -depth; dy < depth; dy++)
+                            {
+                                if (y + dy > 0 && y + dy < api.WorldManager.MapSizeY)
+                                {
+                                    int chunkY = (y + dy) / chunksize;
+                                    int lY = (y + dy) % chunksize;
+
+                                    int index3d = (chunksize * lY + z) * chunksize + x;
+                                    int blockId = chunks[chunkY].Blocks[index3d];
+                                    if (placeBlockByInBlockId.ContainsKey(blockId))
+                                    {
+                                        var blocks = placeBlockByInBlockId[blockId].Blocks;
+
+                                        chunks[chunkY].Blocks[index3d] = blocks[(int)(veinBRel * blocks.Length)].Id;
+                                    }
+                                }
                             }
                         }
-                    }
-                    else
-                    {
+                        else
+                        {
 
+                        }
                     }
                 }
+                i++;
             }
         }
 
         public void DebugRGBMap(ICoreServerAPI api, IServerPlayer player)
         {
             var chunk = api.WorldManager.GetChunk(player.Entity.ServerPos.AsBlockPos);
-
-            IntDataMap2D veinMap = SerializerUtil.Deserialize<IntDataMap2D>(chunk.MapChunk.MapRegion.GetModdata("OreVeinData"));
-
-            Bitmap bmp = new Bitmap(512, 512);
-            for (int x = 0; x < 512; x++)
+            var veinMaps = chunk.MapChunk.MapRegion.GetVeinMaps();
+            foreach (var vein in veinMaps)
             {
-                for (int y = 0; y < 512; y++)
+                IntDataMap2D veinMap = vein.Value;
+
+                Bitmap bmp = new Bitmap(512, 512);
+                for (int x = 0; x < 512; x++)
                 {
-                    bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
+                    for (int y = 0; y < 512; y++)
+                    {
+                        bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
+                    }
                 }
+                bmp.Save(string.Format("noise {0}.png", vein.Key), ImageFormat.Png);
             }
-            bmp.Save("noise.png", ImageFormat.Png);
         }
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
-            OreVeinLayer = new MapLayerOreVeins(api.World.Seed, 8, 0.0f, 255, 64, 512, 64, 64, 32.0);
-            int regionSize = api.WorldManager.RegionSize;
-            IntDataMap2D data = new IntDataMap2D()
+            Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
+            int i = 0;
+
+            Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
+            foreach (var val in mapRegion.OreMaps)
             {
-                Data = OreVeinLayer.GenLayer(
-                    regionX * regionSize,
-                    regionZ * regionSize,
-                    regionSize + 2,
-                    regionSize + 2
-                ),
-                Size = regionSize + 2,
-                BottomRightPadding = 0,
-                TopLeftPadding = 0
-            };
-            mapRegion.SetModdata("OreVeinData", SerializerUtil.Serialize(data));
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 64, 64, 32.0);
+                int regionSize = api.WorldManager.RegionSize;
+
+                IntDataMap2D data = new IntDataMap2D()
+                {
+                    Data = OreVeinLayer.GenLayer(
+                        regionX * regionSize,
+                        regionZ * regionSize,
+                        regionSize + 2,
+                        regionSize + 2
+                    ),
+                    Size = regionSize + 2,
+                    BottomRightPadding = 0,
+                    TopLeftPadding = 0
+                };
+
+                maps[val.Key] = data;
+                i++;
+            }
+
+            mapRegion.SetVeinMaps(maps);
         }
 
         public override void Dispose()
         {
             harmony?.UnpatchAll(patchCode);
+        }
+    }
+
+    public static class RegionExtension
+    {
+        public static Dictionary<string, IntDataMap2D> GetVeinMaps(this IMapRegion mapRegion)
+        {
+            return SerializerUtil.Deserialize<Dictionary<string, IntDataMap2D>>(mapRegion.GetModdata("VeinMaps"));
+        }
+
+        public static void SetVeinMaps(this IMapRegion mapRegion, Dictionary<string, IntDataMap2D> data)
+        {
+            mapRegion.SetModdata("VeinMaps", SerializerUtil.Serialize(data));
         }
     }
 
@@ -322,5 +384,45 @@ namespace WorldGenTests
 
             }
         }
+    }
+
+    public static class HackMan
+    {
+        public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
+        public static object CreateInstance(this Type type) => AccessTools.CreateInstance(type);
+        public static T[] GetFields<T>(this object instance)
+        {
+            List<T> fields = new List<T>();
+            var declaredFields = AccessTools.GetDeclaredFields(instance.GetType())?.Where((t) => t.FieldType == typeof(T));
+            foreach (var val in declaredFields)
+            {
+                fields.Add(instance.GetField<T>(val.Name));
+            }
+            return fields.ToArray();
+        }
+
+        public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
+
+        public static void CallMethod(this object instance, string method) => instance?.CallMethod(method, null);
+        public static void CallMethod(this object instance, string method, params object[] args) => instance?.CallMethod<object>(method, args);
+        public static T CallMethod<T>(this object instance, string method) => (T)instance.CallMethod<object>(method, null);
+
+        public static T CallMethod<T>(this object instance, string method, params object[] args)
+        {
+            Type[] parameters = null;
+            if (args != null)
+            {
+                parameters = args.Length > 0 ? new Type[args.Length] : null;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    parameters[i] = args[i].GetType();
+                }
+            }
+            return (T)instance?.GetMethod(method, parameters).Invoke(instance, args);
+        }
+
+        public static MethodInfo GetMethod(this object instance, string method, params Type[] parameters) => instance.GetMethod(method, parameters, null);
+        public static MethodInfo GetMethod(this object instance, string method, Type[] parameters = null, Type[] generics = null) => AccessTools.Method(instance.GetType(), method, parameters, generics);
     }
 }
