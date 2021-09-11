@@ -88,12 +88,14 @@ namespace WorldGenTests
                         int oreUpRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep));
                         int oreBotLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep + oreStep));
                         int oreBotRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep + oreStep));
+                        uint oreMapInt = (uint)GameMath.BiLerp(oreUpLeft, oreUpRight, oreBotLeft, oreBotRight, (float)x / chunksize, (float)z / chunksize);
 
-                        float oreMapRel = GameMath.BiLerp(oreUpLeft, oreUpRight, oreBotLeft, oreBotRight, (float)x / chunksize, (float)z / chunksize) / 255f;
 
-                        if (oreMapRel > 0.00f && veinRRel > 0.85f)
+                        float oreMapRel = ((oreMapInt & ~0xFF00FF) >> 8) / 15f;
+
+                        if (veinRRel > 0.85f)
                         {
-                            int y = (int)(veinGRel * heightY) / 2;
+                            int y = (int)(veinGRel * heightY);
 
                             int depth = (int)(veinARel * 4);
 
@@ -106,11 +108,11 @@ namespace WorldGenTests
 
                                     int index3d = (chunksize * lY + z) * chunksize + x;
                                     int blockId = chunks[chunkY].Blocks[index3d];
-                                    if (placeBlockByInBlockId.ContainsKey(blockId))
+                                    if (placeBlockByInBlockId?.ContainsKey(blockId) ?? false)
                                     {
                                         var blocks = placeBlockByInBlockId[blockId].Blocks;
 
-                                        chunks[chunkY].Blocks[index3d] = blocks[(int)(veinBRel * blocks.Length)].Id;
+                                        chunks[chunkY].Blocks[index3d] = blocks[(int)(oreMapRel * (blocks.Length - 1))].Id;
                                     }
                                 }
                             }
@@ -153,7 +155,7 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 64, 64, 32.0);
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 128, 64, 32.0);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()
@@ -388,8 +390,8 @@ namespace WorldGenTests
 
     public static class HackMan
     {
-        public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname).GetValue(instance);
-        public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname).GetValue(instance);
+        public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname)?.GetValue(instance);
+        public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname)?.GetValue(instance);
         public static object CreateInstance(this Type type) => AccessTools.CreateInstance(type);
         public static T[] GetFields<T>(this object instance)
         {
