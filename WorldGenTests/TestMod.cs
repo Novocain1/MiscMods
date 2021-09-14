@@ -34,17 +34,18 @@ namespace WorldGenTests
         public override void StartServerSide(ICoreServerAPI api)
         {
             this.api = api;
+            api.Event.InitWorldGenerator(Init, "standard");
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
             api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
 
-        DepositVariant[] Deposits;
+        Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
 
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
-            var veinMaps = chunks[0].MapChunk.MapRegion.GetVeinMaps();
+            var veinMaps = chunks[0].MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("VeinMaps");
             var oreMaps = chunks[0].MapChunk.MapRegion.OreMaps;
 
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
@@ -54,12 +55,12 @@ namespace WorldGenTests
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
-            
-            int i = 0;
 
             foreach (var vein in veinMaps)
             {
-                var deposit = Deposits[i];
+                if (!DepositByCode.ContainsKey(vein.Key)) continue;
+
+                var deposit = DepositByCode[vein.Key];
 
                 Dictionary<int, ResolvedDepositBlock> placeBlockByInBlockId = deposit.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("placeBlockByInBlockId");
                 Dictionary<int, ResolvedDepositBlock> surfaceBlockByInBlockId = deposit.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("surfaceBlockByInBlockId");
@@ -113,6 +114,29 @@ namespace WorldGenTests
                                         var blocks = placeBlockByInBlockId[blockId].Blocks;
 
                                         chunks[chunkY].Blocks[index3d] = blocks[(int)(oreMapRel * (blocks.Length - 1))].Id;
+
+                                        if (deposit.ChildDeposits != null)
+                                        {
+                                            foreach (var child in deposit.ChildDeposits)
+                                            {
+                                                if (veinBRel > 0.5)
+                                                {
+                                                    Dictionary<int, ResolvedDepositBlock> childPlaceBlockByInBlockId = child.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("placeBlockByInBlockId");
+                                                    Dictionary<int, ResolvedDepositBlock> childSurfaceBlockByInBlockId = child.GeneratorInst.GetField<Dictionary<int, ResolvedDepositBlock>>("surfaceBlockByInBlockId");
+
+                                                    if (childPlaceBlockByInBlockId.ContainsKey(blockId))
+                                                    {
+                                                        blocks = childPlaceBlockByInBlockId[blockId].Blocks;
+                                                        chunks[chunkY].Blocks[index3d] = blocks[(int)(oreMapRel * (blocks.Length - 1))].Id;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (y + dy == y + depth && oreMapRel > 0.0f)
+                                        {
+                                            //gen surface deposits
+                                        }
                                     }
                                 }
                             }
@@ -123,22 +147,21 @@ namespace WorldGenTests
                         }
                     }
                 }
-                i++;
             }
         }
 
         public void DebugRGBMap(ICoreServerAPI api, IServerPlayer player)
         {
             var chunk = api.WorldManager.GetChunk(player.Entity.ServerPos.AsBlockPos);
-            var veinMaps = chunk.MapChunk.MapRegion.GetVeinMaps();
+            var veinMaps = chunk.MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("VeinMaps");
             foreach (var vein in veinMaps)
             {
                 IntDataMap2D veinMap = vein.Value;
 
-                Bitmap bmp = new Bitmap(512, 512);
-                for (int x = 0; x < 512; x++)
+                Bitmap bmp = new Bitmap(veinMap.Size, veinMap.Size);
+                for (int x = 0; x < veinMap.Size; x++)
                 {
-                    for (int y = 0; y < 512; y++)
+                    for (int y = 0; y < veinMap.Size; y++)
                     {
                         bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
                     }
@@ -147,9 +170,17 @@ namespace WorldGenTests
             }
         }
 
+        private void Init()
+        {
+            var Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
+            foreach (var deposit in Deposits)
+            {
+                DepositByCode[deposit.Code] = deposit;
+            }
+        }
+
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
-            Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
             int i = 0;
 
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
@@ -163,10 +194,10 @@ namespace WorldGenTests
                     Data = OreVeinLayer.GenLayer(
                         regionX * regionSize,
                         regionZ * regionSize,
-                        regionSize + 2,
-                        regionSize + 2
+                        regionSize,
+                        regionSize
                     ),
-                    Size = regionSize + 2,
+                    Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0
                 };
@@ -175,7 +206,7 @@ namespace WorldGenTests
                 i++;
             }
 
-            mapRegion.SetVeinMaps(maps);
+            mapRegion.SetModdata("VeinMaps", maps);
         }
 
         public override void Dispose()
@@ -186,14 +217,14 @@ namespace WorldGenTests
 
     public static class RegionExtension
     {
-        public static Dictionary<string, IntDataMap2D> GetVeinMaps(this IMapRegion mapRegion)
+        public static T GetModdata<T>(this IMapRegion mapRegion, string key)
         {
-            return SerializerUtil.Deserialize<Dictionary<string, IntDataMap2D>>(mapRegion.GetModdata("VeinMaps"));
+            return SerializerUtil.Deserialize<T>(mapRegion.GetModdata(key));
         }
 
-        public static void SetVeinMaps(this IMapRegion mapRegion, Dictionary<string, IntDataMap2D> data)
+        public static void SetModdata<T>(this IMapRegion mapRegion, string key, T data)
         {
-            mapRegion.SetModdata("VeinMaps", SerializerUtil.Serialize(data));
+            mapRegion.SetModdata(key, SerializerUtil.Serialize(data));
         }
     }
 
