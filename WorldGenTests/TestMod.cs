@@ -16,6 +16,116 @@ using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
+    /*
+    public class NukeTest : ModSystem
+    {
+        public override void StartServerSide(ICoreServerAPI api)
+        {
+            api.RegisterCommand("nuke", "", "", (a, b, c) =>
+            {
+                var bA = api.World.BulkBlockAccessor;
+                int sploded = 1;
+
+                int radius = 64;
+                int diameter = radius * 2;
+
+                int probecount = (diameter * diameter * diameter) - ((diameter - 1) * (diameter - 1) * (diameter - 1));
+
+                for (int splode = 0; splode < 64 / sploded; splode++)
+                {
+                    BlockPos startPos = a.Entity.ServerPos.AsBlockPos;
+
+
+
+                    int[] probes = new int[probecount];
+                    int i = 0;
+
+                    for (int x = -radius; x < radius; x++)
+                    {
+                        for (int y = -radius; y < radius; y++)
+                        {
+                            for (int z = -radius; z < radius; z++)
+                            {
+                                if (i * 3 + 2 > probecount) break;
+
+                                if (InsideRadius(radius, x, y, z) && !InsideRadius(radius - 1, x, y, z))
+                                {
+                                    //bA.SetBlock(710, startPos.AddCopy(x, y, z));
+                                    probes[i * 3 + 0] = startPos.X + x;
+                                    probes[i * 3 + 1] = startPos.Y + y;
+                                    probes[i * 3 + 2] = startPos.Z + z;
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+
+                    Vec3d fromPos = new Vec3d(startPos.X, startPos.Y, startPos.Z);
+
+                    Vec3d toPos = new Vec3d();
+
+                    List<BlockSelection> blockIntercepts = new List<BlockSelection>();
+                    List<EntitySelection> entityIntercepts = new List<EntitySelection>();
+
+                    for (int j = 0; j < i / 3; j++)
+                    {
+                        toPos.X = probes[j * 3 + 0];
+                        toPos.Y = probes[j * 3 + 1];
+                        toPos.Z = probes[j * 3 + 2];
+
+                        var dist = GameMath.Sqrt(fromPos.SquareDistanceTo(toPos.X, toPos.Y, toPos.Z));
+                        if (dist > radius) continue;
+
+                        var blockIntercept = new BlockSelection();
+                        var entityIntercept = new EntitySelection();
+
+                        var dir1 = toPos.SubCopy(fromPos);
+
+                        var ray1 = new Ray()
+                        {
+                            origin = fromPos,
+                            dir = dir1
+                        };
+
+                        api.World.RayTraceForSelection(ray1, ref blockIntercept, ref entityIntercept);
+
+                        if (blockIntercept != null && !blockIntercepts.Any(p => p.Position.Equals(blockIntercept.Position))) blockIntercepts.Add(blockIntercept);
+                        if (entityIntercept != null && !entityIntercepts.Any(p => p.Position.Equals(entityIntercept.Position))) entityIntercepts.Add(entityIntercept);
+                    }
+
+                    var ember = bA.GetBlock(new AssetLocation("game:ember"));
+
+                    foreach (var bs in blockIntercepts)
+                    {
+                        var block = api.World.BlockAccessor.GetBlock(bs.Position);
+
+                        if (block.Id != 0)
+                        {
+                            bA.SetBlock(ember.Id, bs.Position);
+                            if (api.World.Rand.NextDouble() > 0.9) block.OnBlockExploded(api.World, bs.Position, startPos, EnumBlastType.RockBlast);
+                            sploded++;
+                        }
+                    }
+
+                    bA.Commit();
+
+                    foreach (var entitySel in entityIntercepts)
+                    {
+                        entitySel.Entity?.ReceiveDamage(new DamageSource(), 50.0f / sploded);
+                        sploded++;
+                    }
+                }
+                
+            });
+        }
+
+        public bool InsideRadius(int rad, int x, int y, int z)
+        {
+            return (x * x + y * y + z * z) <= (rad * rad);
+        }
+    }
+    */
+
     public class TestMod : ModSystem
     {
         Harmony harmony;
@@ -34,11 +144,11 @@ namespace WorldGenTests
         public override void StartServerSide(ICoreServerAPI api)
         {
             this.api = api;
-            api.Event.InitWorldGenerator(Init, "standard");
-            api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
-            api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
+            //api.Event.InitWorldGenerator(Init, "standard");
+            //api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
+            //api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
-            api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
+            //api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
 
         Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
@@ -106,7 +216,7 @@ namespace WorldGenTests
                                 {
                                     int chunkY = (y + dy) / chunksize;
                                     int lY = (y + dy) % chunksize;
-
+                                    
                                     int index3d = (chunksize * lY + z) * chunksize + x;
                                     int blockId = chunks[chunkY].Blocks[index3d];
                                     if (placeBlockByInBlockId?.ContainsKey(blockId) ?? false)
