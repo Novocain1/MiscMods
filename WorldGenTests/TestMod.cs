@@ -16,7 +16,6 @@ using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
-    /*
     public class NukeTest : ModSystem
     {
         public override void StartServerSide(ICoreServerAPI api)
@@ -26,95 +25,107 @@ namespace WorldGenTests
                 var bA = api.World.BulkBlockAccessor;
                 int sploded = 1;
 
-                int radius = 64;
-                int diameter = radius * 2;
+                int radius = 32;
+                long id = 0;
+                int splode = 0;
 
-                int probecount = (diameter * diameter * diameter) - ((diameter - 1) * (diameter - 1) * (diameter - 1));
-
-                for (int splode = 0; splode < 64 / sploded; splode++)
+                BlockPos startPos = a.Entity.ServerPos.AsBlockPos;
+                id = api.Event.RegisterGameTickListener((dt) =>
                 {
-                    BlockPos startPos = a.Entity.ServerPos.AsBlockPos;
-
-
-
-                    int[] probes = new int[probecount];
-                    int i = 0;
-
-                    for (int x = -radius; x < radius; x++)
+                    if (splode < radius)
                     {
-                        for (int y = -radius; y < radius; y++)
-                        {
-                            for (int z = -radius; z < radius; z++)
-                            {
-                                if (i * 3 + 2 > probecount) break;
+                        int rad = splode;
 
-                                if (InsideRadius(radius, x, y, z) && !InsideRadius(radius - 1, x, y, z))
+                        int diameter = rad * 2;
+
+                        int probecount = (diameter * diameter * diameter) - ((diameter - 1) * (diameter - 1) * (diameter - 1));
+
+                        int[] probes = new int[probecount];
+                        int i = 0;
+
+                        for (int x = -rad; x < rad; x++)
+                        {
+                            for (int y = -rad; y < rad; y++)
+                            {
+                                for (int z = -rad; z < rad; z++)
                                 {
-                                    //bA.SetBlock(710, startPos.AddCopy(x, y, z));
-                                    probes[i * 3 + 0] = startPos.X + x;
-                                    probes[i * 3 + 1] = startPos.Y + y;
-                                    probes[i * 3 + 2] = startPos.Z + z;
-                                    i++;
+                                    if (i * 3 + 2 > probecount) break;
+
+                                    if (api.World.Rand.NextDouble() > 0.9999 && InsideRadius(rad, x, y, z) && !InsideRadius(rad - 1, x, y, z))
+                                    {
+                                        //bA.SetBlock(710, startPos.AddCopy(x, y, z));
+                                        probes[i * 3 + 0] = startPos.X + x;
+                                        probes[i * 3 + 1] = startPos.Y + y;
+                                        probes[i * 3 + 2] = startPos.Z + z;
+                                        i++;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Vec3d fromPos = new Vec3d(startPos.X, startPos.Y, startPos.Z);
+                        Vec3d fromPos = new Vec3d(startPos.X, startPos.Y, startPos.Z);
 
-                    Vec3d toPos = new Vec3d();
+                        Vec3d toPos = new Vec3d();
 
-                    List<BlockSelection> blockIntercepts = new List<BlockSelection>();
-                    List<EntitySelection> entityIntercepts = new List<EntitySelection>();
+                        List<BlockSelection> blockIntercepts = new List<BlockSelection>();
+                        List<EntitySelection> entityIntercepts = new List<EntitySelection>();
 
-                    for (int j = 0; j < i / 3; j++)
-                    {
-                        toPos.X = probes[j * 3 + 0];
-                        toPos.Y = probes[j * 3 + 1];
-                        toPos.Z = probes[j * 3 + 2];
-
-                        var dist = GameMath.Sqrt(fromPos.SquareDistanceTo(toPos.X, toPos.Y, toPos.Z));
-                        if (dist > radius) continue;
-
-                        var blockIntercept = new BlockSelection();
-                        var entityIntercept = new EntitySelection();
-
-                        var dir1 = toPos.SubCopy(fromPos);
-
-                        var ray1 = new Ray()
+                        for (int j = 0; j < i / 3; j++)
                         {
-                            origin = fromPos,
-                            dir = dir1
-                        };
+                            toPos.X = probes[j * 3 + 0];
+                            toPos.Y = probes[j * 3 + 1];
+                            toPos.Z = probes[j * 3 + 2];
 
-                        api.World.RayTraceForSelection(ray1, ref blockIntercept, ref entityIntercept);
+                            var dist = GameMath.Sqrt(fromPos.SquareDistanceTo(toPos.X, toPos.Y, toPos.Z));
+                            if (dist > rad) continue;
 
-                        if (blockIntercept != null && !blockIntercepts.Any(p => p.Position.Equals(blockIntercept.Position))) blockIntercepts.Add(blockIntercept);
-                        if (entityIntercept != null && !entityIntercepts.Any(p => p.Position.Equals(entityIntercept.Position))) entityIntercepts.Add(entityIntercept);
-                    }
+                            var blockIntercept = new BlockSelection();
+                            var entityIntercept = new EntitySelection();
 
-                    var ember = bA.GetBlock(new AssetLocation("game:ember"));
+                            var dir1 = fromPos.SubCopy(toPos);
 
-                    foreach (var bs in blockIntercepts)
-                    {
-                        var block = api.World.BlockAccessor.GetBlock(bs.Position);
+                            var ray1 = new Ray()
+                            {
+                                origin = fromPos,
+                                dir = dir1
+                            };
+                            
+                            api.World.RayTraceForSelection(ray1, ref blockIntercept, ref entityIntercept);
 
-                        if (block.Id != 0)
+                            if (blockIntercept != null && !blockIntercepts.Any(p => p.Position.Equals(blockIntercept.Position))) blockIntercepts.Add(blockIntercept);
+                            if (entityIntercept != null && !entityIntercepts.Any(p => p.Position.Equals(entityIntercept.Position))) entityIntercepts.Add(entityIntercept);
+                        }
+
+                        var ember = bA.GetBlock(new AssetLocation("game:ember"));
+
+                        foreach (var bs in blockIntercepts)
                         {
-                            bA.SetBlock(ember.Id, bs.Position);
-                            if (api.World.Rand.NextDouble() > 0.9) block.OnBlockExploded(api.World, bs.Position, startPos, EnumBlastType.RockBlast);
+                            var block = api.World.BlockAccessor.GetBlock(bs.Position);
+
+                            if (block.Id != 0)
+                            {
+                                bA.SetBlock(0, bs.Position);
+                                bA.TriggerNeighbourBlockUpdate(bs.Position);
+                                if (api.World.Rand.NextDouble() > 0.99) block.OnBlockExploded(api.World, bs.Position, startPos, EnumBlastType.RockBlast);
+                                sploded++;
+                            }
+                        }
+
+                        bA.Commit();
+
+                        foreach (var entitySel in entityIntercepts)
+                        {
+                            entitySel.Entity?.ReceiveDamage(new DamageSource(), 50.0f / sploded);
                             sploded++;
                         }
+                        splode++;
                     }
-
-                    bA.Commit();
-
-                    foreach (var entitySel in entityIntercepts)
+                    else
                     {
-                        entitySel.Entity?.ReceiveDamage(new DamageSource(), 50.0f / sploded);
-                        sploded++;
+                        api.Event.UnregisterGameTickListener(id);
                     }
-                }
+                },
+                1);
                 
             });
         }
@@ -124,7 +135,6 @@ namespace WorldGenTests
             return (x * x + y * y + z * z) <= (rad * rad);
         }
     }
-    */
 
     public class TestMod : ModSystem
     {
@@ -144,11 +154,11 @@ namespace WorldGenTests
         public override void StartServerSide(ICoreServerAPI api)
         {
             this.api = api;
-            //api.Event.InitWorldGenerator(Init, "standard");
-            //api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
-            //api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
+            api.Event.InitWorldGenerator(Init, "standard");
+            api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
+            api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
 
-            //api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
+            api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
 
         Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
@@ -296,14 +306,16 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 128, 64, 32.0);
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 256, 64, 32.0);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
                     Data = OreVeinLayer.GenLayer(
-                        regionX * regionSize,
-                        regionZ * regionSize,
+                        regionX * 32,
+                        regionZ * 32,
+                        32,
+                        32,
                         regionSize,
                         regionSize
                     ),
@@ -340,6 +352,9 @@ namespace WorldGenTests
 
     public class MapLayerOreVeins : MapLayerBase
     {
+        Type mlBlurT = Assembly.GetAssembly(typeof(MapLayerBase)).GetTypes().Where(t => t.Name == "MapLayerBlur").Single();
+        object mlBlurInst;
+
         NormalizedSimplexNoise noisegenA, noisegenR, noisegenG, noisegenB;
         double ridgedMul;
 
@@ -348,6 +363,7 @@ namespace WorldGenTests
 
         public MapLayerOreVeins(long seed, int octaves, float persistence, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 2.0) : base(seed)
         {
+            mlBlurInst = AccessTools.CreateInstance(mlBlurT);
             this.ridgedMul = ridgedMul;
 
             noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
@@ -360,6 +376,8 @@ namespace WorldGenTests
 
         public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 2.0) : base(seed)
         {
+            mlBlurInst = AccessTools.CreateInstance(mlBlurT);
+
             this.ridgedMul = ridgedMul;
 
             noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
@@ -466,6 +484,70 @@ namespace WorldGenTests
             int rgba = b | g << 8 | r << 16 | a << 24;
 
             return inverse ? ~rgba : rgba;
+        }
+
+        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeX, int sizeZ)
+        {
+            int smallSize = (sizeXSmall + sizeZSmall) / 2;
+            int largeSize = (sizeX + sizeZ) / 2;
+            int step = largeSize / smallSize / 2;
+
+            IntDataMap2D smallData = new IntDataMap2D(){
+                Data = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2),
+                Size = smallSize,
+                BottomRightPadding = 0,
+                TopLeftPadding = 0
+            };
+            
+            int[] largeData = new int[sizeX * sizeZ];
+
+            for (int z = 0; z < sizeZ; ++z)
+            {
+                for (int x = 0; x < sizeX; ++x)
+                {
+                    int pX = (int)(((float)x / sizeX) * smallSize);
+                    int pZ = (int)(((float)z / sizeZ) * smallSize);
+
+                    int oreCenter = smallData.GetInt(pX, pZ);
+                    largeData[z * sizeZ + x] = oreCenter;
+                }
+            }
+
+
+
+            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, smallSize, 0, 0, sizeX, sizeZ);
+            mlBlurInst.CallMethod("BoxBlurVertical", largeData, smallSize, 0, 0, sizeX, sizeZ);
+
+            return largeData;
+        }
+
+        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, int step)
+        {
+            int[] outData = new int[sizeX * sizeZ / step];
+
+            int? li = null;
+            for (int z = 0; z < sizeZ; ++z)
+            {
+                for (int x = 0; x < sizeX; ++x)
+                {
+                    int flags = 0b10001;
+                    int ssX = sizeX / step;
+                    int ssZ = sizeZ / step;
+
+                    int lx = (int)(((float)x / sizeX) * ssX);
+                    int lz = (int)(((float)z / sizeZ) * ssZ);
+
+                    int li2 = lz * ssX + lx;
+
+                    if (li2 == li) continue;
+                    
+                    li = li2;
+
+                    outData[li ?? 0] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
+                }
+            }
+
+            return outData;
         }
 
         public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
