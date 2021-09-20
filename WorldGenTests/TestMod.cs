@@ -513,8 +513,6 @@ namespace WorldGenTests
                 }
             }
 
-
-
             mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, smallSize, 0, 0, sizeX, sizeZ);
             mlBlurInst.CallMethod("BoxBlurVertical", largeData, smallSize, 0, 0, sizeX, sizeZ);
 
