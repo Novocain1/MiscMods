@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -157,15 +159,13 @@ namespace WorldGenTests
             api.Event.InitWorldGenerator(Init, "standard");
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
-
-            api.RegisterCommand("veinmap", "", "", (a, b, c) => DebugRGBMap(api, a));
         }
 
         Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
 
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
-            var veinMaps = chunks[0].MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("VeinMaps");
+            var veinMaps = chunks[0].MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
             var oreMaps = chunks[0].MapChunk.MapRegion.OreMaps;
 
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
@@ -270,10 +270,11 @@ namespace WorldGenTests
             }
         }
 
-        public void DebugRGBMap(ICoreServerAPI api, IServerPlayer player)
+        public void DebugRGBMap(ICoreServerAPI api, IMapRegion mapRegion, int regionX, int regionZ)
         {
-            var chunk = api.WorldManager.GetChunk(player.Entity.ServerPos.AsBlockPos);
-            var veinMaps = chunk.MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("VeinMaps");
+            var path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps"));
+            var veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
+
             foreach (var vein in veinMaps)
             {
                 IntDataMap2D veinMap = vein.Value;
@@ -286,7 +287,11 @@ namespace WorldGenTests
                         bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
                     }
                 }
-                bmp.Save(string.Format("noise {0}.png", vein.Key), ImageFormat.Png);
+                Directory.CreateDirectory(Path.Combine(path.FullName, vein.Key.UcFirst()));
+
+                string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
+
+                bmp.Save(pt, ImageFormat.Png);
             }
         }
 
@@ -312,10 +317,10 @@ namespace WorldGenTests
                 IntDataMap2D data = new IntDataMap2D()
                 {
                     Data = OreVeinLayer.GenLayer(
-                        regionX * 32,
-                        regionZ * 32,
-                        32,
-                        32,
+                        regionX * regionSize,
+                        regionZ * regionSize,
+                        64,
+                        64,
                         regionSize,
                         regionSize
                     ),
@@ -328,7 +333,11 @@ namespace WorldGenTests
                 i++;
             }
 
-            mapRegion.SetModdata("VeinMaps", maps);
+            mapRegion.SetModdata("veinmaps", maps);
+
+#if DEBUG
+            DebugRGBMap(api, mapRegion, regionX, regionZ);
+#endif
         }
 
         public override void Dispose()
@@ -513,9 +522,10 @@ namespace WorldGenTests
                 }
             }
 
-            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, smallSize, 0, 0, sizeXLarge, sizeZLarge);
-            mlBlurInst.CallMethod("BoxBlurVertical", largeData, smallSize, 0, 0, sizeXLarge, sizeZLarge);
-
+            
+            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, largeSize / smallSize, 0, 0, sizeXLarge, sizeZLarge);
+            mlBlurInst.CallMethod("BoxBlurVertical", largeData, largeSize / smallSize, 0, 0, sizeXLarge, sizeZLarge);
+            
             return largeData;
         }
 
