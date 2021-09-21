@@ -486,10 +486,10 @@ namespace WorldGenTests
             return inverse ? ~rgba : rgba;
         }
 
-        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeX, int sizeZ)
+        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge)
         {
             int smallSize = (sizeXSmall + sizeZSmall) / 2;
-            int largeSize = (sizeX + sizeZ) / 2;
+            int largeSize = (sizeXLarge + sizeZLarge) / 2;
             int step = largeSize / smallSize / 2;
 
             IntDataMap2D smallData = new IntDataMap2D(){
@@ -499,22 +499,22 @@ namespace WorldGenTests
                 TopLeftPadding = 0
             };
             
-            int[] largeData = new int[sizeX * sizeZ];
+            int[] largeData = new int[sizeXLarge * sizeZLarge];
 
-            for (int z = 0; z < sizeZ; ++z)
+            for (int z = 0; z < sizeZLarge; ++z)
             {
-                for (int x = 0; x < sizeX; ++x)
+                for (int x = 0; x < sizeXLarge; ++x)
                 {
-                    int pX = (int)(((float)x / sizeX) * smallSize);
-                    int pZ = (int)(((float)z / sizeZ) * smallSize);
+                    int pX = (int)(((float)x / sizeXLarge) * smallSize);
+                    int pZ = (int)(((float)z / sizeZLarge) * smallSize);
 
                     int oreCenter = smallData.GetInt(pX, pZ);
-                    largeData[z * sizeZ + x] = oreCenter;
+                    largeData[z * sizeZLarge + x] = oreCenter;
                 }
             }
 
-            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, smallSize, 0, 0, sizeX, sizeZ);
-            mlBlurInst.CallMethod("BoxBlurVertical", largeData, smallSize, 0, 0, sizeX, sizeZ);
+            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, smallSize, 0, 0, sizeXLarge, sizeZLarge);
+            mlBlurInst.CallMethod("BoxBlurVertical", largeData, smallSize, 0, 0, sizeXLarge, sizeZLarge);
 
             return largeData;
         }
