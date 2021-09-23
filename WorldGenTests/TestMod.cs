@@ -272,27 +272,32 @@ namespace WorldGenTests
 
         public void DebugRGBMap(ICoreServerAPI api, IMapRegion mapRegion, int regionX, int regionZ)
         {
-            var path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps"));
-            var veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
-
-            foreach (var vein in veinMaps)
+            var t = new Task(() =>
             {
-                IntDataMap2D veinMap = vein.Value;
+                var path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps", api.World.Seed.ToString()));
+                var veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
 
-                Bitmap bmp = new Bitmap(veinMap.Size, veinMap.Size);
-                for (int x = 0; x < veinMap.Size; x++)
+                foreach (var vein in veinMaps)
                 {
-                    for (int y = 0; y < veinMap.Size; y++)
+                    IntDataMap2D veinMap = vein.Value;
+
+                    Bitmap bmp = new Bitmap(veinMap.Size, veinMap.Size);
+                    for (int x = 0; x < veinMap.Size; x++)
                     {
-                        bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
+                        for (int y = 0; y < veinMap.Size; y++)
+                        {
+                            bmp.SetPixel(x, y, Color.FromArgb(veinMap.GetInt(x, y)));
+                        }
                     }
+                    Directory.CreateDirectory(Path.Combine(path.FullName, vein.Key.UcFirst()));
+
+                    string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
+
+                    bmp.Save(pt, ImageFormat.Png);
                 }
-                Directory.CreateDirectory(Path.Combine(path.FullName, vein.Key.UcFirst()));
-
-                string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
-
-                bmp.Save(pt, ImageFormat.Png);
-            }
+            });
+            
+            t.Start();
         }
 
         private void Init()
@@ -332,7 +337,7 @@ namespace WorldGenTests
                 maps[val.Key] = data;
                 i++;
             }
-
+            
             mapRegion.SetModdata("veinmaps", maps);
 
 #if DEBUG
@@ -499,33 +504,26 @@ namespace WorldGenTests
         {
             int smallSize = (sizeXSmall + sizeZSmall) / 2;
             int largeSize = (sizeXLarge + sizeZLarge) / 2;
+            
             int step = largeSize / smallSize / 2;
 
-            IntDataMap2D smallData = new IntDataMap2D(){
-                Data = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2),
-                Size = smallSize,
-                BottomRightPadding = 0,
-                TopLeftPadding = 0
-            };
-            
-            int[] largeData = new int[sizeXLarge * sizeZLarge];
+            int[] smallData = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2);
+            int[] largeData = new int[largeSize * largeSize];
 
-            for (int z = 0; z < sizeZLarge; ++z)
+            for (int z = 0; z < largeSize; ++z)
             {
-                for (int x = 0; x < sizeXLarge; ++x)
+                for (int x = 0; x < largeSize; ++x)
                 {
-                    int pX = (int)(((float)x / sizeXLarge) * smallSize);
-                    int pZ = (int)(((float)z / sizeZLarge) * smallSize);
+                    int pX = (int)(((float)x / largeSize) * smallSize);
+                    int pZ = (int)(((float)z / largeSize) * smallSize);
 
-                    int oreCenter = smallData.GetInt(pX, pZ);
-                    largeData[z * sizeZLarge + x] = oreCenter;
+                    largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
                 }
             }
+            
+            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
+            mlBlurInst.CallMethod("BoxBlurVertical", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
 
-            
-            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, largeSize / smallSize, 0, 0, sizeXLarge, sizeZLarge);
-            mlBlurInst.CallMethod("BoxBlurVertical", largeData, largeSize / smallSize, 0, 0, sizeXLarge, sizeZLarge);
-            
             return largeData;
         }
 
