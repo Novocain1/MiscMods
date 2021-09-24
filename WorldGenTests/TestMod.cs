@@ -214,7 +214,7 @@ namespace WorldGenTests
 
                         float oreMapRel = ((oreMapInt & ~0xFF00FF) >> 8) / 15f;
 
-                        if (veinRRel > 0.85f)
+                        if (veinRRel > 0.0f)
                         {
                             int y = (int)(veinGRel * heightY);
 
@@ -272,7 +272,7 @@ namespace WorldGenTests
 
         public void DebugRGBMap(ICoreServerAPI api, IMapRegion mapRegion, int regionX, int regionZ)
         {
-            var t = new Task(() =>
+            TyronThreadPool.QueueTask(() =>
             {
                 var path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps", api.World.Seed.ToString()));
                 var veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
@@ -296,8 +296,6 @@ namespace WorldGenTests
                     bmp.Save(pt, ImageFormat.Png);
                 }
             });
-            
-            t.Start();
         }
 
         private void Init()
