@@ -66,7 +66,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestMod.cs" />
+    <Compile Include="HackMan.cs" />
+    <Compile Include="MapLayerOreVeins.cs" />
+    <Compile Include="NukeTest.cs" />
+    <Compile Include="RegionExtension.cs" />
+    <Compile Include="GenOreVeins.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
