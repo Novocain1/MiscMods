@@ -7,8 +7,8 @@
     <ProjectGuid>{B4DDF362-C630-4A2A-85A9-8C19EC9FD2A6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WorldGenTests</RootNamespace>
-    <AssemblyName>WorldGenTests</AssemblyName>
+    <RootNamespace>OreVeins</RootNamespace>
+    <AssemblyName>OreVeins</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
