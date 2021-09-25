@@ -144,7 +144,7 @@ namespace WorldGenTests
 
         public override double ExecuteOrder()
         {
-            return 0.3;
+            return 0.25;
         }
 
         public override void Start(ICoreAPI api)
@@ -158,7 +158,7 @@ namespace WorldGenTests
             this.api = api;
             api.Event.InitWorldGenerator(Init, "standard");
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
-            api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
+            api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.TerrainFeatures, "standard");
         }
 
         private Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
@@ -213,11 +213,11 @@ namespace WorldGenTests
 
                         float oreMapRel = ((oreMapInt & ~0xFF00FF) >> 8) / 15f;
 
-                        if (veinRRel > 0.0f)
+                        if (veinRRel > 0.85f)
                         {
                             int y = (int)(veinGRel * heightY);
 
-                            int depth = (int)(veinARel * 4);
+                            int depth = (int)(veinARel * 4) + 1;
 
                             for (int dy = -depth; dy < depth; dy++)
                             {
@@ -252,16 +252,32 @@ namespace WorldGenTests
                                             }
                                         }
 
-                                        if (y + dy == y + depth && oreMapRel > 0.0f)
+                                        if (dy == 0)
                                         {
                                             //gen surface deposits
+
+                                            if (surfaceBlockByInBlockId?.ContainsKey(blockId) ?? false)
+                                            {
+                                                if (heightY < api.WorldManager.MapSizeY && veinBRel > 0.5f)
+                                                {
+                                                    Block belowBlock = api.World.Blocks[chunks[heightY / chunksize].Blocks[((heightY % chunksize) * chunksize + z) * chunksize + x]];
+
+                                                    index3d = (((heightY + 1) % chunksize) * chunksize + z) * chunksize + x;
+                                                    if (belowBlock.SideSolid[BlockFacing.UP.Index] && chunks[(heightY + 1) / chunksize].Blocks[index3d] == 0)
+                                                    {
+                                                        chunks[(heightY + 1) / chunksize].Blocks[index3d] = surfaceBlockByInBlockId[blockId].Blocks[0].BlockId;
+#if DEBUG
+                                                        //so I can see it better when debugging
+                                                        index3d = (heightY % chunksize * chunksize + z) * chunksize + x;
+                                                        chunks[heightY / chunksize].Blocks[index3d] = 1;
+#endif
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
                         }
                     }
                 }
@@ -290,7 +306,7 @@ namespace WorldGenTests
                     Directory.CreateDirectory(Path.Combine(path.FullName, vein.Key.UcFirst()));
 
                     string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
-
+                    
                     bmp.Save(pt, ImageFormat.Png);
 #if DEBUG
                     break;
