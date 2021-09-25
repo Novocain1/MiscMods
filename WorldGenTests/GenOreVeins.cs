@@ -18,7 +18,9 @@ namespace WorldGenTests
         private Harmony harmony;
         private ICoreServerAPI api;
 
-        private const string patchCode = "Novocain.ModSystem.TestMod";
+        private const string patchCode = "Novocain.ModSystem.GenOreVeins";
+
+        public override bool ShouldLoad(EnumAppSide forSide) => forSide == EnumAppSide.Server;
 
         public override double ExecuteOrder()
         {

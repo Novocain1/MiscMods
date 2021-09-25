@@ -36,8 +36,8 @@ using Vintagestory.API.Common;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: ModInfo("WorldGenTests",
-    Description = "",
-    Side = "Universal",
+[assembly: ModInfo("Infinite Ore Veins",
+    Description = "Adds infinite ore veins to the world with little regard for game balance!",
+    Side = "Server",
     Authors = new[] { "Novocain" },
     Version = "1.0.0")]

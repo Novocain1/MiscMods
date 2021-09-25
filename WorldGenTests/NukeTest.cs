@@ -6,6 +6,7 @@ using Vintagestory.API.Server;
 
 namespace WorldGenTests
 {
+    /*
     public class NukeTest : ModSystem
     {
         public override void StartServerSide(ICoreServerAPI api)
@@ -126,4 +127,5 @@ namespace WorldGenTests
             return (x * x + y * y + z * z) <= (rad * rad);
         }
     }
+    */
 }
