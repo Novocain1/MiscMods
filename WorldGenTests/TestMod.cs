@@ -6,8 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
@@ -91,7 +89,7 @@ namespace WorldGenTests
                                 origin = fromPos,
                                 dir = dir1
                             };
-                            
+
                             api.World.RayTraceForSelection(ray1, ref blockIntercept, ref entityIntercept);
 
                             if (blockIntercept != null && !blockIntercepts.Any(p => p.Position.Equals(blockIntercept.Position))) blockIntercepts.Add(blockIntercept);
@@ -128,7 +126,6 @@ namespace WorldGenTests
                     }
                 },
                 1);
-                
             });
         }
 
@@ -140,12 +137,15 @@ namespace WorldGenTests
 
     public class TestMod : ModSystem
     {
-        Harmony harmony;
-        ICoreServerAPI api;
+        private Harmony harmony;
+        private ICoreServerAPI api;
 
-        const string patchCode = "Novocain.ModSystem.TestMod";
+        private const string patchCode = "Novocain.ModSystem.TestMod";
 
-        public override double ExecuteOrder() { return 0.3; }
+        public override double ExecuteOrder()
+        {
+            return 0.3;
+        }
 
         public override void Start(ICoreAPI api)
         {
@@ -161,7 +161,7 @@ namespace WorldGenTests
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.Terrain, "standard");
         }
 
-        Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
+        private Dictionary<string, DepositVariant> DepositByCode = new Dictionary<string, DepositVariant>();
 
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
@@ -169,7 +169,7 @@ namespace WorldGenTests
             var oreMaps = chunks[0].MapChunk.MapRegion.OreMaps;
 
             ushort[] heightMap = chunks[0].MapChunk.RainHeightMap;
-            
+
             int chunksize = api.World.BlockAccessor.ChunkSize;
 
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
@@ -204,13 +204,12 @@ namespace WorldGenTests
                         float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
                         float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
                         float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
-                        
+
                         int oreUpLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep));
                         int oreUpRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep));
                         int oreBotLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep + oreStep));
                         int oreBotRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep + oreStep));
                         uint oreMapInt = (uint)GameMath.BiLerp(oreUpLeft, oreUpRight, oreBotLeft, oreBotRight, (float)x / chunksize, (float)z / chunksize);
-
 
                         float oreMapRel = ((oreMapInt & ~0xFF00FF) >> 8) / 15f;
 
@@ -226,7 +225,7 @@ namespace WorldGenTests
                                 {
                                     int chunkY = (y + dy) / chunksize;
                                     int lY = (y + dy) % chunksize;
-                                    
+
                                     int index3d = (chunksize * lY + z) * chunksize + x;
                                     int blockId = chunks[chunkY].Blocks[index3d];
                                     if (placeBlockByInBlockId?.ContainsKey(blockId) ?? false)
@@ -252,7 +251,7 @@ namespace WorldGenTests
                                                 }
                                             }
                                         }
-                                        
+
                                         if (y + dy == y + depth && oreMapRel > 0.0f)
                                         {
                                             //gen surface deposits
@@ -263,14 +262,13 @@ namespace WorldGenTests
                         }
                         else
                         {
-
                         }
                     }
                 }
             }
         }
 
-        public void DebugRGBMap(ICoreServerAPI api, IMapRegion mapRegion, int regionX, int regionZ)
+        public void DebugVeinMaps(ICoreServerAPI api, IMapRegion mapRegion, int regionX, int regionZ)
         {
             TyronThreadPool.QueueTask(() =>
             {
@@ -294,6 +292,9 @@ namespace WorldGenTests
                     string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
 
                     bmp.Save(pt, ImageFormat.Png);
+#if DEBUG
+                    break;
+#endif
                 }
             });
         }
@@ -335,11 +336,11 @@ namespace WorldGenTests
                 maps[val.Key] = data;
                 i++;
             }
-            
+
             mapRegion.SetModdata("veinmaps", maps);
 
 #if DEBUG
-            DebugRGBMap(api, mapRegion, regionX, regionZ);
+            DebugVeinMaps(api, mapRegion, regionX, regionZ);
 #endif
         }
 
@@ -364,14 +365,14 @@ namespace WorldGenTests
 
     public class MapLayerOreVeins : MapLayerBase
     {
-        Type mlBlurT = Assembly.GetAssembly(typeof(MapLayerBase)).GetTypes().Where(t => t.Name == "MapLayerBlur").Single();
-        object mlBlurInst;
+        private Type mlBlurT = Assembly.GetAssembly(typeof(MapLayerBase)).GetTypes().Where(t => t.Name == "MapLayerBlur").Single();
+        private object mlBlurInst;
 
-        NormalizedSimplexNoise noisegenA, noisegenR, noisegenG, noisegenB;
-        double ridgedMul;
+        private NormalizedSimplexNoise noisegenA, noisegenR, noisegenG, noisegenB;
+        private double ridgedMul;
 
-        float multiplier;
-        double[] thresholds;
+        private float multiplier;
+        private double[] thresholds;
 
         public MapLayerOreVeins(long seed, int octaves, float persistence, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 2.0) : base(seed)
         {
@@ -400,7 +401,6 @@ namespace WorldGenTests
             this.multiplier = multiplier;
             this.thresholds = thresholds;
         }
-
 
         public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
         {
@@ -502,7 +502,7 @@ namespace WorldGenTests
         {
             int smallSize = (sizeXSmall + sizeZSmall) / 2;
             int largeSize = (sizeXLarge + sizeZLarge) / 2;
-            
+
             int step = largeSize / smallSize / 2;
 
             int[] smallData = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2);
@@ -518,7 +518,7 @@ namespace WorldGenTests
                     largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
                 }
             }
-            
+
             mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
             mlBlurInst.CallMethod("BoxBlurVertical", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
 
@@ -544,7 +544,7 @@ namespace WorldGenTests
                     int li2 = lz * ssX + lx;
 
                     if (li2 == li) continue;
-                    
+
                     li = li2;
 
                     outData[li ?? 0] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
@@ -581,8 +581,6 @@ namespace WorldGenTests
                 }
             }
 
-
-
             return outData;
         }
 
@@ -610,7 +608,6 @@ namespace WorldGenTests
         {
             if (__result != 0)
             {
-
             }
         }
     }
@@ -618,8 +615,11 @@ namespace WorldGenTests
     public static class HackMan
     {
         public static T GetField<T>(this object instance, string fieldname) => (T)AccessTools.Field(instance.GetType(), fieldname)?.GetValue(instance);
+
         public static T GetProperty<T>(this object instance, string fieldname) => (T)AccessTools.Property(instance.GetType(), fieldname)?.GetValue(instance);
+
         public static object CreateInstance(this Type type) => AccessTools.CreateInstance(type);
+
         public static T[] GetFields<T>(this object instance)
         {
             List<T> fields = new List<T>();
@@ -634,7 +634,9 @@ namespace WorldGenTests
         public static void SetField(this object instance, string fieldname, object setVal) => AccessTools.Field(instance.GetType(), fieldname).SetValue(instance, setVal);
 
         public static void CallMethod(this object instance, string method) => instance?.CallMethod(method, null);
+
         public static void CallMethod(this object instance, string method, params object[] args) => instance?.CallMethod<object>(method, args);
+
         public static T CallMethod<T>(this object instance, string method) => (T)instance.CallMethod<object>(method, null);
 
         public static T CallMethod<T>(this object instance, string method, params object[] args)
@@ -652,6 +654,7 @@ namespace WorldGenTests
         }
 
         public static MethodInfo GetMethod(this object instance, string method, params Type[] parameters) => instance.GetMethod(method, parameters, null);
+
         public static MethodInfo GetMethod(this object instance, string method, Type[] parameters = null, Type[] generics = null) => AccessTools.Method(instance.GetType(), method, parameters, generics);
     }
 }
