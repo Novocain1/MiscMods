@@ -323,8 +323,6 @@ namespace WorldGenTests
                     Data = OreVeinLayer.GenLayer(
                         regionX * regionSize,
                         regionZ * regionSize,
-                        64,
-                        64,
                         regionSize,
                         regionSize
                     ),
@@ -404,7 +402,10 @@ namespace WorldGenTests
 
         public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
         {
+            bool inverse = (flags & 0b10000) > 0;
+
             double nR, nG, nB, nA;
+            nR = nG = nB = nA = inverse ? 1 : 0;
 
             double nRX = xCoord + x;
             double nRZ = zCoord + z;
@@ -414,28 +415,145 @@ namespace WorldGenTests
             double nBZ = zCoord + z;
             double nAX = xCoord + x;
             double nAZ = zCoord + z;
+            
+            int onCol = flags >> 5;
 
             if (thresholds != null)
             {
-                nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                switch (onCol)
+                {
+                    case 1:
+                        nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        if ((inverse && nA < 1) || (!inverse && nA > 0))
+                        {
+                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 2:
+                        nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        if ((inverse && nR < 1) || (!inverse && nR > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 3:
+                        nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        if ((inverse && nG < 1) || (!inverse && nG > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 4:
+                        nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        if ((inverse && nB < 1) || (!inverse && nB > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        }
+                        break;
+                    default:
+                        nA = noisegenA.Noise(nAX, nAZ, thresholds);
+                        nR = noisegenR.Noise(nRX, nRZ, thresholds);
+                        nG = noisegenG.Noise(nGX, nGZ, thresholds);
+                        nB = noisegenB.Noise(nBX, nBZ, thresholds);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        break;
+                }
             }
             else
             {
-                nA = noisegenA.Noise(nAX, nAZ);
-                nR = noisegenR.Noise(nRX, nRZ);
-                nG = noisegenG.Noise(nGX, nGZ);
-                nB = noisegenB.Noise(nBX, nBZ);
+                switch (onCol)
+                {
+                    case 1:
+                        nA = noisegenA.Noise(nAX, nAZ);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        if ((inverse && nA < 1) || (!inverse && nA > 0))
+                        {
+                            nR = noisegenR.Noise(nRX, nRZ);
+                            nG = noisegenG.Noise(nGX, nGZ);
+                            nB = noisegenB.Noise(nBX, nBZ);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 2:
+                        nR = noisegenR.Noise(nRX, nRZ);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        if ((inverse && nR < 1) || (!inverse && nR > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ);
+                            nG = noisegenG.Noise(nGX, nGZ);
+                            nB = noisegenB.Noise(nBX, nBZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 3:
+                        nG = noisegenG.Noise(nGX, nGZ);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        if ((inverse && nG < 1) || (!inverse && nG > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ);
+                            nR = noisegenR.Noise(nRX, nRZ);
+                            nB = noisegenB.Noise(nBX, nBZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        }
+                        break;
+                    case 4:
+                        nB = noisegenB.Noise(nBX, nBZ);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        if ((inverse && nB < 1) || (!inverse && nB > 0))
+                        {
+                            nA = noisegenA.Noise(nAX, nAZ);
+                            nR = noisegenR.Noise(nRX, nRZ);
+                            nG = noisegenG.Noise(nGX, nGZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        }
+                        break;
+                    default:
+                        nA = noisegenA.Noise(nAX, nAZ);
+                        nR = noisegenR.Noise(nRX, nRZ);
+                        nG = noisegenG.Noise(nGX, nGZ);
+                        nB = noisegenB.Noise(nBX, nBZ);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        break;
+                }
             }
-
-            bool inverse = (flags & 0b10000) > 0;
-
-            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
-            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
 
             byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
             byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
@@ -519,9 +637,6 @@ namespace WorldGenTests
                 }
             }
 
-            mlBlurInst.CallMethod("BoxBlurHorizontal", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
-            mlBlurInst.CallMethod("BoxBlurVertical", largeData, step, 0, 0, sizeXLarge, sizeZLarge);
-
             return largeData;
         }
 
@@ -534,7 +649,7 @@ namespace WorldGenTests
             {
                 for (int x = 0; x < sizeX; ++x)
                 {
-                    int flags = 0b10001;
+                    int flags = 0b1010001;
                     int ssX = sizeX / step;
                     int ssZ = sizeZ / step;
 
@@ -564,7 +679,7 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        int flags = 0b10001;
+                        int flags = 0b1010001;
                         outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
@@ -575,7 +690,7 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        int flags = 0b10001;
+                        int flags = 0b1010001;
                         outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
