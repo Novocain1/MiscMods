@@ -40,4 +40,4 @@ using Vintagestory.API.Common;
     Description = "Adds infinite ore veins to the world with little regard for game balance!",
     Side = "Server",
     Authors = new[] { "Novocain" },
-    Version = "1.0.0")]
+    Version = "1.0.1")]
