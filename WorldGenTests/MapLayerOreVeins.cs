@@ -2,17 +2,95 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Vintagestory.API.Client;
 using Vintagestory.API.MathTools;
 using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
+    public class FractalNoise : NormalizedSimplexNoise
+    {
+        public FractalNoise(double[] inputAmplitudes, double[] frequencies, long seed) : base(inputAmplitudes, frequencies, seed)
+        {
+        }
+
+        public static new FractalNoise FromDefaultOctaves(int quantityOctaves, double baseFrequency, double persistence, long seed)
+        {
+            double[] frequencies = new double[quantityOctaves];
+            double[] amplitudes = new double[quantityOctaves];
+
+            for (int i = 0; i < quantityOctaves; i++)
+            {
+                frequencies[i] = Math.Pow(2, i) * baseFrequency;
+                amplitudes[i] = Math.Pow(persistence, i);
+            }
+
+            return new FractalNoise(amplitudes, frequencies, seed);
+        }
+
+        readonly double[] mat = new double[]
+        {
+                1.6,  1.2,
+                -1.2,  1.6
+        };
+
+        public double FractalFromNoise(double x, double y)
+        {
+            double ox = x, oy = y;
+
+            double f = 0.5000 * Noise(x, y);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+            ox = x;
+            oy = y;
+
+            f += 0.2500 * Noise(x, y);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+            ox = x;
+            oy = y;
+
+            f += 0.1250 * Noise(x, y);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+
+            f += 0.0625 * Noise(x, y);
+
+            return f;
+        }
+
+        public double FractalFromNoise(double x, double y, double[] amplitudes)
+        {
+            double ox = x, oy = y;
+
+            double f = 0.5000 * Noise(x, y, amplitudes);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+            ox = x;
+            oy = y;
+
+            f += 0.2500 * Noise(x, y, amplitudes);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+            ox = x;
+            oy = y;
+
+            f += 0.1250 * Noise(x, y, amplitudes);
+            x = (mat[0] * ox + mat[1] * oy);
+            y = (mat[2] * ox + mat[3] * oy);
+
+            f += 0.0625 * Noise(x, y);
+
+            return f;
+        }
+    }
+
     public class MapLayerOreVeins : MapLayerBase
     {
         private Type mlBlurT = Assembly.GetAssembly(typeof(MapLayerBase)).GetTypes().Where(t => t.Name == "MapLayerBlur").Single();
         private object mlBlurInst;
 
-        private NormalizedSimplexNoise noisegenA, noisegenR, noisegenG, noisegenB;
+        private FractalNoise noisegenA, noisegenR, noisegenG, noisegenB;
         private double ridgedMul;
 
         private float multiplier;
@@ -23,10 +101,10 @@ namespace WorldGenTests
             mlBlurInst = AccessTools.CreateInstance(mlBlurT);
             this.ridgedMul = ridgedMul;
 
-            noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
-            noisegenR = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
-            noisegenG = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
-            noisegenB = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
+            noisegenA = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
+            noisegenR = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
+            noisegenG = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
+            noisegenB = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
 
             this.multiplier = multiplier;
         }
@@ -37,10 +115,10 @@ namespace WorldGenTests
 
             this.ridgedMul = ridgedMul;
 
-            noisegenA = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
-            noisegenR = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
-            noisegenG = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
-            noisegenB = NormalizedSimplexNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
+            noisegenA = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleA, persistence, seed + 7312654);
+            noisegenR = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
+            noisegenG = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
+            noisegenB = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
 
             this.multiplier = multiplier;
             this.thresholds = thresholds;
@@ -69,66 +147,66 @@ namespace WorldGenTests
                 switch (onCol)
                 {
                     case 1:
-                        nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        nA = noisegenA.FractalFromNoise(nAX, nAZ, thresholds);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
                         if ((inverse && nA < 1) || (!inverse && nA > 0))
                         {
-                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ, thresholds);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ, thresholds);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ, thresholds);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 2:
-                        nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        nR = noisegenR.FractalFromNoise(nRX, nRZ, thresholds);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
                         if ((inverse && nR < 1) || (!inverse && nR > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ, thresholds);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ, thresholds);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 3:
-                        nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        nG = noisegenG.FractalFromNoise(nGX, nGZ, thresholds);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
                         if ((inverse && nG < 1) || (!inverse && nG > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                            nB = noisegenB.Noise(nBX, nBZ, thresholds);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ, thresholds);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ, thresholds);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 4:
-                        nB = noisegenB.Noise(nBX, nBZ, thresholds);
-                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        nB = noisegenB.FractalFromNoise(nBX, nBZ, thresholds);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         if ((inverse && nB < 1) || (!inverse && nB > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                            nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                            nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ, thresholds);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ, thresholds);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ, thresholds);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     default:
-                        nA = noisegenA.Noise(nAX, nAZ, thresholds);
-                        nR = noisegenR.Noise(nRX, nRZ, thresholds);
-                        nG = noisegenG.Noise(nGX, nGZ, thresholds);
-                        nB = noisegenB.Noise(nBX, nBZ, thresholds);
-                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        nA = noisegenA.FractalFromNoise(nAX, nAZ, thresholds);
+                        nR = noisegenR.FractalFromNoise(nRX, nRZ, thresholds);
+                        nG = noisegenG.FractalFromNoise(nGX, nGZ, thresholds);
+                        nB = noisegenB.FractalFromNoise(nBX, nBZ, thresholds);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         break;
                 }
             }
@@ -137,66 +215,66 @@ namespace WorldGenTests
                 switch (onCol)
                 {
                     case 1:
-                        nA = noisegenA.Noise(nAX, nAZ);
-                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
+                        nA = noisegenA.FractalFromNoise(nAX, nAZ);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
                         if ((inverse && nA < 1) || (!inverse && nA > 0))
                         {
-                            nR = noisegenR.Noise(nRX, nRZ);
-                            nG = noisegenG.Noise(nGX, nGZ);
-                            nB = noisegenB.Noise(nBX, nBZ);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ);
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 2:
-                        nR = noisegenR.Noise(nRX, nRZ);
-                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
+                        nR = noisegenR.FractalFromNoise(nRX, nRZ);
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
                         if ((inverse && nR < 1) || (!inverse && nR > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ);
-                            nG = noisegenG.Noise(nGX, nGZ);
-                            nB = noisegenB.Noise(nBX, nBZ);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 3:
-                        nG = noisegenG.Noise(nGX, nGZ);
-                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                        nG = noisegenG.FractalFromNoise(nGX, nGZ);
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
                         if ((inverse && nG < 1) || (!inverse && nG > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ);
-                            nR = noisegenR.Noise(nRX, nRZ);
-                            nB = noisegenB.Noise(nBX, nBZ);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ);
+                            nB = noisegenB.FractalFromNoise(nBX, nBZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     case 4:
-                        nB = noisegenB.Noise(nBX, nBZ);
-                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        nB = noisegenB.FractalFromNoise(nBX, nBZ);
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         if ((inverse && nB < 1) || (!inverse && nB > 0))
                         {
-                            nA = noisegenA.Noise(nAX, nAZ);
-                            nR = noisegenR.Noise(nRX, nRZ);
-                            nG = noisegenG.Noise(nGX, nGZ);
-                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
+                            nA = noisegenA.FractalFromNoise(nAX, nAZ);
+                            nR = noisegenR.FractalFromNoise(nRX, nRZ);
+                            nG = noisegenG.FractalFromNoise(nGX, nGZ);
+                            if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                            if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
                         }
                         break;
                     default:
-                        nA = noisegenA.Noise(nAX, nAZ);
-                        nR = noisegenR.Noise(nRX, nRZ);
-                        nG = noisegenG.Noise(nGX, nGZ);
-                        nB = noisegenB.Noise(nBX, nBZ);
-                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * ridgedMul);
-                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * ridgedMul);
-                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * ridgedMul);
-                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * ridgedMul);
+                        nA = noisegenA.FractalFromNoise(nAX, nAZ);
+                        nR = noisegenR.FractalFromNoise(nRX, nRZ);
+                        nG = noisegenG.FractalFromNoise(nGX, nGZ);
+                        nB = noisegenB.FractalFromNoise(nBX, nBZ);
+                        if ((flags & 0b01000) > 0) nA = Math.Abs((nA - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
+                        if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
                         break;
                 }
             }
@@ -231,17 +309,17 @@ namespace WorldGenTests
 
                 if (thresholds != null)
                 {
-                    nRt = noisegenR.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
-                    nGt = noisegenG.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
-                    nBt = noisegenB.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
-                    nAt = noisegenA.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
+                    nRt = noisegenR.FractalFromNoise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
+                    nGt = noisegenG.FractalFromNoise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
+                    nBt = noisegenB.FractalFromNoise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
+                    nAt = noisegenA.FractalFromNoise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
                 }
                 else
                 {
-                    nRt = noisegenR.Noise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
-                    nGt = noisegenG.Noise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
-                    nBt = noisegenB.Noise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
-                    nAt = noisegenA.Noise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
+                    nRt = noisegenR.FractalFromNoise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
+                    nGt = noisegenG.FractalFromNoise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
+                    nBt = noisegenB.FractalFromNoise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
+                    nAt = noisegenA.FractalFromNoise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
                 }
 
                 nR += (flags & 0b00001) > 0 ? Math.Abs((nRt * depth - 0.5) * 2.0) / depth : nRt;
