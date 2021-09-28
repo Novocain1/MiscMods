@@ -17,6 +17,7 @@ namespace WorldGenTests
     {
         private Harmony harmony;
         private ICoreServerAPI api;
+        LCGRandom rand = new LCGRandom();
 
         private const string patchCode = "Novocain.ModSystem.GenOreVeins";
 
@@ -36,6 +37,7 @@ namespace WorldGenTests
         public override void StartServerSide(ICoreServerAPI api)
         {
             this.api = api;
+            rand.SetWorldSeed(api.World.Seed + 56498846451);
             api.Event.InitWorldGenerator(Init, "standard");
             api.Event.MapRegionGeneration(OnMapRegionGen, "standard");
             api.Event.ChunkColumnGeneration(OnChunkColumnGeneration, EnumWorldGenPass.TerrainFeatures, "standard");
@@ -53,8 +55,15 @@ namespace WorldGenTests
             int chunksize = api.World.BlockAccessor.ChunkSize;
 
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
+            rand.InitPositionSeed(chunkX, chunkZ);
+            int dCx = rand.NextInt(4) - 2;
+            int dCz = rand.NextInt(4) - 2;
+
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
+
+            int rdSx = (chunkX + dCx) % regionChunkSize;
+            int rdSz = (chunkZ + dCz) % regionChunkSize;
 
             foreach (var vein in veinMaps)
             {
@@ -79,11 +88,17 @@ namespace WorldGenTests
                         int heightY = heightMap[z * chunksize + x];
 
                         int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
+                        int surfaceAtPos = veinMap.GetInt((int)(rdSx * veinStep + x), (int)(rdSz * veinStep + z));
 
                         float veinARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
                         float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
                         float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
                         float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
+
+                        float surfaceARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
+                        float surfaceRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
+                        float surfaceGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
+                        float surfaceBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
 
                         int oreUpLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep));
                         int oreUpRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep));
@@ -134,27 +149,38 @@ namespace WorldGenTests
 
                                         if (dy == 0)
                                         {
-                                            //gen surface deposits
 
-                                            if (surfaceBlockByInBlockId?.ContainsKey(blockId) ?? false)
-                                            {
-                                                if (heightY < api.WorldManager.MapSizeY && veinBRel > 0.5f)
-                                                {
-                                                    Block belowBlock = api.World.Blocks[chunks[heightY / chunksize].Blocks[((heightY % chunksize) * chunksize + z) * chunksize + x]];
-
-                                                    index3d = (((heightY + 1) % chunksize) * chunksize + z) * chunksize + x;
-                                                    if (belowBlock.SideSolid[BlockFacing.UP.Index] && chunks[(heightY + 1) / chunksize].Blocks[index3d] == 0)
-                                                    {
-                                                        chunks[(heightY + 1) / chunksize].Blocks[index3d] = surfaceBlockByInBlockId[blockId].Blocks[0].BlockId;
-#if DEBUG
-                                                        //so I can see it better when debugging
-                                                        index3d = (heightY % chunksize * chunksize + z) * chunksize + x;
-                                                        chunks[heightY / chunksize].Blocks[index3d] = 1;
-#endif
-                                                    }
-                                                }
-                                            }
                                         }
+                                    }
+                                }
+                            }
+                        }
+                        if (surfaceRRel > 0.85)
+                        {
+                            //gen surface deposits
+                            int y = (int)(veinGRel * heightY);
+
+                            int chunkY = y / chunksize;
+                            int lY = y % chunksize;
+
+                            int index3d = (chunksize * lY + z) * chunksize + x;
+                            int blockId = chunks[chunkY].Blocks[index3d];
+
+                            if (surfaceBlockByInBlockId?.ContainsKey(blockId) ?? false)
+                            {
+                                if (heightY < api.WorldManager.MapSizeY && veinBRel > 0.5f)
+                                {
+                                    Block belowBlock = api.World.Blocks[chunks[heightY / chunksize].Blocks[((heightY % chunksize) * chunksize + z) * chunksize + x]];
+
+                                    index3d = (((heightY + 1) % chunksize) * chunksize + z) * chunksize + x;
+                                    if (belowBlock.SideSolid[BlockFacing.UP.Index] && chunks[(heightY + 1) / chunksize].Blocks[index3d] == 0)
+                                    {
+                                        chunks[(heightY + 1) / chunksize].Blocks[index3d] = surfaceBlockByInBlockId[blockId].Blocks[0].BlockId;
+#if DEBUG
+                                        //so I can see it better when debugging
+                                        index3d = (heightY % chunksize * chunksize + z) * chunksize + x;
+                                        chunks[heightY / chunksize].Blocks[index3d] = 1;
+#endif
                                     }
                                 }
                             }
