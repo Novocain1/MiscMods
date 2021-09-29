@@ -126,7 +126,6 @@ namespace WorldGenTests
             bool inverse = (flags & 0b10000) > 0;
 
             double nR, nG, nB, nA;
-            nR = nG = nB = nA = 0.0;
 
             double nRX = xCoord + x;
             double nRZ = zCoord + z;
@@ -372,13 +371,13 @@ namespace WorldGenTests
         public virtual int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, int step)
         {
             int[] outData = new int[sizeX * sizeZ / step];
+            int flags = 0b1010001;
 
             int? li = null;
             for (int z = 0; z < sizeZ; ++z)
             {
                 for (int x = 0; x < sizeX; ++x)
                 {
-                    int flags = 0b1010001;
                     int ssX = sizeX / step;
                     int ssZ = sizeZ / step;
 
@@ -401,6 +400,8 @@ namespace WorldGenTests
         public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
         {
             int[] outData = new int[sizeX * sizeZ];
+            
+            int flags = 0b1010001;
 
             if (thresholds != null)
             {
@@ -408,7 +409,6 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        int flags = 0b1010001;
                         outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }
@@ -419,7 +419,6 @@ namespace WorldGenTests
                 {
                     for (int x = 0; x < sizeX; ++x)
                     {
-                        int flags = 0b1010001;
                         outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
                     }
                 }

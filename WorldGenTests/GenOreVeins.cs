@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -55,15 +56,9 @@ namespace WorldGenTests
             int chunksize = api.World.BlockAccessor.ChunkSize;
 
             int regionChunkSize = api.WorldManager.RegionSize / chunksize;
-            rand.InitPositionSeed(chunkX, chunkZ);
-            int dCx = rand.NextInt(4) - 2;
-            int dCz = rand.NextInt(4) - 2;
 
             int rdx = chunkX % regionChunkSize;
             int rdz = chunkZ % regionChunkSize;
-
-            int rdSx = (chunkX + dCx) % regionChunkSize;
-            int rdSz = (chunkZ + dCz) % regionChunkSize;
 
             foreach (var vein in veinMaps)
             {
@@ -85,20 +80,26 @@ namespace WorldGenTests
                 {
                     for (int z = 0; z < chunksize; z++)
                     {
+                        rand.InitPositionSeed(chunkX + x, chunkZ + z);
+                        int dCx = rand.NextInt(8) - 4;
+                        int dCz = rand.NextInt(8) - 4;
+
                         int heightY = heightMap[z * chunksize + x];
 
                         int veinAtPos = veinMap.GetInt((int)(rdx * veinStep + x), (int)(rdz * veinStep + z));
-                        int surfaceAtPos = veinMap.GetInt((int)(rdSx * veinStep + x), (int)(rdSz * veinStep + z));
+                        int surfaceAtPos = veinMap.GetInt((int)GameMath.Clamp(rdx * veinStep + (x + dCx), 0, veinMap.Size - 1), (int)GameMath.Clamp(rdz * veinStep + (z + dCz), 0, veinMap.Size - 1));
+                        
+                        if (veinAtPos == 0 && surfaceAtPos == 0) continue;
 
                         float veinARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
                         float veinRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
                         float veinGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
                         float veinBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
 
-                        float surfaceARel = (((uint)veinAtPos & ~0x00FFFFFF) >> 24) / 255f;
-                        float surfaceRRel = (((uint)veinAtPos & ~0xFF00FFFF) >> 16) / 255f;
-                        float surfaceGRel = (((uint)veinAtPos & ~0xFFFF00FF) >> 08) / 255f;
-                        float surfaceBRel = (((uint)veinAtPos & ~0xFFFFFF00) >> 00) / 255f;
+                        float surfaceARel = (((uint)surfaceAtPos & ~0x00FFFFFF) >> 24) / 255f;
+                        float surfaceRRel = (((uint)surfaceAtPos & ~0xFF00FFFF) >> 16) / 255f;
+                        float surfaceGRel = (((uint)surfaceAtPos & ~0xFFFF00FF) >> 08) / 255f;
+                        float surfaceBRel = (((uint)surfaceAtPos & ~0xFFFFFF00) >> 00) / 255f;
 
                         int oreUpLeft = oreMap.GetUnpaddedInt((int)(rdx * oreStep), (int)(rdz * oreStep));
                         int oreUpRight = oreMap.GetUnpaddedInt((int)(rdx * oreStep + oreStep), (int)(rdz * oreStep));
@@ -146,11 +147,6 @@ namespace WorldGenTests
                                                 }
                                             }
                                         }
-
-                                        if (dy == 0)
-                                        {
-
-                                        }
                                     }
                                 }
                             }
@@ -170,9 +166,9 @@ namespace WorldGenTests
                             {
                                 if (heightY < api.WorldManager.MapSizeY && veinBRel > 0.5f)
                                 {
-                                    Block belowBlock = api.World.Blocks[chunks[heightY / chunksize].Blocks[((heightY % chunksize) * chunksize + z) * chunksize + x]];
+                                    Block belowBlock = api.World.Blocks[chunks[heightY / chunksize].Blocks[(heightY % chunksize * chunksize + z) * chunksize + x]];
 
-                                    index3d = (((heightY + 1) % chunksize) * chunksize + z) * chunksize + x;
+                                    index3d = ((heightY + 1) % chunksize * chunksize + z) * chunksize + x;
                                     if (belowBlock.SideSolid[BlockFacing.UP.Index] && chunks[(heightY + 1) / chunksize].Blocks[index3d] == 0)
                                     {
                                         chunks[(heightY + 1) / chunksize].Blocks[index3d] = surfaceBlockByInBlockId[blockId].Blocks[0].BlockId;
@@ -237,7 +233,7 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 512, 256, 64, 8.0, 0.20);
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 2048, 256, 64, 16.0, 0.20);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()
@@ -245,6 +241,8 @@ namespace WorldGenTests
                     Data = OreVeinLayer.GenLayer(
                         regionX * regionSize,
                         regionZ * regionSize,
+                        128,
+                        128,
                         regionSize,
                         regionSize
                     ),
@@ -255,6 +253,9 @@ namespace WorldGenTests
 
                 maps[val.Key] = data;
                 i++;
+#if DEBUG
+                api.Logger.StoryEvent(Math.Round(((float)i / mapRegion.OreMaps.Count) * 100, 2).ToString());
+#endif
             }
 
             mapRegion.SetModdata("veinmaps", maps);
