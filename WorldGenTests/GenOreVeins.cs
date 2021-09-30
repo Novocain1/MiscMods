@@ -48,6 +48,8 @@ namespace WorldGenTests
 
         private void OnChunkColumnGeneration(IServerChunk[] chunks, int chunkX, int chunkZ, ITreeAttribute chunkGenParams = null)
         {
+            int seaLevel = api.World.SeaLevel;
+
             var veinMaps = chunks[0].MapChunk.MapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
             var oreMaps = chunks[0].MapChunk.MapRegion.OreMaps;
 
@@ -109,11 +111,11 @@ namespace WorldGenTests
 
                         float oreMapRel = ((oreMapInt & ~0xFF00FF) >> 8) / 15f;
 
-                        if (veinRRel > 0.85f)
+                        if (veinRRel > 0.0)
                         {
-                            int y = (int)(veinGRel * heightY);
+                            int y = (int)(veinGRel * api.WorldManager.MapSizeY);
 
-                            int depth = (int)(veinARel * 4) + 1;
+                            int depth = (int)(veinRRel * 10) + 1;
 
                             for (int dy = -depth; dy < depth; dy++)
                             {
@@ -211,7 +213,7 @@ namespace WorldGenTests
                     
                     bmp.Save(pt, ImageFormat.Png);
 #if DEBUG
-                    break;
+                    //break;
 #endif
                 }
             });
@@ -233,19 +235,12 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 2048, 256, 64, 16.0, 0.20);
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 255, 64, 2048, 1024, 64, 128.0, 0.99);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
-                    Data = OreVeinLayer.GenLayer(
-                        regionX * regionSize,
-                        regionZ * regionSize,
-                        128,
-                        128,
-                        regionSize,
-                        regionSize
-                    ),
+                    Data = OreVeinLayer.GenLayer(regionX * regionSize, regionZ * regionSize, 128, 128, regionSize, regionSize, 0b1010001),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0

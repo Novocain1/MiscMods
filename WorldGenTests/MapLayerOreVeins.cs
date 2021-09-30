@@ -39,20 +39,20 @@ namespace WorldGenTests
             double ox = x, oy = y;
 
             double f = 0.5000 * Noise(x, y);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
             ox = x;
             oy = y;
 
             f += 0.2500 * Noise(x, y);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
             ox = x;
             oy = y;
 
             f += 0.1250 * Noise(x, y);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
 
             f += 0.0625 * Noise(x, y);
 
@@ -64,20 +64,20 @@ namespace WorldGenTests
             double ox = x, oy = y;
 
             double f = 0.5000 * Noise(x, y, amplitudes);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
             ox = x;
             oy = y;
 
             f += 0.2500 * Noise(x, y, amplitudes);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
             ox = x;
             oy = y;
 
             f += 0.1250 * Noise(x, y, amplitudes);
-            x = (mat[0] * ox + mat[1] * oy);
-            y = (mat[2] * ox + mat[3] * oy);
+            x = mat[0] * ox + mat[1] * oy;
+            y = mat[2] * ox + mat[3] * oy;
 
             f += 0.0625 * Noise(x, y);
 
@@ -344,22 +344,22 @@ namespace WorldGenTests
             return inverse ? ~rgba : rgba;
         }
 
-        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge)
+        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags)
         {
             int smallSize = (sizeXSmall + sizeZSmall) / 2;
             int largeSize = (sizeXLarge + sizeZLarge) / 2;
 
             int step = largeSize / smallSize / 2;
 
-            int[] smallData = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2);
+            int[] smallData = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2, flags);
             int[] largeData = new int[largeSize * largeSize];
 
             for (int z = 0; z < largeSize; ++z)
             {
                 for (int x = 0; x < largeSize; ++x)
                 {
-                    int pX = (int)(((float)x / largeSize) * smallSize);
-                    int pZ = (int)(((float)z / largeSize) * smallSize);
+                    int pX = (int)((float)x / largeSize * smallSize);
+                    int pZ = (int)((float)z / largeSize * smallSize);
 
                     largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
                 }
@@ -368,10 +368,9 @@ namespace WorldGenTests
             return largeData;
         }
 
-        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, int step)
+        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, int step, int flags)
         {
             int[] outData = new int[sizeX * sizeZ / step];
-            int flags = 0b1010001;
 
             int? li = null;
             for (int z = 0; z < sizeZ; ++z)
@@ -381,8 +380,8 @@ namespace WorldGenTests
                     int ssX = sizeX / step;
                     int ssZ = sizeZ / step;
 
-                    int lx = (int)(((float)x / sizeX) * ssX);
-                    int lz = (int)(((float)z / sizeZ) * ssZ);
+                    int lx = (int)((float)x / sizeX * ssX);
+                    int lz = (int)((float)z / sizeZ * ssZ);
 
                     int li2 = lz * ssX + lx;
 
