@@ -240,7 +240,7 @@ namespace WorldGenTests
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
-                    Data = OreVeinLayer.GenLayer(regionX * regionSize, regionZ * regionSize, 128, 128, regionSize, regionSize, 0b1010001),
+                    Data = OreVeinLayer.GenLayerSized(regionX * regionSize, regionZ * regionSize, 128, 128, regionSize, regionSize, 0b1010001),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0

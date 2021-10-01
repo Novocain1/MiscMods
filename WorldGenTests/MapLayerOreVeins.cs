@@ -344,14 +344,38 @@ namespace WorldGenTests
             return inverse ? ~rgba : rgba;
         }
 
-        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags)
+        public virtual int[] GenLayerInterp(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags, int padding = 0)
         {
             int smallSize = (sizeXSmall + sizeZSmall) / 2;
             int largeSize = (sizeXLarge + sizeZLarge) / 2;
 
             int step = largeSize / smallSize / 2;
 
-            int[] smallData = GenLayer(xCoord, zCoord, largeSize, largeSize, step * 2, flags);
+            int[] smallData = GenLayerStepped(xCoord, zCoord, largeSize, largeSize, step * 2, flags, padding);
+            int[] largeData = new int[largeSize * largeSize];
+
+            for (int z = 0; z < largeSize; ++z)
+            {
+                for (int x = 0; x < largeSize; ++x)
+                {
+                    int pX = (int)((float)x / largeSize * smallSize);
+                    int pZ = (int)((float)z / largeSize * smallSize);
+
+                    largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
+                }
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public virtual int[] GenLayerSized(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags)
+        {
+            int smallSize = (sizeXSmall + sizeZSmall) / 2;
+            int largeSize = (sizeXLarge + sizeZLarge) / 2;
+
+            int step = largeSize / smallSize / 2;
+
+            int[] smallData = GenLayerStepped(xCoord, zCoord, largeSize, largeSize, step * 2, flags);
             int[] largeData = new int[largeSize * largeSize];
 
             for (int z = 0; z < largeSize; ++z)
@@ -368,20 +392,23 @@ namespace WorldGenTests
             return largeData;
         }
 
-        public virtual int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, int step, int flags)
+        public virtual int[] GenLayerStepped(int xCoord, int zCoord, int sizeX, int sizeZ, int step, int flags, int padding = 0)
         {
-            int[] outData = new int[sizeX * sizeZ / step];
+            int[] outData = new int[(sizeX + padding) * (sizeZ + padding) / step];
 
             int? li = null;
-            for (int z = 0; z < sizeZ; ++z)
+            for (int z = -padding; z < sizeZ + padding; ++z)
             {
-                for (int x = 0; x < sizeX; ++x)
+                for (int x = -padding; x < sizeX + padding; ++x)
                 {
-                    int ssX = sizeX / step;
-                    int ssZ = sizeZ / step;
+                    int ssX = (sizeX + padding) / step;
+                    int ssZ = (sizeZ + padding) / step;
 
-                    int lx = (int)((float)x / sizeX * ssX);
-                    int lz = (int)((float)z / sizeZ * ssZ);
+                    int xp = x + padding;
+                    int zp = z + padding;
+
+                    int lx = (int)((float)xp / sizeX * ssX);
+                    int lz = (int)((float)zp / sizeZ * ssZ);
 
                     int li2 = lz * ssX + lx;
 
