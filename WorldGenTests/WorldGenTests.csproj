@@ -66,6 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Argb8.cs" />
     <Compile Include="HackMan.cs" />
     <Compile Include="MapLayerOreVeins.cs" />
     <Compile Include="NukeTest.cs" />
