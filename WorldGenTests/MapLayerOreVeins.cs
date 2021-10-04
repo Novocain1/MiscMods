@@ -1,15 +1,24 @@
 ﻿using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Vintagestory.API.Client;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.Server;
 using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
     public class FractalNoise : NormalizedSimplexNoise
     {
+        readonly double[] mat = new double[]
+        {
+                1.6,  1.2,
+                -1.2,  1.6
+        };
+
         public FractalNoise(double[] inputAmplitudes, double[] frequencies, long seed) : base(inputAmplitudes, frequencies, seed)
         {
         }
@@ -27,13 +36,6 @@ namespace WorldGenTests
 
             return new FractalNoise(amplitudes, frequencies, seed);
         }
-
-        readonly double[] mat = new double[]
-        {
-                1.6,  1.2,
-                -1.2,  1.6
-        };
-
         public double FractalFromNoise(double x, double y)
         {
             double ox = x, oy = y;
@@ -87,14 +89,16 @@ namespace WorldGenTests
 
     public class MapLayerOreVeins : MapLayerBase
     {
-        private FractalNoise noisegenA, noisegenR, noisegenG, noisegenB;
-        private double ridgedMul;
-
-        private float multiplier;
-        private double[] thresholds;
         double cullTest;
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
+        private FractalNoise noisegenA, noisegenR, noisegenG, noisegenB;
+        private double ridgedMul;
+        private double[] thresholds;
+
+        Type mblurT = AccessTools.GetTypesFromAssembly(typeof(MapLayerBase).Assembly).Where(t => t.Name == "MapLayerBlur").Single();
+        object mblurInst;
+
+        public MapLayerOreVeins(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
             this.ridgedMul = ridgedMul;
             this.cullTest = cullTest;
@@ -103,11 +107,10 @@ namespace WorldGenTests
             noisegenR = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
             noisegenG = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
             noisegenB = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
-
-            this.multiplier = multiplier;
+            mblurInst = AccessTools.CreateInstance(mblurT);
         }
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int multiplier, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
+        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
             this.ridgedMul = ridgedMul;
             this.cullTest = cullTest;
@@ -116,9 +119,152 @@ namespace WorldGenTests
             noisegenR = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleR, persistence, seed + 5498987);
             noisegenG = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleG, persistence, seed + 2987992);
             noisegenB = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
-
-            this.multiplier = multiplier;
             this.thresholds = thresholds;
+            mblurInst = AccessTools.CreateInstance(mblurT);
+        }
+
+        public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
+        {
+            int[] outData = new int[sizeX * sizeZ];
+
+            int flags = 0b1010001;
+
+            if (thresholds != null)
+            {
+                for (int z = 0; z < sizeZ; ++z)
+                {
+                    for (int x = 0; x < sizeX; ++x)
+                    {
+                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
+                    }
+                }
+            }
+            else
+            {
+                for (int z = 0; z < sizeZ; ++z)
+                {
+                    for (int x = 0; x < sizeX; ++x)
+                    {
+                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
+                    }
+                }
+            }
+
+            return outData;
+        }
+
+        public int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, double[] thresholds)
+        {
+            int[] outData = new int[sizeX * sizeZ];
+
+            for (int z = 0; z < sizeZ; ++z)
+            {
+                for (int x = 0; x < sizeX; ++x)
+                {
+                    int flags = 0b10001;
+                    outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
+                }
+            }
+
+            return outData;
+        }
+
+        LCGRandom rand = new LCGRandom(0);
+
+        public int[] BoxBlur(int[] data, int range, int sizeX, int sizeZ)
+        {
+            mblurInst.CallMethod("BoxBlurHorizontal", data, range, 0, 0, sizeX, sizeZ);
+            mblurInst.CallMethod("BoxBlurVertical", data, range, 0, 0, sizeX, sizeZ);
+            return data;
+        }
+
+        public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusion, int blursize, int padding = 2)
+        {
+            int step = largeSize / smallSize / 2;
+            int paddedSize = largeSize + (padding * 2 * step);
+
+            int[] largeData = new int[largeSize * largeSize];
+
+            int[] paddedData = GenLayerSized(xCoord - (padding * step), zCoord - (padding * step), smallSize, paddedSize, flags);
+            int[] diffusedData = paddedData;
+
+            //diffusion
+            for (int z = 0; z < paddedSize; ++z)
+            {
+                for (int x = 0; x < paddedSize; ++x)
+                {
+                    int rz = GameMath.Clamp(z + (rand.NextInt(diffusion + 1) - (diffusion / 2)), 0, paddedSize - 1);
+                    int rx = GameMath.Clamp(x + (rand.NextInt(diffusion + 1) - (diffusion / 2)), 0, paddedSize - 1);
+
+                    diffusedData[z * paddedSize + x] = paddedData[rz * paddedSize + rx];
+                }
+            }
+
+            //blur
+            if (blursize > 0) BoxBlur(diffusedData, blursize, paddedSize, paddedSize);
+            
+            //crop
+            IntDataMap2D data = new IntDataMap2D()
+            {
+                BottomRightPadding = padding * 2 * step,
+                TopLeftPadding = padding * 2 * step,
+                Data = diffusedData,
+                Size = paddedSize
+            };
+
+            for (int z = 0; z < largeSize; ++z)
+            {
+                for (int x = 0; x < largeSize; ++x)
+                {
+                    largeData[z * largeSize + x] = data.GetUnpaddedInt(x, z);
+                }
+            }
+
+            return largeData;
+        }
+
+        public virtual int[] GenLayerSized(int xCoord, int zCoord, int smallSize, int largeSize, int flags)
+        {
+            int[] smallData = GenLayerStepped(xCoord, zCoord, smallSize, smallSize, largeSize, largeSize, flags);
+            int[] largeData = new int[largeSize * largeSize];
+
+            for (int z = 0; z < largeSize; ++z)
+            {
+                for (int x = 0; x < largeSize; ++x)
+                {
+                    int pX = (int)((float)x / largeSize * smallSize);
+                    int pZ = (int)((float)z / largeSize * smallSize);
+
+                    largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
+                }
+            }
+
+            return largeData;
+        }
+
+        public virtual int[] GenLayerStepped(int xCoord, int zCoord, int smallX, int smallZ, int sizeX, int sizeZ, int flags)
+        {
+            int[] outData = new int[smallX * smallZ];
+
+            int? li = null;
+            for (int z = 0; z < sizeZ; ++z)
+            {
+                for (int x = 0; x < sizeX; ++x)
+                {
+                    int lx = (int)((float)x / sizeX * smallX);
+                    int lz = (int)((float)z / sizeZ * smallZ);
+
+                    int li2 = lz * smallX + lx;
+
+                    if (li2 == li) continue;
+
+                    li = li2;
+
+                    outData[li ?? 0] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
+                }
+            }
+
+            return outData;
         }
 
         public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
@@ -282,191 +428,10 @@ namespace WorldGenTests
                         break;
                 }
             }
-
-            byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
-            byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
-            byte b = (byte)GameMath.Clamp(multiplier * nB, 0, 255);
-            byte a = (byte)GameMath.Clamp(multiplier * nA, 0, 255);
-
-            int rgba = b | g << 8 | r << 16 | a << 24;
-
-            return inverse ? ~rgba : rgba;
-        }
-
-        public int GetRGBAScribbleNoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null, int depth = 2)
-        {
-            double nR, nG, nB, nA;
-            nR = nG = nB = nA = 0.0;
-
-            double nRX = xCoord + x + 0000000;
-            double nRZ = zCoord + z + 0000000;
-            double nGX = xCoord + x + 5498987;
-            double nGZ = zCoord + z + 5498987;
-            double nBX = xCoord + x + 2987992;
-            double nBZ = zCoord + z + 2987992;
-            double nAX = xCoord + x + 4987462;
-            double nAZ = zCoord + z + 4987462;
-
-            for (int i = 1; i <= depth; i++)
-            {
-                double nRt, nGt, nBt, nAt;
-
-                if (thresholds != null)
-                {
-                    nRt = noisegenR.FractalFromNoise((nRX * i) + (i * 512), (nRZ * i) + (i * 512), thresholds) / depth;
-                    nGt = noisegenG.FractalFromNoise((nGX * i) + (i * 512), (nGZ * i) + (i * 512), thresholds) / depth;
-                    nBt = noisegenB.FractalFromNoise((nBX * i) + (i * 512), (nBZ * i) + (i * 512), thresholds) / depth;
-                    nAt = noisegenA.FractalFromNoise((nAX * i) + (i * 512), (nAZ * i) + (i * 512), thresholds) / depth;
-                }
-                else
-                {
-                    nRt = noisegenR.FractalFromNoise((nRX * i) + (i * 512), (nRZ * i) + (i * 512)) / depth;
-                    nGt = noisegenG.FractalFromNoise((nGX * i) + (i * 512), (nGZ * i) + (i * 512)) / depth;
-                    nBt = noisegenB.FractalFromNoise((nBX * i) + (i * 512), (nBZ * i) + (i * 512)) / depth;
-                    nAt = noisegenA.FractalFromNoise((nAX * i) + (i * 512), (nAZ * i) + (i * 512)) / depth;
-                }
-
-                nR += (flags & 0b00001) > 0 ? Math.Abs((nRt * depth - 0.5) * 2.0) / depth : nRt;
-                nG += (flags & 0b00010) > 0 ? Math.Abs((nGt * depth - 0.5) * 2.0) / depth : nGt;
-                nB += (flags & 0b00100) > 0 ? Math.Abs((nBt * depth - 0.5) * 2.0) / depth : nBt;
-                nA += (flags & 0b01000) > 0 ? Math.Abs((nAt * depth - 0.5) * 2.0) / depth : nAt;
-            }
-
-            bool inverse = (flags & 0b10000) > 0;
-
-            byte r = (byte)GameMath.Clamp(multiplier * nR, 0, 255);
-            byte g = (byte)GameMath.Clamp(multiplier * nG, 0, 255);
-            byte b = (byte)GameMath.Clamp(multiplier * nB, 0, 255);
-            byte a = (byte)GameMath.Clamp(multiplier * nA, 0, 255);
-
-            int rgba = b | g << 8 | r << 16 | a << 24;
-
-            return inverse ? ~rgba : rgba;
-        }
-
-        public virtual int[] GenLayerInterp(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags, int padding = 0)
-        {
-            int smallSize = (sizeXSmall + sizeZSmall) / 2;
-            int largeSize = (sizeXLarge + sizeZLarge) / 2;
-
-            int step = largeSize / smallSize / 2;
-
-            int[] smallData = GenLayerStepped(xCoord, zCoord, largeSize, largeSize, step * 2, flags, padding);
-            int[] largeData = new int[largeSize * largeSize];
-
-            for (int z = 0; z < largeSize; ++z)
-            {
-                for (int x = 0; x < largeSize; ++x)
-                {
-                    int pX = (int)((float)x / largeSize * smallSize);
-                    int pZ = (int)((float)z / largeSize * smallSize);
-
-                    largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
-                }
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public virtual int[] GenLayerSized(int xCoord, int zCoord, int sizeXSmall, int sizeZSmall, int sizeXLarge, int sizeZLarge, int flags)
-        {
-            int smallSize = (sizeXSmall + sizeZSmall) / 2;
-            int largeSize = (sizeXLarge + sizeZLarge) / 2;
-
-            int step = largeSize / smallSize / 2;
-
-            int[] smallData = GenLayerStepped(xCoord, zCoord, largeSize, largeSize, step * 2, flags);
-            int[] largeData = new int[largeSize * largeSize];
-
-            for (int z = 0; z < largeSize; ++z)
-            {
-                for (int x = 0; x < largeSize; ++x)
-                {
-                    int pX = (int)((float)x / largeSize * smallSize);
-                    int pZ = (int)((float)z / largeSize * smallSize);
-
-                    largeData[z * largeSize + x] = smallData[pZ * smallSize + pX];
-                }
-            }
-
-            return largeData;
-        }
-
-        public virtual int[] GenLayerStepped(int xCoord, int zCoord, int sizeX, int sizeZ, int step, int flags, int padding = 0)
-        {
-            int[] outData = new int[(sizeX + padding) * (sizeZ + padding) / step];
-
-            int? li = null;
-            for (int z = -padding; z < sizeZ + padding; ++z)
-            {
-                for (int x = -padding; x < sizeX + padding; ++x)
-                {
-                    int ssX = (sizeX + padding) / step;
-                    int ssZ = (sizeZ + padding) / step;
-
-                    int xp = x + padding;
-                    int zp = z + padding;
-
-                    int lx = (int)((float)xp / sizeX * ssX);
-                    int lz = (int)((float)zp / sizeZ * ssZ);
-
-                    int li2 = lz * ssX + lx;
-
-                    if (li2 == li) continue;
-
-                    li = li2;
-
-                    outData[li ?? 0] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
-                }
-            }
-
-            return outData;
-        }
-
-        public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
-        {
-            int[] outData = new int[sizeX * sizeZ];
             
-            int flags = 0b1010001;
+            Argb8 argb = new Argb8((byte)(nA * 255), (byte)(nR * 255), (byte)(nG * 255), (byte)(nB * 255));
 
-            if (thresholds != null)
-            {
-                for (int z = 0; z < sizeZ; ++z)
-                {
-                    for (int x = 0; x < sizeX; ++x)
-                    {
-                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
-                    }
-                }
-            }
-            else
-            {
-                for (int z = 0; z < sizeZ; ++z)
-                {
-                    for (int x = 0; x < sizeX; ++x)
-                    {
-                        outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
-                    }
-                }
-            }
-
-            return outData;
-        }
-
-        public int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ, double[] thresholds)
-        {
-            int[] outData = new int[sizeX * sizeZ];
-
-            for (int z = 0; z < sizeZ; ++z)
-            {
-                for (int x = 0; x < sizeX; ++x)
-                {
-                    int flags = 0b10001;
-                    outData[z * sizeX + x] = GetRGBANoise(xCoord, x, zCoord, z, flags, thresholds);
-                }
-            }
-
-            return outData;
+            return inverse ? argb.Inverse : argb.Value;
         }
     }
 }
