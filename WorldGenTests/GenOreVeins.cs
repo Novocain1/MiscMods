@@ -237,7 +237,7 @@ namespace WorldGenTests
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
-                    Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0),
+                    Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0, 4, 8),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0

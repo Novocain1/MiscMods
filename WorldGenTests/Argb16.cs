@@ -2,7 +2,23 @@
 {
     internal struct Argb16
     {
-        public long Value;
+        private long val;
+
+        public long Value
+        {
+            get
+            {
+                return val;
+            }
+            set
+            {
+                val = value;
+                a = (short)((val >> 48) & 0xFFFF);
+                r = (short)((val >> 32) & 0xFFFF);
+                g = (short)((val >> 16) & 0xFFFF);
+                b = (short)((val >> 00) & 0xFFFF);
+            }
+        }
         public long Inverse => ~Value;
 
         private short a, r, g, b;
@@ -14,13 +30,13 @@
             this.g = g;
             this.b = b;
 
-            Value = (this.a << 48) | (this.r << 32) | (this.g << 16) | (this.b << 00);
+            val = (this.a << 48) | (this.r << 32) | (this.g << 16) | (this.b << 00);
         }
 
         public Argb16(long value)
         {
             a = r = g = b = 0;
-            Value = value;
+            val = value;
         }
 
         public Argb16(double a, double r, double g, double b)
@@ -30,10 +46,10 @@
             this.g = (short)(g * 65535d);
             this.b = (short)(b * 65535d);
 
-            Value = (this.a << 48) | (this.r << 32) | (this.g << 16) | (this.b << 00);
+            val = (this.a << 48) | (this.r << 32) | (this.g << 16) | (this.b << 00);
         }
 
-        public short A { get => (short)(((ulong)Value & 0xFFFF000000000000) >> 24); set { a = value; SetValue(); } }
+        public short A { get => (short)(((ulong)Value & 0xFFFF000000000000) >> 48); set { a = value; SetValue(); } }
         public double Arel
         {
             get => A / 65535d;
@@ -47,13 +63,13 @@
             set => R = (short)(value * 65535d);
         }
 
-        public short G { get => (short)(((ulong)Value & 0x00000000FFFF0000) >> 08); set { g = value; SetValue(); } }
+        public short G { get => (short)(((ulong)Value & 0x00000000FFFF0000) >> 16); set { g = value; SetValue(); } }
         public double Grel {
             get => G / 65535d;
             set => G = (short)(value * 65535d);
         }
 
-        public short R { get => (short)(((ulong)Value & 0x0000FFFF00000000) >> 16); set { r = value; SetValue(); } }
+        public short R { get => (short)(((ulong)Value & 0x0000FFFF00000000) >> 32); set { r = value; SetValue(); } }
         public double Rrel {
             get => R / 65535d;
             set => B = (short)(value * 65535d);

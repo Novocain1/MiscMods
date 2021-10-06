@@ -2,7 +2,23 @@
 {
     internal struct Argb8
     {
-        public int Value;
+        private int val;
+
+        public int Value 
+        {
+            get
+            {
+                return val;
+            }
+            set
+            {
+                val = value;
+                a = (byte)((val >> 24) & 0xFF);
+                r = (byte)((val >> 16) & 0xFF);
+                g = (byte)((val >> 08) & 0xFF);
+                b = (byte)((val >> 00) & 0xFF);
+            }
+        }
         public int Inverse => ~Value;
         private byte a, r, g, b;
 
@@ -13,13 +29,13 @@
             this.g = g;
             this.b = b;
 
-            Value = (this.a << 24) | (this.r << 16) | (this.g << 08) | (this.b << 00);
+            val = (this.a << 24) | (this.r << 16) | (this.g << 08) | (this.b << 00);
         }
 
         public Argb8(int value)
         {
             a = r = g = b = 0;
-            Value = value;
+            val = value;
         }
 
         public Argb8(float a, float r, float g, float b)
@@ -29,7 +45,7 @@
             this.g = (byte)(g * 255f);
             this.b = (byte)(b * 255f);
 
-            Value = (this.a << 24) | (this.r << 16) | (this.g << 08) | (this.b << 00);
+            val = (this.a << 24) | (this.r << 16) | (this.g << 08) | (this.b << 00);
         }
 
         public byte A { get => (byte)(((uint)Value & 0xFF000000) >> 24); set { a = value; SetValue(); } }
@@ -59,7 +75,7 @@
 
         private void SetValue()
         {
-            Value = (a << 24) | (r << 16) | (g << 08) | (b << 00);
+            val = (a << 24) | (r << 16) | (g << 08) | (b << 00);
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
 using Vintagestory.Server;
 using Vintagestory.ServerMods;
 
@@ -169,8 +170,6 @@ namespace WorldGenTests
             return outData;
         }
 
-        LCGRandom rand = new LCGRandom(0);
-
         public int[] BoxBlur(int[] data, int range, int sizeX, int sizeZ)
         {
             mblurInst.CallMethod("BoxBlurHorizontal", data, range, 0, 0, sizeX, sizeZ);
@@ -178,7 +177,7 @@ namespace WorldGenTests
             return data;
         }
 
-        public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusion, int blursize, int padding = 2)
+        public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusionSize, int blursize, int maxtries = 8, int padding = 2)
         {
             int step = largeSize / smallSize / 2;
             int paddedSize = largeSize + (padding * 2 * step);
@@ -186,23 +185,38 @@ namespace WorldGenTests
             int[] largeData = new int[largeSize * largeSize];
 
             int[] paddedData = GenLayerSized(xCoord - (padding * step), zCoord - (padding * step), smallSize, paddedSize, flags);
-            int[] diffusedData = paddedData;
+            int[] diffusedData = (int[])paddedData.Clone();
 
             //diffusion
             for (int z = 0; z < paddedSize; ++z)
             {
                 for (int x = 0; x < paddedSize; ++x)
                 {
-                    int rz = GameMath.Clamp(z + (rand.NextInt(diffusion + 1) - (diffusion / 2)), 0, paddedSize - 1);
-                    int rx = GameMath.Clamp(x + (rand.NextInt(diffusion + 1) - (diffusion / 2)), 0, paddedSize - 1);
+                    int sample = 0;
 
-                    diffusedData[z * paddedSize + x] = paddedData[rz * paddedSize + rx];
+                    for (int i = 0; sample == 0 && i < maxtries; i++)
+                    {
+                        int rz = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
+                        int rx = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
+
+                        rz -= diffusionSize / 2;
+                        rx -= diffusionSize / 2;
+
+                        rz += z;
+                        rx += x;
+
+                        rz = GameMath.Clamp(rz, 0, paddedSize - 1);
+                        rx = GameMath.Clamp(rx, 0, paddedSize - 1);
+                        sample = paddedData[rz * paddedSize + rx];
+                    }
+
+                    diffusedData[z * paddedSize + x] = sample;
                 }
             }
 
             //blur
             if (blursize > 0) BoxBlur(diffusedData, blursize, paddedSize, paddedSize);
-            
+
             //crop
             IntDataMap2D data = new IntDataMap2D()
             {
