@@ -177,7 +177,7 @@ namespace WorldGenTests
             return data;
         }
 
-        public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusionSize, int blursize, int maxtries = 8, int padding = 2)
+        public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusionSize, int blurSize, int maxTries = 8, int padding = 2)
         {
             int step = largeSize / smallSize / 2;
             int paddedSize = largeSize + (padding * 2 * step);
@@ -194,7 +194,7 @@ namespace WorldGenTests
                 {
                     int sample = 0;
 
-                    for (int i = 0; sample == 0 && i < maxtries; i++)
+                    for (int i = 0; sample == 0 && i < maxTries; i++)
                     {
                         int rz = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
                         int rx = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
@@ -215,7 +215,7 @@ namespace WorldGenTests
             }
 
             //blur
-            if (blursize > 0) BoxBlur(diffusedData, blursize, paddedSize, paddedSize);
+            if (blurSize > 0) BoxBlur(diffusedData, blurSize, paddedSize, paddedSize);
 
             //crop
             IntDataMap2D data = new IntDataMap2D()
