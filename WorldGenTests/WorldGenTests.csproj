@@ -70,7 +70,7 @@
     <Compile Include="Argb8.cs" />
     <Compile Include="FractalNoise.cs" />
     <Compile Include="HackMan.cs" />
-    <Compile Include="MapLayerOreVeins.cs" />
+    <Compile Include="MapLayerFractalARGB.cs" />
     <Compile Include="NukeTest.cs" />
     <Compile Include="RegionExtension.cs" />
     <Compile Include="GenOreVeins.cs" />

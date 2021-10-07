@@ -7,7 +7,7 @@ using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
-    public class MapLayerOreVeins : MapLayerBase
+    public class MapLayerFractalARGB : MapLayerBase
     {
         private double cullTest;
 
@@ -18,7 +18,7 @@ namespace WorldGenTests
         private Type mblurT = AccessTools.GetTypesFromAssembly(typeof(MapLayerBase).Assembly).Where(t => t.Name == "MapLayerBlur").Single();
         private object mblurInst;
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
+        public MapLayerFractalARGB(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
             this.ridgedMul = ridgedMul;
             this.cullTest = cullTest;
@@ -30,7 +30,7 @@ namespace WorldGenTests
             mblurInst = AccessTools.CreateInstance(mblurT);
         }
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
+        public MapLayerFractalARGB(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
             this.ridgedMul = ridgedMul;
             this.cullTest = cullTest;
