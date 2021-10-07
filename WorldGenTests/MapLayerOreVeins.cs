@@ -12,58 +12,6 @@ using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
-    public class FractalNoise : NormalizedSimplexNoise
-    {
-        readonly double[] mat = new double[]
-        {
-                1.6,  1.2,
-                -1.2,  1.6
-        };
-
-        public FractalNoise(double[] inputAmplitudes, double[] frequencies, long seed) : base(inputAmplitudes, frequencies, seed)
-        {
-        }
-
-        public static new FractalNoise FromDefaultOctaves(int quantityOctaves, double baseFrequency, double persistence, long seed)
-        {
-            double[] frequencies = new double[quantityOctaves];
-            double[] amplitudes = new double[quantityOctaves];
-
-            for (int i = 0; i < quantityOctaves; i++)
-            {
-                frequencies[i] = Math.Pow(2, i) * baseFrequency;
-                amplitudes[i] = Math.Pow(persistence, i);
-            }
-
-            return new FractalNoise(amplitudes, frequencies, seed);
-        }
-
-        public new virtual double Noise(double x, double y, double[] amplitudes = null)
-        {
-            double ox = x, oy = y;
-
-            double f = 0.5000 * (amplitudes == null ? base.Noise(x, y) : base.Noise(x, y, amplitudes));
-            x = mat[0] * ox + mat[1] * oy;
-            y = mat[2] * ox + mat[3] * oy;
-            ox = x;
-            oy = y;
-
-            f += 0.2500 * (amplitudes == null ? base.Noise(x, y) : base.Noise(x, y, amplitudes));
-            x = mat[0] * ox + mat[1] * oy;
-            y = mat[2] * ox + mat[3] * oy;
-            ox = x;
-            oy = y;
-
-            f += 0.1250 * (amplitudes == null ? base.Noise(x, y) : base.Noise(x, y, amplitudes));
-            x = mat[0] * ox + mat[1] * oy;
-            y = mat[2] * ox + mat[3] * oy;
-
-            f += 0.0625 * (amplitudes == null ? base.Noise(x, y) : base.Noise(x, y, amplitudes));
-
-            return f;
-        }
-    }
-
     public class MapLayerOreVeins : MapLayerBase
     {
         double cullTest;
@@ -87,7 +35,7 @@ namespace WorldGenTests
             mblurInst = AccessTools.CreateInstance(mblurT);
         }
 
-        public MapLayerOreVeins(long seed, int octaves, float persistence, int scale, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
+        public MapLayerOreVeins(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double[] thresholds, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
             this.ridgedMul = ridgedMul;
             this.cullTest = cullTest;
@@ -257,6 +205,8 @@ namespace WorldGenTests
             return outData;
         }
 
+        Argb8 argb = new Argb8();
+
         public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
         {
             bool inverse = (flags & 0b10000) > 0;
@@ -344,7 +294,10 @@ namespace WorldGenTests
                     break;
             }
 
-            Argb8 argb = new Argb8((byte)(nA * 255), (byte)(nR * 255), (byte)(nG * 255), (byte)(nB * 255));
+            argb.Arel = (float)nA;
+            argb.Rrel = (float)nR;
+            argb.Grel = (float)nG;
+            argb.Brel = (float)nB;
 
             return inverse ? argb.Inverse : argb.Value;
         }

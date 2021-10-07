@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Argb16.cs" />
     <Compile Include="Argb8.cs" />
+    <Compile Include="FractalNoise.cs" />
     <Compile Include="HackMan.cs" />
     <Compile Include="MapLayerOreVeins.cs" />
     <Compile Include="NukeTest.cs" />
