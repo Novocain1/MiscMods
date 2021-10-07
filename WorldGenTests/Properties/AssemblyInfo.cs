@@ -33,11 +33,11 @@ using Vintagestory.API.Common;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.4.0")]
-[assembly: AssemblyFileVersion("1.0.4.0")]
+[assembly: AssemblyVersion("1.0.5.0")]
+[assembly: AssemblyFileVersion("1.0.5.0")]
 
 [assembly: ModInfo("Infinite Ore Veins",
-    Description = "Adds infinite ore veins to the world with little regard for game balance!",
+    Description = "Adds infinite sprawling ore veins to the world with little regard for game balance!",
     Side = "Server",
     Authors = new[] { "Novocain" },
-    Version = "1.0.4")]
+    Version = "1.0.5")]

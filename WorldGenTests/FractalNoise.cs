@@ -5,7 +5,7 @@ namespace WorldGenTests
 {
     public class FractalNoise : NormalizedSimplexNoise
     {
-        readonly double[] mat = new double[]
+        static readonly double[] mat = new double[]
         {
                 1.6,  1.2,
                 -1.2,  1.6

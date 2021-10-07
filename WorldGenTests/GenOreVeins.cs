@@ -232,7 +232,7 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.999);
+                var OreVeinLayer = new MapLayerOreVeins(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.001);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()

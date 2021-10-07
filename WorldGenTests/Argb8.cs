@@ -1,4 +1,6 @@
-﻿namespace WorldGenTests
+﻿using Vintagestory.API.MathTools;
+
+namespace WorldGenTests
 {
     internal struct Argb8
     {
@@ -52,25 +54,25 @@
         public float Arel
         {
             get => A / 255f;
-            set => A = (byte)(value * 255f);
+            set => A = (byte)(GameMath.Clamp(value * 255f, 0, 255));
         }
 
         public byte B { get => (byte)(((uint)Value & 0x000000FF) >> 00); set { b = value; SetValue(); } }
         public float Brel {
             get => B / 255f;
-            set => B = (byte)(value * 255f);
+            set => B = (byte)(GameMath.Clamp(value * 255f, 0, 255));
         }
 
         public byte G { get => (byte)(((uint)Value & 0x0000FF00) >> 08); set { g = value; SetValue(); } }
         public float Grel {
             get => G / 255f;
-            set => G = (byte)(value * 255f);
+            set => G = (byte)(GameMath.Clamp(value * 255f, 0, 255));
         }
 
         public byte R { get => (byte)(((uint)Value & 0x00FF0000) >> 16); set { r = value; SetValue(); } }
         public float Rrel {
             get => R / 255f;
-            set => R = (byte)(value * 255f);
+            set => R = (byte)(GameMath.Clamp(value * 255f, 0, 255));
         }
 
         private void SetValue()

@@ -1,4 +1,6 @@
-﻿namespace WorldGenTests
+﻿using Vintagestory.API.MathTools;
+
+namespace WorldGenTests
 {
     internal struct Argb16
     {
@@ -53,26 +55,26 @@
         public double Arel
         {
             get => A / 65535d;
-            set => A = (short)(value * 65535d);
+            set => A = (short)(GameMath.Clamp(value * 65535d, 0, ushort.MaxValue));
         }
 
         public short B { get => (short)(((ulong)Value & 0x000000000000FFFF) >> 00); set { b = value; SetValue(); } }
         public double Brel
         {
             get => B / 65535d;
-            set => R = (short)(value * 65535d);
+            set => R = (short)(GameMath.Clamp(value * 65535d, 0, ushort.MaxValue));
         }
 
         public short G { get => (short)(((ulong)Value & 0x00000000FFFF0000) >> 16); set { g = value; SetValue(); } }
         public double Grel {
             get => G / 65535d;
-            set => G = (short)(value * 65535d);
+            set => G = (short)(GameMath.Clamp(value * 65535d, 0, ushort.MaxValue));
         }
 
         public short R { get => (short)(((ulong)Value & 0x0000FFFF00000000) >> 32); set { r = value; SetValue(); } }
         public double Rrel {
             get => R / 65535d;
-            set => B = (short)(value * 65535d);
+            set => B = (short)(GameMath.Clamp(value * 65535d, 0, ushort.MaxValue));
         }
 
         private void SetValue()

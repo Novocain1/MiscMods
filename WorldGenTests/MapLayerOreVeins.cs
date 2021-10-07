@@ -1,27 +1,22 @@
 ﻿using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Vintagestory.API.Client;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
-using Vintagestory.Server;
 using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
     public class MapLayerOreVeins : MapLayerBase
     {
-        double cullTest;
+        private double cullTest;
 
         private FractalNoise noisegenA, noisegenR, noisegenG, noisegenB;
         private double ridgedMul;
         private double[] thresholds;
 
-        Type mblurT = AccessTools.GetTypesFromAssembly(typeof(MapLayerBase).Assembly).Where(t => t.Name == "MapLayerBlur").Single();
-        object mblurInst;
+        private Type mblurT = AccessTools.GetTypesFromAssembly(typeof(MapLayerBase).Assembly).Where(t => t.Name == "MapLayerBlur").Single();
+        private object mblurInst;
 
         public MapLayerOreVeins(long seed, int octaves, float persistence, int scaleA, int scaleR, int scaleG, int scaleB, double ridgedMul = 1.0, double cullTest = 0.8) : base(seed)
         {
@@ -112,29 +107,32 @@ namespace WorldGenTests
             int[] diffusedData = (int[])paddedData.Clone();
 
             //diffusion
-            for (int z = 0; z < paddedSize; ++z)
+            if (diffusionSize > 0)
             {
-                for (int x = 0; x < paddedSize; ++x)
+                for (int z = 0; z < paddedSize; ++z)
                 {
-                    int sample = 0;
-
-                    for (int i = 0; sample == 0 && i < maxTries; i++)
+                    for (int x = 0; x < paddedSize; ++x)
                     {
-                        int rz = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
-                        int rx = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
+                        int sample = 0;
 
-                        rz -= diffusionSize / 2;
-                        rx -= diffusionSize / 2;
+                        for (int i = 0; sample == 0 && i < maxTries; i++)
+                        {
+                            int rz = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
+                            int rx = GameMath.oaatHash(x, i + 0, z) % diffusionSize;
 
-                        rz += z;
-                        rx += x;
+                            rz -= diffusionSize / 2;
+                            rx -= diffusionSize / 2;
 
-                        rz = GameMath.Clamp(rz, 0, paddedSize - 1);
-                        rx = GameMath.Clamp(rx, 0, paddedSize - 1);
-                        sample = paddedData[rz * paddedSize + rx];
+                            rz += z;
+                            rx += x;
+
+                            rz = GameMath.Clamp(rz, 0, paddedSize - 1);
+                            rx = GameMath.Clamp(rx, 0, paddedSize - 1);
+                            sample = paddedData[rz * paddedSize + rx];
+                        }
+
+                        diffusedData[z * paddedSize + x] = sample;
                     }
-
-                    diffusedData[z * paddedSize + x] = sample;
                 }
             }
 
@@ -205,7 +203,7 @@ namespace WorldGenTests
             return outData;
         }
 
-        Argb8 argb = new Argb8();
+        private Argb8 argb = new Argb8();
 
         public int GetRGBANoise(int xCoord, int x, int zCoord, int z, int flags = 0, double[] thresholds = null)
         {
@@ -221,8 +219,10 @@ namespace WorldGenTests
             double nBZ = zCoord + z;
             double nAX = xCoord + x;
             double nAZ = zCoord + z;
-            
+
             int onCol = flags >> 5;
+
+            double cullTest = inverse ? 1.0 - this.cullTest : this.cullTest;
 
             switch (onCol)
             {
@@ -240,6 +240,7 @@ namespace WorldGenTests
                     }
                     else nA = nR = nG = nB = inverse ? 1 : 0;
                     break;
+
                 case 2:
                     nR = noisegenR.Noise(nRX, nRZ, thresholds);
                     if ((flags & 0b00001) > 0) nR = Math.Abs((nR - 0.5) * 2) * ridgedMul;
@@ -254,6 +255,7 @@ namespace WorldGenTests
                     }
                     else nA = nR = nG = nB = inverse ? 1 : 0;
                     break;
+
                 case 3:
                     nG = noisegenG.Noise(nGX, nGZ, thresholds);
                     if ((flags & 0b00010) > 0) nG = Math.Abs((nG - 0.5) * 2) * ridgedMul;
@@ -268,6 +270,7 @@ namespace WorldGenTests
                     }
                     else nA = nR = nG = nB = inverse ? 1 : 0;
                     break;
+
                 case 4:
                     nB = noisegenB.Noise(nBX, nBZ, thresholds);
                     if ((flags & 0b00100) > 0) nB = Math.Abs((nB - 0.5) * 2) * ridgedMul;
@@ -282,6 +285,7 @@ namespace WorldGenTests
                     }
                     else nA = nR = nG = nB = inverse ? 1 : 0;
                     break;
+
                 default:
                     nA = noisegenA.Noise(nAX, nAZ, thresholds);
                     nR = noisegenR.Noise(nRX, nRZ, thresholds);
@@ -294,10 +298,10 @@ namespace WorldGenTests
                     break;
             }
 
-            argb.Arel = (float)nA;
-            argb.Rrel = (float)nR;
-            argb.Grel = (float)nG;
-            argb.Brel = (float)nB;
+            argb.A = (byte)(nA * 255);
+            argb.R = (byte)(nR * 255);
+            argb.G = (byte)(nG * 255);
+            argb.B = (byte)(nB * 255);
 
             return inverse ? argb.Inverse : argb.Value;
         }
