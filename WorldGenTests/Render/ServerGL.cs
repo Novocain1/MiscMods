@@ -75,10 +75,15 @@ namespace WorldGenTests
 
         void main(void)
         {
-            outColor.r = 1.0 - (abs(worley5(coords.xy + v_texcoord, 100.0 + coords.z + 1.0) - 0.5) * 2.0);
-            outColor.g = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 2.0);
-            outColor.b = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 3.0);
-            outColor.a = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 4.0);
+            vec3 c = coords / 64.0;
+
+            outColor.r = 1.0 - ((abs(worley5(c.xy + v_texcoord, c.z + 10.0) - 0.5) * 2.0) * 128.0);
+            if (outColor.r > 0)
+            {
+                outColor.g = worley5((c.xy + v_texcoord) * 00.500, c.z + 30.0);
+                outColor.b = worley5((c.xy + v_texcoord) * 02.000, c.z + 70.0);
+                outColor.a = worley5((c.xy + v_texcoord) * 00.020, c.z + 90.0);
+            }
         }
         ";
         const string VertCode = @"
@@ -187,7 +192,7 @@ namespace WorldGenTests
             {
                 for (int x = 0; x < 512; ++x)
                 {
-                    pixels[x * 512 + y] = bmp.GetPixel(x, y).ToArgb();
+                    pixels[y * 512 + x] = bmp.GetPixel(x, y).ToArgb();
                 }
             }
 
@@ -296,12 +301,11 @@ namespace WorldGenTests
 
         private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct)
         {
-            pixels = null;
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             int coords = GL.GetUniformLocation(ProgramID, "coords");
             GL.UseProgram(ProgramID);
-            GL.Uniform3(coords, xCoord / 64, yCoord / 64, zCoord / 64);
+            GL.Uniform3(coords, xCoord, yCoord, zCoord);
             
             RenderScreenQuad();
             

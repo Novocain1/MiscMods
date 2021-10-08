@@ -49,7 +49,9 @@ namespace WorldGenTests
             ServerGL.yCoord = zCoord;
             ServerGL.zCoord = seed;
             ServerGL.snap = true;
-            while (ServerGL.pixels == null) ; ;
+            
+            while (ServerGL.snap) ; ;
+
             return ServerGL.pixels;
         }
 
