@@ -35,6 +35,8 @@ namespace WorldGenTests
         #version 330 core
 
         uniform vec3 coords;
+        uniform vec4 scale;
+        uniform float ridgedmul;
 
         in vec2 v_texcoord;
 
@@ -48,12 +50,12 @@ namespace WorldGenTests
  	        return vec2(hash(n.x*23.62-300.0+n.y*34.35),hash(n.x*45.13+256.0+n.y*38.89)); 
         }
 
-        float worley(vec2 c, float time) {
+        float worley(vec2 c, float seed) {
             float dis = 1.0;
             for(int x = -1; x <= 1; x++)
                 for(int y = -1; y <= 1; y++){
                     vec2 p = floor(c)+vec2(x,y);
-                    vec2 a = hash2(p) * time;
+                    vec2 a = hash2(p) * seed;
                     vec2 rnd = 0.5+sin(a)*0.5;
                     float d = length(rnd+vec2(x,y)-fract(c));
                     dis = min(dis, d);
@@ -61,13 +63,13 @@ namespace WorldGenTests
             return dis;
         }
 
-        float worley5(vec2 c, float time) {
+        float worley5(vec2 c, float seed) {
             float w = 0.0;
             float a = 0.5;
             for (int i = 0; i<5; i++) {
-                w += worley(c, time)*a;
+                w += worley(c, seed)*a;
                 c*=2.0;
-                time*=2.0;
+                seed*=2.0;
                 a*=0.5;
             }
             return w;
@@ -75,15 +77,19 @@ namespace WorldGenTests
 
         void main(void)
         {
-            vec3 c = coords / 64.0;
+            vec3 c = coords;
+            
+            vec2 vR = (c.xy + v_texcoord * 512.0) * scale.r;
+            vec2 vG = (c.xy + v_texcoord * 512.0) * scale.g;
+            vec2 vB = (c.xy + v_texcoord * 512.0) * scale.b;
+            vec2 vA = (c.xy + v_texcoord * 512.0) * scale.a;
 
-            outColor.r = 1.0 - ((abs(worley5(c.xy + v_texcoord, c.z + 10.0) - 0.5) * 2.0) * 128.0);
-            if (outColor.r > 0)
-            {
-                outColor.g = worley5((c.xy + v_texcoord) * 00.500, c.z + 30.0);
-                outColor.b = worley5((c.xy + v_texcoord) * 02.000, c.z + 70.0);
-                outColor.a = worley5((c.xy + v_texcoord) * 00.020, c.z + 90.0);
-            }
+            outColor.r = worley5(vR, c.z + 10.0);
+            outColor.g = worley5(vG, c.z + 30.0);
+            outColor.b = worley5(vB, c.z + 70.0);
+            outColor.a = worley5(vA, c.z + 90.0);
+
+            outColor.r = 1.0 - (abs(outColor.r - 0.5) * 2.0) * ridgedmul;
         }
         ";
         const string VertCode = @"
@@ -173,7 +179,7 @@ namespace WorldGenTests
 
         public static bool snap;
 
-        public static int[] pixels;
+        public static int[] pixels = new int[512 * 512];
 
         public void Snap()
         {
@@ -185,8 +191,6 @@ namespace WorldGenTests
 
             GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
             bmp.UnlockBits(data);
-
-            pixels = new int[512 * 512];
 
             for (int y = 0; y < 512; ++y)
             {
@@ -255,6 +259,10 @@ namespace WorldGenTests
         CancellationTokenSource tokenSource2;
         CancellationToken ct;
 
+        int coords;
+        int scale;
+        int ridgedmul;
+
         public override void StartServerSide(ICoreServerAPI api)
         {
             tokenSource2 = new CancellationTokenSource();
@@ -271,6 +279,10 @@ namespace WorldGenTests
 
                 ScreenQuad = CreateScreenQuad();
                 ProgramID = CreateShaderProgram();
+
+                coords = GL.GetUniformLocation(ProgramID, "coords");
+                scale = GL.GetUniformLocation(ProgramID, "scale");
+                ridgedmul = GL.GetUniformLocation(ProgramID, "ridgedmul");
 
                 ErrorCode err = GL.GetError();
 
@@ -303,10 +315,11 @@ namespace WorldGenTests
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            int coords = GL.GetUniformLocation(ProgramID, "coords");
             GL.UseProgram(ProgramID);
             GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            
+            GL.Uniform4(scale, 0.001f, 0.001f, 0.01f, 0.001f);
+            GL.Uniform1(ridgedmul, 64.0f);
+
             RenderScreenQuad();
             
             GL.UseProgram(0);

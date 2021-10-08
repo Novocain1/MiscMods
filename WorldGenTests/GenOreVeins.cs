@@ -249,7 +249,6 @@ namespace WorldGenTests
 #if DEBUG
                 api.Logger.StoryEvent(Math.Round(((float)i / mapRegion.OreMaps.Count) * 100, 2).ToString());
 #endif
-                ServerGL.pixels = null;
             }
 
             mapRegion.SetModdata("veinmaps", maps);
