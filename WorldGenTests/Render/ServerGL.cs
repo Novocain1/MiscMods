@@ -1,6 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,7 +73,7 @@ namespace WorldGenTests
 
         void main(void)
         {
-	        outColor = vec4(vec3(worley5(coords + (v_texcoord / 50000.0), 100.0)), 0.0);
+	        outColor = vec4(vec3(worley5(coords + v_texcoord, 100.0)), 0.0);
         }
         ";
         const string VertCode = @"
@@ -212,19 +213,23 @@ namespace WorldGenTests
         }
 
         VAO ScreenQuad;
+        
+        CancellationTokenSource tokenSource2;
+        CancellationToken ct;
 
         public override void StartServerSide(ICoreServerAPI api)
         {
+            tokenSource2 = new CancellationTokenSource();
+            ct = tokenSource2.Token;
+
             Context = Task.Run(() =>
             {
-                var tokenSource2 = new CancellationTokenSource();
-                CancellationToken ct = tokenSource2.Token;
-
                 GraphicsMode mode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 24);
                 GameWindowFlags flags = GameWindowFlags.Default | GameWindowFlags.UseVirtualKeys | GameWindowFlags.FixedWindow;
                 OpenTK.WindowState windowstate = OpenTK.WindowState.Normal;
 
                 GameWindowNative gamewindow = new GameWindowNative(mode, flags, 3, 3);
+                gamewindow.VSync = VSyncMode.On;
 
                 ScreenQuad = CreateScreenQuad();
                 ProgramID = CreateShaderProgram();
@@ -236,30 +241,43 @@ namespace WorldGenTests
 #endif
                 gamewindow.WindowState = windowstate;
 
-                gamewindow.RenderFrame += (a, b) => OnRenderFrame(gamewindow, b);
-                gamewindow.Run();
+                gamewindow.RenderFrame += (a, b) => OnRenderFrame(gamewindow, b, ct);
+                
+                try
+                {
+                    gamewindow.Run();
+                }
+                catch (Exception)
+                {
+                }
+                
             });
         }
 
         public override void Dispose()
         {
-
+            tokenSource2.Cancel();
         }
 
-        public static double xCoord, yCoord;
+        public static float xCoord, yCoord;
 
-        private void OnRenderFrame(GameWindowNative window, FrameEventArgs args)
+        private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             int coords = GL.GetUniformLocation(ProgramID, "coords");
             GL.UseProgram(ProgramID);
-            GL.Uniform2(coords, xCoord, yCoord);
+            GL.Uniform2(coords, xCoord / 64, yCoord / 64);
             
             RenderScreenQuad();
             
             GL.UseProgram(0);
             window.SwapBuffers();
+            
+            if (ct.IsCancellationRequested)
+            {
+                window.Dispose();
+            }
         }
 
         private void RenderScreenQuad()
