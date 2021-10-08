@@ -43,6 +43,16 @@ namespace WorldGenTests
             mblurInst = AccessTools.CreateInstance(mblurT);
         }
 
+        public int[] GenLayerGL(int xCoord, int zCoord, int seed)
+        {
+            ServerGL.xCoord = xCoord;
+            ServerGL.yCoord = zCoord;
+            ServerGL.zCoord = seed;
+            ServerGL.snap = true;
+            while (ServerGL.pixels == null) ; ;
+            return ServerGL.pixels;
+        }
+
         public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
         {
             int[] outData = new int[sizeX * sizeZ];

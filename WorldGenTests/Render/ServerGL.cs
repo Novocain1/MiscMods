@@ -3,6 +3,8 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
@@ -32,7 +34,7 @@ namespace WorldGenTests
         const string FragCode = @"
         #version 330 core
 
-        uniform vec2 coords;
+        uniform vec3 coords;
 
         in vec2 v_texcoord;
 
@@ -73,7 +75,10 @@ namespace WorldGenTests
 
         void main(void)
         {
-	        outColor = vec4(vec3(worley5(coords + v_texcoord, 100.0)), 0.0);
+            outColor.r = 1.0 - (abs(worley5(coords.xy + v_texcoord, 100.0 + coords.z + 1.0) - 0.5) * 2.0);
+            outColor.g = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 2.0);
+            outColor.b = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 3.0);
+            outColor.a = worley5(coords.xy + v_texcoord, 100.0 + coords.z + 4.0);
         }
         ";
         const string VertCode = @"
@@ -161,6 +166,34 @@ namespace WorldGenTests
 
         public int ProgramID;
 
+        public static bool snap;
+
+        public static int[] pixels;
+
+        public void Snap()
+        {
+            Bitmap bmp = new Bitmap(512, 512);
+            Rectangle rect = new Rectangle(0, 0, 512, 512);
+
+            System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format32bppArgb;
+            BitmapData data = bmp.LockBits(rect, ImageLockMode.WriteOnly, format);
+
+            GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            bmp.UnlockBits(data);
+
+            pixels = new int[512 * 512];
+
+            for (int y = 0; y < 512; ++y)
+            {
+                for (int x = 0; x < 512; ++x)
+                {
+                    pixels[x * 512 + y] = bmp.GetPixel(x, y).ToArgb();
+                }
+            }
+
+            snap = false;
+        }
+
         public VAO CreateScreenQuad()
         {
             float[] xyz = new float[12];
@@ -224,7 +257,7 @@ namespace WorldGenTests
 
             Context = Task.Run(() =>
             {
-                GraphicsMode mode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 24);
+                GraphicsMode mode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 32);
                 GameWindowFlags flags = GameWindowFlags.Default | GameWindowFlags.UseVirtualKeys | GameWindowFlags.FixedWindow;
                 OpenTK.WindowState windowstate = OpenTK.WindowState.Normal;
 
@@ -259,19 +292,26 @@ namespace WorldGenTests
             tokenSource2.Cancel();
         }
 
-        public static float xCoord, yCoord;
+        public static float xCoord, yCoord, zCoord;
 
         private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct)
         {
+            pixels = null;
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             int coords = GL.GetUniformLocation(ProgramID, "coords");
             GL.UseProgram(ProgramID);
-            GL.Uniform2(coords, xCoord / 64, yCoord / 64);
+            GL.Uniform3(coords, xCoord / 64, yCoord / 64, zCoord / 64);
             
             RenderScreenQuad();
             
             GL.UseProgram(0);
+
+            if (snap)
+            {
+                Snap();
+            }
+
             window.SwapBuffers();
             
             if (ct.IsCancellationRequested)
