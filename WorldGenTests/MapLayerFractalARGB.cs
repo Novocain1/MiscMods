@@ -98,6 +98,9 @@ namespace WorldGenTests
 
         public virtual int[] GenLayerDiffuse(int xCoord, int zCoord, int smallSize, int largeSize, int flags, int diffusionSize, int blurSize, int maxTries = 8, int padding = 2)
         {
+            ServerGL.xCoord = xCoord;
+            ServerGL.yCoord = zCoord;
+
             int step = largeSize / smallSize / 2;
             int paddedSize = largeSize + (padding * 2 * step);
 
