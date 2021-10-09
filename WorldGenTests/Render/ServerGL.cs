@@ -22,9 +22,26 @@ namespace WorldGenTests
     public class VAO
     {
         public int VaoID { get; set; }
+        
         public int VaoSlotNumber { get; set; }
         public int VboIDIndex { get; set; }
         public int IndicesCount { get; set; }
+        public bool Disposed { get; set; }
+
+        public int XyzVboId { get; set; }
+        public int UvVboId { get; set; }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+
+            if (XyzVboId != 0) GL.DeleteBuffer(XyzVboId);
+            if (UvVboId != 0) GL.DeleteBuffer(UvVboId);
+
+            GL.DeleteVertexArray(VaoID);
+
+            Disposed = true;
+        }
     }
 
     public class ServerGL : ModSystem
@@ -79,10 +96,10 @@ namespace WorldGenTests
         {
             vec3 c = coords;
             
-            vec2 vR = (c.xy + v_texcoord * 512.0) * scale.r;
-            vec2 vG = (c.xy + v_texcoord * 512.0) * scale.g;
-            vec2 vB = (c.xy + v_texcoord * 512.0) * scale.b;
-            vec2 vA = (c.xy + v_texcoord * 512.0) * scale.a;
+            vec2 vR = (c.xy + v_texcoord) * scale.r;
+            vec2 vG = (c.xy + v_texcoord) * scale.g;
+            vec2 vB = (c.xy + v_texcoord) * scale.b;
+            vec2 vA = (c.xy + v_texcoord) * scale.a;
 
             outColor.r = worley5(vR, c.z + 10.0);
             outColor.g = worley5(vG, c.z + 30.0);
@@ -181,6 +198,8 @@ namespace WorldGenTests
 
         public static int[] pixels = new int[512 * 512];
 
+        //public static unsafe int[]* pixels;
+
         public void Snap()
         {
             Bitmap bmp = new Bitmap(512, 512);
@@ -250,14 +269,16 @@ namespace WorldGenTests
                 VaoID = vaoID,
                 VaoSlotNumber = vaoSlotNumber,
                 VboIDIndex = vboIdIndex,
-                IndicesCount = 6
+                IndicesCount = 6,
+                XyzVboId = xyzVboId,
+                UvVboId = uvVboId
             };
         }
 
         VAO ScreenQuad;
         
-        CancellationTokenSource tokenSource2;
-        CancellationToken ct;
+        CancellationTokenSource tokenSource0;
+        CancellationToken ct0;
 
         int coords;
         int scale;
@@ -265,9 +286,17 @@ namespace WorldGenTests
 
         public override void StartServerSide(ICoreServerAPI api)
         {
-            tokenSource2 = new CancellationTokenSource();
-            ct = tokenSource2.Token;
+            tokenSource0 = new CancellationTokenSource();
+            ct0 = tokenSource0.Token;
 
+            api.Event.InitWorldGenerator(() =>
+            {
+                CreateContext();
+            }, "standard");
+        }
+
+        public void CreateContext()
+        {
             Context = Task.Run(() =>
             {
                 GraphicsMode mode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 32);
@@ -285,14 +314,19 @@ namespace WorldGenTests
                 ridgedmul = GL.GetUniformLocation(ProgramID, "ridgedmul");
 
                 ErrorCode err = GL.GetError();
-
 #if !DEBUG
                 gamewindow.Visible = false;
 #endif
                 gamewindow.WindowState = windowstate;
 
-                gamewindow.RenderFrame += (a, b) => OnRenderFrame(gamewindow, b, ct);
-                
+                gamewindow.RenderFrame += (a, b) => OnRenderFrame(gamewindow, b, ct0);
+
+                gamewindow.Closed += (a, b) =>
+                {
+                    ScreenQuad.Dispose();
+                    if (ProgramID != 0) GL.DeleteProgram(ProgramID);
+                };
+
                 try
                 {
                     gamewindow.Run();
@@ -300,24 +334,24 @@ namespace WorldGenTests
                 catch (Exception)
                 {
                 }
-                
+
             });
         }
 
         public override void Dispose()
         {
-            tokenSource2.Cancel();
+            tokenSource0.Cancel();
         }
 
         public static float xCoord, yCoord, zCoord;
 
-        private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct)
+        private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct0)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             GL.UseProgram(ProgramID);
             GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            GL.Uniform4(scale, 0.001f, 0.001f, 0.01f, 0.001f);
+            GL.Uniform4(scale, 1.0f, 1.0f, 1.0f, 1.0f);
             GL.Uniform1(ridgedmul, 64.0f);
 
             RenderScreenQuad();
@@ -330,9 +364,10 @@ namespace WorldGenTests
             }
 
             window.SwapBuffers();
-            
-            if (ct.IsCancellationRequested)
+
+            if (ct0.IsCancellationRequested)
             {
+                window.Close();
                 window.Dispose();
             }
         }

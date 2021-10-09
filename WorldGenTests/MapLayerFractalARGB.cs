@@ -1,12 +1,35 @@
 ﻿using HarmonyLib;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
+    public class MapLayerGL : MapLayerBase
+    {
+        long seed;
+        public MapLayerGL(long seed) : base(seed)
+        {
+            this.seed = seed;
+        }
+
+        public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
+        {
+            ServerGL.xCoord = xCoord;
+            ServerGL.yCoord = zCoord;
+            ServerGL.zCoord = (float)seed;
+            ServerGL.snap = true;
+
+            while (ServerGL.snap) ; ;
+
+            return ServerGL.pixels;
+        }
+    }
+
     public class MapLayerFractalARGB : MapLayerBase
     {
         private double cullTest;
@@ -41,18 +64,6 @@ namespace WorldGenTests
             noisegenB = FractalNoise.FromDefaultOctaves(octaves, 1f / scaleB, persistence, seed + 4987462);
             this.thresholds = thresholds;
             mblurInst = AccessTools.CreateInstance(mblurT);
-        }
-
-        public int[] GenLayerGL(int xCoord, int zCoord, int seed)
-        {
-            ServerGL.xCoord = xCoord;
-            ServerGL.yCoord = zCoord;
-            ServerGL.zCoord = seed;
-            ServerGL.snap = true;
-            
-            while (ServerGL.snap) ; ;
-
-            return ServerGL.pixels;
         }
 
         public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
