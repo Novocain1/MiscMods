@@ -200,7 +200,6 @@ namespace WorldGenTests
                         for (int y = 0; y < veinMap.Size; y++)
                         {
                             Argb8 test = new Argb8(veinMap.GetInt(x, y));
-
                             bmp.SetPixel(x, y, Color.FromArgb(test.Value));
                         }
                     }

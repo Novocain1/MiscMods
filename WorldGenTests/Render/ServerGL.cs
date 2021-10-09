@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
@@ -197,25 +198,18 @@ namespace WorldGenTests
         public static bool snap;
 
         public static int[] pixels = new int[512 * 512];
-
-        //public static unsafe int[]* pixels;
+        
+        IntPtr Address;
 
         public void Snap()
         {
-            Bitmap bmp = new Bitmap(512, 512);
-            Rectangle rect = new Rectangle(0, 0, 512, 512);
-
-            System.Drawing.Imaging.PixelFormat format = System.Drawing.Imaging.PixelFormat.Format32bppArgb;
-            BitmapData data = bmp.LockBits(rect, ImageLockMode.WriteOnly, format);
-
-            GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-            bmp.UnlockBits(data);
-
+            GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, Address);
+            
             for (int y = 0; y < 512; ++y)
             {
                 for (int x = 0; x < 512; ++x)
                 {
-                    pixels[y * 512 + x] = bmp.GetPixel(x, y).ToArgb();
+                    pixels[y * 512 + x] = Marshal.ReadInt32(Address, (y * sizeof(int)) * 512 + (x * sizeof(int)));
                 }
             }
 
@@ -297,6 +291,8 @@ namespace WorldGenTests
 
         public void CreateContext()
         {
+            Address = Marshal.AllocHGlobal(sizeof(int) * 512 * sizeof(int) * 512);
+
             Context = Task.Run(() =>
             {
                 GraphicsMode mode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 32);
@@ -341,6 +337,7 @@ namespace WorldGenTests
         public override void Dispose()
         {
             tokenSource0.Cancel();
+            Marshal.FreeHGlobal(Address);
         }
 
         public static float xCoord, yCoord, zCoord;
