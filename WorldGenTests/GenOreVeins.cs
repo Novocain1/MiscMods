@@ -232,7 +232,7 @@ namespace WorldGenTests
             foreach (var val in mapRegion.OreMaps)
             {
                 //var OreVeinLayer = new MapLayerFractalARGB(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.001);
-                var OreVeinLayer = new MapLayerGL(api.World.Seed + i * 100);
+                var OreVeinLayer = new MapLayerGL(api.World.Seed, i);
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()

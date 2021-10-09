@@ -348,7 +348,7 @@ namespace WorldGenTests
 
             GL.UseProgram(ProgramID);
             GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            GL.Uniform4(scale, 1.0f, 1.0f, 1.0f, 1.0f);
+            GL.Uniform4(scale, 0.5f, 0.5f, 0.5f, 0.5f);
             GL.Uniform1(ridgedmul, 64.0f);
 
             RenderScreenQuad();

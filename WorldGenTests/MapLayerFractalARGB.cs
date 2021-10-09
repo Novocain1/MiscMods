@@ -9,26 +9,6 @@ using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
-    public class MapLayerGL : MapLayerBase
-    {
-        long seed;
-        public MapLayerGL(long seed) : base(seed)
-        {
-            this.seed = seed;
-        }
-
-        public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
-        {
-            ServerGL.xCoord = xCoord;
-            ServerGL.yCoord = zCoord;
-            ServerGL.zCoord = (float)seed;
-            ServerGL.snap = true;
-
-            while (ServerGL.snap) ; ;
-
-            return ServerGL.pixels;
-        }
-    }
 
     public class MapLayerFractalARGB : MapLayerBase
     {

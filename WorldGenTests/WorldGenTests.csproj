@@ -77,6 +77,7 @@
     <Compile Include="FractalNoise.cs" />
     <Compile Include="HackMan.cs" />
     <Compile Include="MapLayerFractalARGB.cs" />
+    <Compile Include="MapLayerGL.cs" />
     <Compile Include="NukeTest.cs" />
     <Compile Include="RegionExtension.cs" />
     <Compile Include="GenOreVeins.cs" />
