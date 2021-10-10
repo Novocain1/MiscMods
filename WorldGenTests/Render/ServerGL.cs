@@ -280,6 +280,8 @@ namespace WorldGenTests
 
         public override void StartServerSide(ICoreServerAPI api)
         {
+            closedByUser = true;
+
             tokenSource0 = new CancellationTokenSource();
             ct0 = tokenSource0.Token;
 
@@ -316,11 +318,13 @@ namespace WorldGenTests
                 gamewindow.WindowState = windowstate;
 
                 gamewindow.RenderFrame += (a, b) => OnRenderFrame(gamewindow, b, ct0);
-
+                
                 gamewindow.Closed += (a, b) =>
                 {
                     ScreenQuad.Dispose();
                     if (ProgramID != 0) GL.DeleteProgram(ProgramID);
+                    Marshal.FreeHGlobal(Address);
+                    if (closedByUser) CreateContext();
                 };
 
                 try
@@ -334,29 +338,30 @@ namespace WorldGenTests
             });
         }
 
+        static bool closedByUser = true;
+
         public override void Dispose()
         {
+            closedByUser = false;
             tokenSource0.Cancel();
-            Marshal.FreeHGlobal(Address);
         }
 
         public static float xCoord, yCoord, zCoord;
-
         private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct0)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            GL.UseProgram(ProgramID);
-            GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            GL.Uniform4(scale, 0.5f, 0.5f, 0.5f, 0.5f);
-            GL.Uniform1(ridgedmul, 64.0f);
-
-            RenderScreenQuad();
-            
-            GL.UseProgram(0);
-
             if (snap)
             {
+                GL.UseProgram(ProgramID);
+                GL.Uniform3(coords, xCoord, yCoord, zCoord);
+                GL.Uniform4(scale, 2f, 2f, 2f, 2f);
+                GL.Uniform1(ridgedmul, 64.0f);
+
+                RenderScreenQuad();
+
+                GL.UseProgram(0);
+
                 Snap();
             }
 
