@@ -15,7 +15,7 @@ namespace WorldGenTests
 {
     public class GameWindowNative : GameWindow
     {
-        public GameWindowNative(OpenTK.Graphics.GraphicsMode mode, GameWindowFlags flags, int openGlMajor, int openGlMinor) : base(512, 512, mode, "Server Context", flags, DisplayDevice.Default, openGlMajor, openGlMinor, OpenTK.Graphics.GraphicsContextFlags.Default)
+        public GameWindowNative(int width, int height, OpenTK.Graphics.GraphicsMode mode, GameWindowFlags flags, int openGlMajor, int openGlMinor) : base(width, height, mode, "Server Context", flags, DisplayDevice.Default, openGlMajor, openGlMinor, OpenTK.Graphics.GraphicsContextFlags.Default)
         {
         }
     }
@@ -125,6 +125,10 @@ namespace WorldGenTests
             }
         ";
 
+        const int padding = 4;
+        const int unpaddedSize = 512;
+        const int screenSize = unpaddedSize + padding * 4;
+
         static int[] quadVertices = {
             // Front face
             -1, -1,  0,
@@ -203,7 +207,7 @@ namespace WorldGenTests
 
         public void Snap()
         {
-            GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, Address);
+            GL.ReadPixels(padding, padding, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, Address);
             
             for (int y = 0; y < 512; ++y)
             {
@@ -301,7 +305,7 @@ namespace WorldGenTests
                 GameWindowFlags flags = GameWindowFlags.Default | GameWindowFlags.UseVirtualKeys | GameWindowFlags.FixedWindow;
                 OpenTK.WindowState windowstate = OpenTK.WindowState.Normal;
 
-                GameWindowNative gamewindow = new GameWindowNative(mode, flags, 3, 3);
+                GameWindowNative gamewindow = new GameWindowNative(screenSize, screenSize, mode, flags, 3, 3);
                 gamewindow.VSync = VSyncMode.On;
 
                 ScreenQuad = CreateScreenQuad();
