@@ -240,7 +240,7 @@ namespace WorldGenTests
                 {
                     //Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0, 4, 8),
                     //Data = OreVeinLayer.GenLayerGL(regionX * regionSize, regionZ * regionSize, api.World.Seed + i * 100),
-                    Data = OreVeinLayer.GenLayer(regionX, regionZ, i),
+                    Data = OreVeinLayer.GenLayer(regionX * regionSize, regionZ * regionSize, i),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0

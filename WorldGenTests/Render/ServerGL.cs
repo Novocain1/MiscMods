@@ -55,6 +55,7 @@ namespace WorldGenTests
         uniform vec3 coords;
         uniform vec4 scale;
         uniform float ridgedmul;
+        uniform int sizeXY;
 
         in vec2 v_texcoord;
 
@@ -96,11 +97,12 @@ namespace WorldGenTests
         void main(void)
         {
             vec3 c = coords;
+            c.xy = c.xy + v_texcoord * sizeXY;
 
-            vec2 vR = (c.xy + v_texcoord) * scale.r;
-            vec2 vG = (c.xy + v_texcoord) * scale.g;
-            vec2 vB = (c.xy + v_texcoord) * scale.b;
-            vec2 vA = (c.xy + v_texcoord) * scale.a;
+            vec2 vR = c.xy * scale.r;
+            vec2 vG = c.xy * scale.g;
+            vec2 vB = c.xy * scale.b;
+            vec2 vA = c.xy * scale.a;
 
             outColor.r = fworley(vR, c.z + 100.0);
             outColor.g = fworley(vG, c.z + 200.0);
@@ -125,7 +127,7 @@ namespace WorldGenTests
             }
         ";
 
-        const int padding = 4;
+        const int padding = 64;
         const int unpaddedSize = 512;
         const int screenSize = unpaddedSize + padding * 4;
 
@@ -281,6 +283,7 @@ namespace WorldGenTests
         int coords;
         int scale;
         int ridgedmul;
+        int sizeXY;
 
         public override void StartServerSide(ICoreServerAPI api)
         {
@@ -314,6 +317,7 @@ namespace WorldGenTests
                 coords = GL.GetUniformLocation(ProgramID, "coords");
                 scale = GL.GetUniformLocation(ProgramID, "scale");
                 ridgedmul = GL.GetUniformLocation(ProgramID, "ridgedmul");
+                sizeXY = GL.GetUniformLocation(ProgramID, "sizeXY");
 
                 ErrorCode err = GL.GetError();
 #if !DEBUG
@@ -357,8 +361,9 @@ namespace WorldGenTests
 
             GL.UseProgram(ProgramID);
             GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            GL.Uniform4(scale, 0.2f, 2f, 2f, 2f);
+            GL.Uniform4(scale, 0.001f, 0.001f, 0.001f, 0.001f);
             GL.Uniform1(ridgedmul, 64.0f);
+            GL.Uniform1(sizeXY, screenSize);
 
             RenderScreenQuad();
 
