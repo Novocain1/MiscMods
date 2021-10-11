@@ -187,8 +187,8 @@ namespace WorldGenTests
         {
             TyronThreadPool.QueueTask(() =>
             {
-                var path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps", api.World.Seed.ToString()));
-                var veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
+                DirectoryInfo path = Directory.CreateDirectory(Path.Combine(GamePaths.DataPath, "VeinMaps", api.World.Seed.ToString()));
+                Dictionary<string, IntDataMap2D> veinMaps = mapRegion.GetModdata<Dictionary<string, IntDataMap2D>>("veinmaps");
 
                 foreach (var vein in veinMaps)
                 {
@@ -208,21 +208,22 @@ namespace WorldGenTests
                     string pt = Path.Combine(path.FullName, vein.Key.UcFirst(), string.Format("{0}, {1}.png", regionX, regionZ));
                     
                     bmp.Save(pt, ImageFormat.Png);
-#if DEBUG
-                    //break;
-#endif
                 }
             });
         }
 
         private void Init()
         {
-            var Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
+            OreVeinLayer = new MapLayerGL(api.World.Seed);
+
+            DepositVariant[] Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
             foreach (var deposit in Deposits)
             {
                 DepositByCode[deposit.Code] = deposit;
             }
         }
+
+        MapLayerGL OreVeinLayer;
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
@@ -232,14 +233,14 @@ namespace WorldGenTests
             foreach (var val in mapRegion.OreMaps)
             {
                 //var OreVeinLayer = new MapLayerFractalARGB(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.001);
-                var OreVeinLayer = new MapLayerGL(api.World.Seed, i);
+                
                 int regionSize = api.WorldManager.RegionSize;
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
                     //Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0, 4, 8),
                     //Data = OreVeinLayer.GenLayerGL(regionX * regionSize, regionZ * regionSize, api.World.Seed + i * 100),
-                    Data = OreVeinLayer.GenLayer(regionX, regionZ, 512, 512),
+                    Data = OreVeinLayer.GenLayer(regionX, regionZ, i),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0

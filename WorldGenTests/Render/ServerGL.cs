@@ -96,8 +96,6 @@ namespace WorldGenTests
         void main(void)
         {
             vec3 c = coords;
-            c.z = mod(c.z, 2048.0);
-            c.z /= 2048.0;
 
             vec2 vR = (c.xy + v_texcoord) * scale.r;
             vec2 vG = (c.xy + v_texcoord) * scale.g;

@@ -2,22 +2,20 @@
 
 namespace WorldGenTests
 {
-    public class MapLayerGL : MapLayerBase
+    public class MapLayerGL
     {
         long seed;
-        int iteration;
 
-        public MapLayerGL(long seed, int iteration) : base(seed)
+        public MapLayerGL(long seed)
         {
             this.seed = seed;
-            this.iteration = iteration;
         }
 
-        public override int[] GenLayer(int xCoord, int zCoord, int sizeX, int sizeZ)
+        public int[] GenLayer(float xCoord, float zCoord, int iteration)
         {
             ServerGL.xCoord = xCoord;
             ServerGL.yCoord = zCoord;
-            ServerGL.zCoord = (float)seed + iteration;
+            ServerGL.zCoord = (seed + iteration / 9.0f) % 256.0f;
             ServerGL.snap = true;
 
             while (ServerGL.snap) ; ;
