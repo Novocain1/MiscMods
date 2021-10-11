@@ -81,14 +81,14 @@ namespace WorldGenTests
             return dis;
         }
 
-        float worley5(vec2 c, float seed) {
+        float fworley(vec2 c, float seed) {
             float w = 0.0;
             float a = 0.5;
-            for (int i = 0; i<5; i++) {
-                w += worley(c, seed)*a;
-                c*=2.0;
-                seed*=2.0;
-                a*=0.5;
+            for (int i = 0; i < 10; i++) {
+                w += worley(c, seed) * a;
+                c *= 2.0;
+                seed *= 2.0;
+                a *= 0.5;
             }
             return w;
         }
@@ -96,16 +96,18 @@ namespace WorldGenTests
         void main(void)
         {
             vec3 c = coords;
-            
+            c.z = mod(c.z, 2048.0);
+            c.z /= 2048.0;
+
             vec2 vR = (c.xy + v_texcoord) * scale.r;
             vec2 vG = (c.xy + v_texcoord) * scale.g;
             vec2 vB = (c.xy + v_texcoord) * scale.b;
             vec2 vA = (c.xy + v_texcoord) * scale.a;
 
-            outColor.r = worley5(vR, c.z + 10.0);
-            outColor.g = worley5(vG, c.z + 30.0);
-            outColor.b = worley5(vB, c.z + 70.0);
-            outColor.a = worley5(vA, c.z + 90.0);
+            outColor.r = fworley(vR, c.z + 100.0);
+            outColor.g = fworley(vG, c.z + 200.0);
+            outColor.b = fworley(vB, c.z + 300.0);
+            outColor.a = fworley(vA, c.z + 400.0);
 
             outColor.r = 1.0 - (abs(outColor.r - 0.5) * 2.0) * ridgedmul;
         }
@@ -351,21 +353,21 @@ namespace WorldGenTests
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            if (snap)
-            {
-                GL.UseProgram(ProgramID);
-                GL.Uniform3(coords, xCoord, yCoord, zCoord);
-                GL.Uniform4(scale, 2f, 2f, 2f, 2f);
-                GL.Uniform1(ridgedmul, 64.0f);
+            GL.UseProgram(ProgramID);
+            GL.Uniform3(coords, xCoord, yCoord, zCoord);
+            GL.Uniform4(scale, 0.2f, 2f, 2f, 2f);
+            GL.Uniform1(ridgedmul, 64.0f);
 
-                RenderScreenQuad();
+            RenderScreenQuad();
 
-                GL.UseProgram(0);
-
-                Snap();
-            }
+            GL.UseProgram(0);
 
             window.SwapBuffers();
+
+            if (snap)
+            {
+                Snap();
+            }
 
             if (ct0.IsCancellationRequested)
             {

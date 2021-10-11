@@ -17,7 +17,7 @@ namespace WorldGenTests
         {
             ServerGL.xCoord = xCoord;
             ServerGL.yCoord = zCoord;
-            ServerGL.zCoord = (float)seed + iteration * 1000;
+            ServerGL.zCoord = (float)seed + iteration;
             ServerGL.snap = true;
 
             while (ServerGL.snap) ; ;
