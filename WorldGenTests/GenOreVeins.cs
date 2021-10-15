@@ -237,7 +237,7 @@ namespace WorldGenTests
                 int regionSize = api.WorldManager.RegionSize;
                 
                 //stupid numbers that took too much time to figure out
-                int deltaX = -16;
+                int deltaX = +36;
                 int deltaY = -36;
 
                 IntDataMap2D data = new IntDataMap2D()

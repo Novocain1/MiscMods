@@ -83,6 +83,7 @@
     <Compile Include="GenOreVeins.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Render\ServerGL.cs" />
+    <Compile Include="Render\ShaderCode.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
