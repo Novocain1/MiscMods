@@ -1,4 +1,5 @@
-﻿using Vintagestory.ServerMods;
+﻿using System;
+using Vintagestory.ServerMods;
 
 namespace WorldGenTests
 {
@@ -11,14 +12,13 @@ namespace WorldGenTests
             this.seed = seed;
         }
 
-        public int[] GenLayer(float xCoord, float zCoord, int iteration)
+        public int[] GenLayer(float xCoord, float zCoord, int i)
         {
             ServerGL.xCoord = xCoord;
             ServerGL.yCoord = zCoord;
-            ServerGL.zCoord = (seed + iteration / 9.0f) % 256.0f;
-            ServerGL.snap = true;
+            ServerGL.seed = seed + i * 512;
 
-            while (ServerGL.snap) ; ;
+            ServerGL.ReadPtr();
 
             return ServerGL.pixels;
         }

@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 namespace WorldGenTests
@@ -52,7 +53,8 @@ namespace WorldGenTests
         const string FragCode = @"
         #version 330 core
 
-        uniform vec3 coords;
+        uniform vec2 coords;
+        uniform float seed;
         uniform vec4 scale;
         uniform float ridgedmul;
         uniform int sizeXY;
@@ -61,75 +63,169 @@ namespace WorldGenTests
 
         layout(location = 0) out vec4 outColor;
         
-        float hash(float n) {
- 	        return fract(cos(n*89.42)*343.42);
+        vec3 mod289(vec3 x)
+        {
+          return x - floor(x * (1.0 / 289.0)) * 289.0;
         }
 
-        vec2 hash2(vec2 n) {
- 	        return vec2(hash(n.x*23.62-300.0+n.y*34.35),hash(n.x*45.13+256.0+n.y*38.89)); 
+        vec4 mod289(vec4 x)
+        {
+          return x - floor(x * (1.0 / 289.0)) * 289.0;
         }
 
-        float worley(vec2 c, float seed) {
-            float dis = 1.0;
-            for(int x = -1; x <= 1; x++)
-                for(int y = -1; y <= 1; y++){
-                    vec2 p = floor(c)+vec2(x,y);
-                    vec2 a = hash2(p) * seed;
-                    vec2 rnd = 0.5+sin(a)*0.5;
-                    float d = length(rnd+vec2(x,y)-fract(c));
-                    dis = min(dis, d);
-                }
-            return dis;
+        vec4 permute(vec4 x)
+        {
+          return mod289(((x*34.0)+1.0)*x);
         }
 
-        float fworley(vec2 c, float seed) {
-            float w = 0.0;
-            float a = 0.5;
-            for (int i = 0; i < 10; i++) {
-                w += worley(c, seed) * a;
-                c *= 2.0;
-                seed *= 2.0;
-                a *= 0.5;
-            }
-            return w;
+        vec4 taylorInvSqrt(vec4 r)
+        {
+          return 1.79284291400159 - 0.85373472095314 * r;
+        }
+
+        vec3 fade(vec3 t) {
+          return t*t*t*(t*(t*6.0-15.0)+10.0);
+        }
+
+        // Classic Perlin noise
+        float cnoise(vec3 P)
+        {
+          vec3 Pi0 = floor(P); // Integer part for indexing
+          vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1
+          Pi0 = mod289(Pi0);
+          Pi1 = mod289(Pi1);
+          vec3 Pf0 = fract(P); // Fractional part for interpolation
+          vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0
+          vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
+          vec4 iy = vec4(Pi0.yy, Pi1.yy);
+          vec4 iz0 = Pi0.zzzz;
+          vec4 iz1 = Pi1.zzzz;
+
+          vec4 ixy = permute(permute(ix) + iy);
+          vec4 ixy0 = permute(ixy + iz0);
+          vec4 ixy1 = permute(ixy + iz1);
+
+          vec4 gx0 = ixy0 * (1.0 / 7.0);
+          vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
+          gx0 = fract(gx0);
+          vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
+          vec4 sz0 = step(gz0, vec4(0.0));
+          gx0 -= sz0 * (step(0.0, gx0) - 0.5);
+          gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+
+          vec4 gx1 = ixy1 * (1.0 / 7.0);
+          vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
+          gx1 = fract(gx1);
+          vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
+          vec4 sz1 = step(gz1, vec4(0.0));
+          gx1 -= sz1 * (step(0.0, gx1) - 0.5);
+          gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+
+          vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);
+          vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);
+          vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);
+          vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);
+          vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);
+          vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);
+          vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);
+          vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);
+
+          vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
+          g000 *= norm0.x;
+          g010 *= norm0.y;
+          g100 *= norm0.z;
+          g110 *= norm0.w;
+          vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
+          g001 *= norm1.x;
+          g011 *= norm1.y;
+          g101 *= norm1.z;
+          g111 *= norm1.w;
+
+          float n000 = dot(g000, Pf0);
+          float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));
+          float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
+          float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
+          float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
+          float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
+          float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
+          float n111 = dot(g111, Pf1);
+
+          vec3 fade_xyz = fade(Pf0);
+          vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);
+          vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
+          float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
+          return 2.2 * n_xyz;
+        }
+
+        float fnoise(vec2 p, float i)
+        {
+            float mat0 = 1.6;
+            float mat1 = 1.2;
+            float mat2 = -1.2;
+            float mat3 = 1.6;
+
+            float ox = p.x;
+            float oy = p.y;
+            float f = 0.0;
+
+            f += 0.5000 * cnoise(vec3(p.x, p.y, seed + i));
+            p.x = mat0 * ox + mat1 * oy;
+            p.y = mat2 * ox + mat3 * oy;
+            ox = p.x;
+            oy = p.y;
+
+            f += 0.2500 * cnoise(vec3(p.x, p.y, seed + i));
+            p.x = mat0 * ox + mat1 * oy;
+            p.y = mat2 * ox + mat3 * oy;
+            ox = p.x;
+            oy = p.y;
+
+            f += 0.1250 * cnoise(vec3(p.x, p.y, seed + i));
+            p.x = mat0 * ox + mat1 * oy;
+            p.y = mat2 * ox + mat3 * oy;
+
+            f += 0.0625 * cnoise(vec3(p.x, p.y, seed + i));
+
+            return f;
         }
 
         void main(void)
         {
-            vec3 c = coords;
-            c.xy = c.xy + v_texcoord * sizeXY;
+            vec2 size = v_texcoord * sizeXY;
+            float nR = fnoise((coords + size) * scale.r, 0.0) * ridgedmul;
+            nR = tanh(nR * 4.0) / 2.0 + 0.5;
 
-            vec2 vR = c.xy * scale.r;
-            vec2 vG = c.xy * scale.g;
-            vec2 vB = c.xy * scale.b;
-            vec2 vA = c.xy * scale.a;
+            nR = 1.0 - (abs(nR - 0.5) * 2.0);
 
-            outColor.r = fworley(vR, c.z + 100.0);
-            outColor.g = fworley(vG, c.z + 200.0);
-            outColor.b = fworley(vB, c.z + 300.0);
-            outColor.a = fworley(vA, c.z + 400.0);
+            float nG = fnoise((coords + size) * scale.g, 0.1);
+            nG = tanh(nG * 4.0) / 2.0 + 0.5;
 
-            outColor.r = 1.0 - (abs(outColor.r - 0.5) * 2.0) * ridgedmul;
+            float nB = fnoise((coords + size) * scale.b, 0.2);
+            nB = tanh(nB * 4.0) / 2.0 + 0.5;
+
+            float nA = fnoise((coords + size) * scale.a, 0.3);
+            nA = tanh(nA * 4.0) / 2.0 + 0.5;
+
+            outColor = vec4(nR, nG, nB, nA);
         }
         ";
+
         const string VertCode = @"
-            #version 330 core
+        #version 330 core
 
-            out vec2 v_texcoord;
+        out vec2 v_texcoord;
 
-            void main(void)
-            {
-                // https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/
-                float x = -1.0 + float((gl_VertexID & 1) << 2);
-                float y = -1.0 + float((gl_VertexID & 2) << 1);
-                gl_Position = vec4(x, y, 0.0, 1.0);
-                v_texcoord = vec2((x + 1.0) * 0.5, (y + 1.0) * 0.5);
-            }
+        void main(void)
+        {
+            // https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/
+            float x = -1.0 + float((gl_VertexID & 1) << 2);
+            float y = -1.0 + float((gl_VertexID & 2) << 1);
+            gl_Position = vec4(x, y, 0.0, 1.0);
+            v_texcoord = vec2((x + 1.0) * 0.5, (y + 1.0) * 0.5);
+        }
         ";
 
-        const int padding = 64;
-        const int unpaddedSize = 512;
-        const int screenSize = unpaddedSize + padding * 4;
+        const int screenSize = 512;
 
         static int[] quadVertices = {
             // Front face
@@ -201,25 +297,38 @@ namespace WorldGenTests
 
         public int ProgramID;
 
-        public static bool snap;
-
         public static int[] pixels = new int[512 * 512];
         
-        IntPtr Address;
+        static IntPtr Address;
+        static bool write = false;
+        static bool read = false;
 
-        public void Snap()
+        public static void WritePtr()
         {
-            GL.ReadPixels(padding, padding, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, Address);
+            while (read) ; ;
+
+            write = true;
+
+            GL.ReadPixels(0, 0, 512, 512, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, Address);
+
+            write = false;
+        }
+
+        public static void ReadPtr()
+        {
+            while (write) ; ;
             
+            read = true;
+
             for (int y = 0; y < 512; ++y)
             {
                 for (int x = 0; x < 512; ++x)
                 {
-                    pixels[y * 512 + x] = Marshal.ReadInt32(Address, (y * sizeof(int)) * 512 + (x * sizeof(int)));
+                    pixels[y * 512 + x] = Marshal.ReadInt32(Address, y * sizeof(int) * 512 + (x * sizeof(int)));
                 }
             }
-
-            snap = false;
+            
+            read = false;
         }
 
         public VAO CreateScreenQuad()
@@ -284,6 +393,7 @@ namespace WorldGenTests
         int scale;
         int ridgedmul;
         int sizeXY;
+        int seedID;
 
         public override void StartServerSide(ICoreServerAPI api)
         {
@@ -318,6 +428,7 @@ namespace WorldGenTests
                 scale = GL.GetUniformLocation(ProgramID, "scale");
                 ridgedmul = GL.GetUniformLocation(ProgramID, "ridgedmul");
                 sizeXY = GL.GetUniformLocation(ProgramID, "sizeXY");
+                seedID = GL.GetUniformLocation(ProgramID, "seed");
 
                 ErrorCode err = GL.GetError();
 #if !DEBUG
@@ -354,15 +465,18 @@ namespace WorldGenTests
             tokenSource0.Cancel();
         }
 
-        public static float xCoord, yCoord, zCoord;
+        public static float xCoord, yCoord;
+        public static long seed;
+
         private void OnRenderFrame(GameWindowNative window, FrameEventArgs args, CancellationToken ct0)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             GL.UseProgram(ProgramID);
-            GL.Uniform3(coords, xCoord, yCoord, zCoord);
-            GL.Uniform4(scale, 0.001f, 0.001f, 0.001f, 0.001f);
-            GL.Uniform1(ridgedmul, 64.0f);
+            GL.Uniform2(coords, xCoord, yCoord);
+            GL.Uniform1(seedID, (float)seed % int.MaxValue);
+            GL.Uniform4(scale, 1f / 128f, 1f / 512f, 1f / 256f, 1f / 720f);
+            GL.Uniform1(ridgedmul, 8.0f);
             GL.Uniform1(sizeXY, screenSize);
 
             RenderScreenQuad();
@@ -371,10 +485,7 @@ namespace WorldGenTests
 
             window.SwapBuffers();
 
-            if (snap)
-            {
-                Snap();
-            }
+            WritePtr();
 
             if (ct0.IsCancellationRequested)
             {
