@@ -72,15 +72,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Argb16.cs" />
-    <Compile Include="Argb8.cs" />
-    <Compile Include="FractalNoise.cs" />
-    <Compile Include="HackMan.cs" />
-    <Compile Include="MapLayerFractalARGB.cs" />
-    <Compile Include="MapLayerGL.cs" />
-    <Compile Include="NukeTest.cs" />
-    <Compile Include="RegionExtension.cs" />
-    <Compile Include="GenOreVeins.cs" />
+    <Compile Include="Util\Argb16.cs" />
+    <Compile Include="Util\Argb8.cs" />
+    <Compile Include="Worldgen\Noise\FractalNoise.cs" />
+    <Compile Include="Util\HackMan.cs" />
+    <Compile Include="Worldgen\Map Layer\MapLayerFractalARGB.cs" />
+    <Compile Include="Worldgen\Map Layer\MapLayerGL.cs" />
+    <Compile Include="Tests\NukeTest.cs" />
+    <Compile Include="Util\RegionExtension.cs" />
+    <Compile Include="Worldgen\GenOreVeins.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Render\ServerGL.cs" />
     <Compile Include="Render\ShaderCode.cs" />

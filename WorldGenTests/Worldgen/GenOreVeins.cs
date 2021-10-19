@@ -214,16 +214,12 @@ namespace WorldGenTests
 
         private void Init()
         {
-            OreVeinLayer = new MapLayerGL(api.World.Seed);
-
             DepositVariant[] Deposits = api.ModLoader.GetModSystem<GenDeposits>().Deposits;
             foreach (var deposit in Deposits)
             {
                 DepositByCode[deposit.Code] = deposit;
             }
         }
-
-        MapLayerGL OreVeinLayer;
 
         private void OnMapRegionGen(IMapRegion mapRegion, int regionX, int regionZ)
         {
@@ -232,20 +228,13 @@ namespace WorldGenTests
             Dictionary<string, IntDataMap2D> maps = new Dictionary<string, IntDataMap2D>();
             foreach (var val in mapRegion.OreMaps)
             {
-                //var OreVeinLayer = new MapLayerFractalARGB(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.001);
+                var OreVeinLayer = new MapLayerFractalARGB(api.World.Seed + i, 8, 0.0f, 64, 2048, 1024, 64, 128.0, 0.001);
                 
                 int regionSize = api.WorldManager.RegionSize;
-                
-                //stupid numbers that took too much time to figure out
-                int deltaX = +36;
-                int deltaY = -36;
 
                 IntDataMap2D data = new IntDataMap2D()
                 {
-                    //Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0, 4, 8),
-                    //Data = OreVeinLayer.GenLayerGL(regionX * regionSize, regionZ * regionSize, api.World.Seed + i * 100),
-
-                    Data = OreVeinLayer.GenLayer(regionX * (regionSize + deltaX), regionZ * (regionSize + deltaY), i),
+                    Data = OreVeinLayer.GenLayerDiffuse(regionX * regionSize, regionZ * regionSize, 128, regionSize, 0b1010001, 2, 0, 4, 8),
                     Size = regionSize,
                     BottomRightPadding = 0,
                     TopLeftPadding = 0
