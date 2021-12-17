@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,6 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
-using Action = Vintagestory.API.Common.Action;
 
 namespace VSHUD
 {

@@ -34,11 +34,11 @@ namespace VSHUD
 
             string dmg = Math.Abs(damage).ToString("F3");
 
-            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15);
+            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15).WithOrientation(EnumTextOrientation.Center);
 
             SingleComposer = capi.Gui
                 .CreateCompo("floatyDmg" + damage + capi.Gui.OpenedGuis.Count + 1 + GetHashCode(), dialogBounds)
-                .AddDynamicText(dmg, font, EnumTextOrientation.Center, textBounds, "text")
+                .AddDynamicText(dmg, font, textBounds, "text")
                 .Compose();
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;

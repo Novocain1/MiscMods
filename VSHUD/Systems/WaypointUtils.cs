@@ -17,7 +17,6 @@ using System.IO;
 using Cairo;
 using Vintagestory.API.Util;
 using Path = System.IO.Path;
-using Action = Vintagestory.API.Common.Action;
 using System.Globalization;
 using Vintagestory.Common;
 

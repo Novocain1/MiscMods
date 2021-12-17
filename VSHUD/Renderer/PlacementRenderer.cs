@@ -29,7 +29,7 @@ namespace VSHUD
         List<Type> IgnoredTypes { get; set; }
         List<Type> SneakPlacedTypes { get; set; }
 
-        public Dictionary<Type, Vintagestory.API.Common.Action> itemActions = new Dictionary<Type, Vintagestory.API.Common.Action>();
+        public Dictionary<Type, Action> itemActions = new Dictionary<Type, Action>();
 
         MeshRef mRef;
 
@@ -71,7 +71,7 @@ namespace VSHUD
             Block block = invStack?.Block;
             if (block == null && invItem != null)
             {
-                if (itemActions.TryGetValue(invItem.GetType(), out Vintagestory.API.Common.Action action))
+                if (itemActions.TryGetValue(invItem.GetType(), out Action action))
                 {
                     action.Invoke();
                     block = itemPlacedBlock;

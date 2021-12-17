@@ -1,7 +1,7 @@
 ﻿using Vintagestory.Client.NoObf;
 using System.Collections.Concurrent;
-using Action = Vintagestory.API.Common.Action;
 using Vintagestory.API.Client;
+using System;
 
 namespace VSHUD
 {

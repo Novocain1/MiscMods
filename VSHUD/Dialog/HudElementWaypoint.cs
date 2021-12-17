@@ -82,11 +82,11 @@ namespace VSHUD
             font = CairoFont.WhiteSmallText();
             font.Color = dColor;
 
-            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15);
+            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithFontSize(15).WithOrientation(EnumTextOrientation.Center);
 
             SingleComposer = capi.Gui
                 .CreateCompo(DialogTitle + capi.Gui.OpenedGuis.Count + 1, dialogBounds)
-                .AddDynamicText("", font, EnumTextOrientation.Center, textBounds, "text")
+                .AddDynamicText("", font, textBounds, "text")
                 .Compose()
             ;
 

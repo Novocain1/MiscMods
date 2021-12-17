@@ -111,6 +111,62 @@ namespace VSHUD
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
     }
 
+    [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
+    public class SetDecorHalt0
+    {
+        public static bool Prefix() => 
+            SetBlockRedirect.ShouldNotSkipOriginal;
+
+        public static void Postfix(ref bool __result)
+        {
+            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+
+            __result = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(int) })]
+    public class SetDecorHalt1
+    {
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+
+        public static void Postfix(ref bool __result)
+        {
+            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+
+            __result = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
+    public class SetDecorRedirect0
+    {
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+
+        public static void Postfix(ref bool __result, Block block, BlockPos position)
+        {
+            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+
+            SetBlockRedirect.blockId = block.Id;
+
+            SetBlockRedirect.xyz[0] = position.X;
+            SetBlockRedirect.xyz[1] = position.Y;
+            SetBlockRedirect.xyz[2] = position.Z;
+            __result = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(int) })]
+    public class SetDecorRedirect1
+    {
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+
+        public static void Postfix(ref bool __result, Block block, BlockPos position)
+        {
+            SetDecorRedirect0.Postfix(ref __result, block, position);
+        }
+    }
+
     [HarmonyPatch(typeof(BlockAccessorRelaxed), "SetBlock")]
     public class SetBlockRedirect
     {   

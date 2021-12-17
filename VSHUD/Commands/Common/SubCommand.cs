@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Vintagestory.API.Common;
 
 namespace VSHUD
 {
     public class SubCommand
     {
-        public SubCommand(Vintagestory.API.Common.Action<IPlayer, int, CmdArgs> command, string description, Dictionary<string, SubCommand> subCommands = null)
+        public SubCommand(Action<IPlayer, int, CmdArgs> command, string description, Dictionary<string, SubCommand> subCommands = null)
         {
             Command = command;
             Description = description;
@@ -14,7 +15,7 @@ namespace VSHUD
 
         public Dictionary<string, SubCommand> SubCommands { get; set; }
 
-        public Vintagestory.API.Common.Action<IPlayer, int, CmdArgs> Command { get; set; }
+        public Action<IPlayer, int, CmdArgs> Command { get; set; }
         public string Description { get; set; }
 
         public void Run(IPlayer player, int groupId, CmdArgs args)

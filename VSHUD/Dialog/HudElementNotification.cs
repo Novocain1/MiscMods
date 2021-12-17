@@ -126,11 +126,11 @@ namespace VSHUD
             this.color = color;
             font.Color = color;
 
-            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold);
+            font = font.WithStroke(new double[] { 0.0, 0.0, 0.0, 1.0 }, 1.0).WithWeight(Cairo.FontWeight.Bold).WithOrientation(EnumTextOrientation.Right);
 
             SingleComposer = capi.Gui
                 .CreateCompo("notification" + text + capi.Gui.OpenedGuis.Count + 1 + GetHashCode(), dialogBounds)
-                .AddDynamicText(text, font, EnumTextOrientation.Right, textBounds, "text")
+                .AddDynamicText(text, font, textBounds, "text")
                 .Compose();
 
             var dynText = SingleComposer.GetDynamicText("text");
