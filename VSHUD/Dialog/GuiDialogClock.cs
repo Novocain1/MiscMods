@@ -30,7 +30,7 @@ namespace VSHUD
             double[] stroke = new double[] { 0, 0, 0, 1 };
 
             SingleComposer = capi.Gui.CreateCompo("clock", textBounds)
-                .AddDynamicText("", CairoFont.WhiteSmallText().WithStroke(stroke, 2).WithOrientation(EnumTextOrientation.Justify), textBounds.ForkChild(), "clock")
+                .AddDynamicText("", CairoFont.WhiteSmallText().WithStroke(stroke, 2).WithOrientation(EnumTextOrientation.Justify), EnumTextOrientation.Justify, textBounds.ForkChild(), "clock")
                 .Compose();
 
             id = capi.World.RegisterGameTickListener(dt => UpdateText(), 100);

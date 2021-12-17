@@ -38,7 +38,7 @@ namespace VSHUD
 
             SingleComposer = capi.Gui
                 .CreateCompo("floatyDmg" + damage + capi.Gui.OpenedGuis.Count + 1 + GetHashCode(), dialogBounds)
-                .AddDynamicText(dmg, font, textBounds, "text")
+                .AddDynamicText(dmg, font, EnumTextOrientation.Center, textBounds, "text")
                 .Compose();
 
             SingleComposer.Bounds.Alignment = EnumDialogArea.None;

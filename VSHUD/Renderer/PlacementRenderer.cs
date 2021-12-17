@@ -7,6 +7,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 using OpenTK.Graphics.OpenGL;
+using Action = Vintagestory.API.Common.Action;
 
 namespace VSHUD
 {

@@ -86,7 +86,7 @@ namespace VSHUD
 
             SingleComposer = capi.Gui
                 .CreateCompo(DialogTitle + capi.Gui.OpenedGuis.Count + 1, dialogBounds)
-                .AddDynamicText("", font, textBounds, "text")
+                .AddDynamicText("", font, EnumTextOrientation.Center, textBounds, "text")
                 .Compose()
             ;
 

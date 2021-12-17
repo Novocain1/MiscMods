@@ -130,7 +130,7 @@ namespace VSHUD
 
             SingleComposer = capi.Gui
                 .CreateCompo("notification" + text + capi.Gui.OpenedGuis.Count + 1 + GetHashCode(), dialogBounds)
-                .AddDynamicText(text, font, textBounds, "text")
+                .AddDynamicText(text, font, EnumTextOrientation.Right, textBounds, "text")
                 .Compose();
 
             var dynText = SingleComposer.GetDynamicText("text");

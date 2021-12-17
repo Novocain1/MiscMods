@@ -107,7 +107,7 @@ namespace VSHUD
                     {
                         DummyWaypoint[] relative = JsonConvert.DeserializeObject<DummyWaypoint[]>(reader.ReadToEnd(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
-                        VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
+                        VSHUDTaskSystem.Actions.Enqueue(new Vintagestory.API.Common.Action(() =>
                         {
                             for (int j = 0; j < relative.Length; j++)
                             {
@@ -135,7 +135,7 @@ namespace VSHUD
                 int maxY = args.PopInt() ?? 10;
                 double radius = (args.PopInt() ?? 1000);
 
-                VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
+                VSHUDTaskSystem.Actions.Enqueue(new Vintagestory.API.Common.Action(() =>
                 {
                     for (int i = 0; i < amount; i++)
                     {

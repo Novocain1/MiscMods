@@ -19,6 +19,7 @@ using Vintagestory.API.Util;
 using Path = System.IO.Path;
 using System.Globalization;
 using Vintagestory.Common;
+using Action = Vintagestory.API.Common.Action;
 
 namespace VSHUD
 {
@@ -149,7 +150,7 @@ namespace VSHUD
 
         internal bool PurgeWaypointsByStrings(params string[] containsStrings)
         {
-            VSHUDTaskSystem.Actions.Enqueue(new Action(() =>
+            VSHUDTaskSystem.Actions.Enqueue(new Vintagestory.API.Common.Action(() =>
             {
                 Stack<int> rmIDs = new Stack<int>();
                 for (int i = 0; i < Waypoints.Count; i++)
