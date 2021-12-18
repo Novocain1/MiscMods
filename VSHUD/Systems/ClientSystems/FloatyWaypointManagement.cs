@@ -49,12 +49,15 @@ namespace VSHUD
                     string str = "";
                     var wps = new HudElementWaypoint[WaypointElements.Count];
                     WaypointElements.CopyTo(wps, 0);
-                    Array.Sort(wps, delegate (HudElementWaypoint a, HudElementWaypoint b) { return a.waypoint.Index.CompareTo(b.waypoint.Index); });
+                    Array.Sort(wps, delegate (HudElementWaypoint a, HudElementWaypoint b) {
+                        var c = (a?.waypoint?.Index ?? 0).CompareTo(b?.waypoint?.Index ?? 0);
+                        return c; 
+                    });
 
                     foreach (var wp in wps)
                     {
-                        str += wp.waypoint.Title;
-                        str += wp.waypoint.Index;
+                        str += wp?.waypoint?.Title ?? "";
+                        str += wp?.waypoint?.Index ?? 00;
                     }
                     return ExtraMath.Sha512Hash(str);
                 }
