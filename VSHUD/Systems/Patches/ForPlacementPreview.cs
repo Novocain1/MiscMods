@@ -111,7 +111,7 @@ namespace VSHUD
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
     }
 
-    [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
+    [HarmonyPatch(typeof(WorldChunk), "AddDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
     public class SetDecorHalt0
     {
         public static bool Prefix() => 
@@ -125,7 +125,7 @@ namespace VSHUD
         }
     }
 
-    [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(int) })]
+    [HarmonyPatch(typeof(WorldChunk), "AddDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(int) })]
     public class SetDecorHalt1
     {
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
@@ -138,7 +138,7 @@ namespace VSHUD
         }
     }
 
-    [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
+    [HarmonyPatch(typeof(BlockAccessorBase), "AddDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
     public class SetDecorRedirect0
     {
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
@@ -156,7 +156,7 @@ namespace VSHUD
         }
     }
 
-    [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(int) })]
+    [HarmonyPatch(typeof(BlockAccessorBase), "AddDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(int) })]
     public class SetDecorRedirect1
     {
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
