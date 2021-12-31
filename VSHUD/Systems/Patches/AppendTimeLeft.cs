@@ -70,14 +70,20 @@ namespace VSHUD
     {
         public static void Postfix(BlockEntityOpenableContainer __instance, StringBuilder dsc)
         {
-            if (__instance is BlockEntityQuern)
+            if (__instance is BlockEntityQuern quern)
             {
-                var quern = (BlockEntityQuern)__instance;
-
                 if (quern.CanGrind() && quern.GrindSpeed > 0)
                 {
-                    double timeLeft = (quern.maxGrindingTime() - quern.inputGrindTime) * 2.0;
-                    dsc.AppendLine(string.Format("Process Completed In {0} Game Minutes", Math.Round(timeLeft, 2)));
+                    double percent = quern.inputGrindTime / quern.maxGrindingTime();
+                    int mss = quern.InputSlot?.Itemstack?.Item?.MaxStackSize ?? 1;
+                    double stackSize = (double)(quern.InputSlot?.Itemstack?.StackSize ?? 0) / mss;
+                    stackSize = 1.0 - stackSize;
+                    stackSize += percent / mss;
+                    stackSize *= 100;
+                    percent *= 100;
+
+                    dsc.AppendLine(string.Format("Stack {0}%", Math.Round(stackSize, 2)));
+                    dsc.AppendLine(string.Format("Item {0}%", Math.Round(percent, 2)));
                 }
             }
 
