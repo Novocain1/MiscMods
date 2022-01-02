@@ -135,10 +135,12 @@
     <Compile Include="Systems\ClientSystems\LightUtilSystem.cs" />
     <Compile Include="Systems\ClientSystems\MassFileExportSystem.cs" />
     <Compile Include="Systems\FloatyDamage.cs" />
+    <Compile Include="Systems\ItemSorting.cs" />
     <Compile Include="Systems\Patches\AppendTimeLeft.cs" />
     <Compile Include="Systems\Patches\MarkDirtyFix.cs" />
     <Compile Include="Systems\Patches\PreventWaypointChatLogging.cs" />
     <Compile Include="Renderer\PlacementRenderer.cs" />
+    <Compile Include="Utility\SlotIDTransfer.cs" />
     <Compile Include="Utility\CheckAppSideAnywhere.cs" />
     <Compile Include="Utility\HackMan.cs" />
     <Compile Include="Systems\Patches\ChunkPartGrabber.cs" />
