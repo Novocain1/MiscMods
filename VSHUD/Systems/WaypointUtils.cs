@@ -194,10 +194,10 @@ namespace VSHUD
             base.Dispose();
             foreach (var val in texturesByIcon)
             {
-                val.Value.Dispose();
-                val.Value.SetField("capi", null);
+                val.Value?.Dispose();
+                val.Value?.SetField("capi", null);
             }
-            texturesByIcon.Clear();
+            texturesByIcon?.Clear();
             texturesByIcon = null;
         }
     }
