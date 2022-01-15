@@ -29,8 +29,6 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
-            VSHUDMain vshudMain = api.ModLoader.GetModSystem<VSHUDMain>();
-
             api.RegisterCommand("obj", "", "", (p, a) =>
             {
                 var bs = api.World.Player.CurrentBlockSelection;
@@ -58,7 +56,10 @@ namespace VSHUD
 
                 if (mesh != null)
                 {
-                    vshudMain.massFileExportSystem.EnqeueExport(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, name + ".obj"), name + ".obj"));
+                    lock (MassFileExportSystem.toExport)
+                    {
+                        MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, name + ".obj"), name + ".obj"));
+                    }
                 }
             });
 
@@ -72,7 +73,7 @@ namespace VSHUD
                         capi.ShowChatMessage(string.Format("Chunk Tesselator .obj Caching {0}.", ConfigLoader.Config.CreateChunkObjs ? "Enabled" : "Disabled"));
                         break;
                     case "clear":
-                        vshudMain.massFileExportSystem.Clear<ExportableChunkPart>();
+                        MassFileExportSystem.Clear<ExportableChunkPart>();
                         break;
                     default:
                         break;
@@ -106,7 +107,10 @@ namespace VSHUD
 
                 if (mesh != null)
                 {
-                    vshudMain.massFileExportSystem.EnqeueExportFast(new ExportableJsonObject(mesh, Path.Combine(GamePaths.DataPath, name)));
+                    lock (MassFileExportSystem.toExport)
+                    {
+                        MassFileExportSystem.toExport.Push(new ExportableJsonObject(mesh, Path.Combine(GamePaths.DataPath, name)));
+                    }
                 }
             });
         }

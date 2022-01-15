@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System.Linq;
 using Vintagestory.GameContent;
 
 namespace VSHUD
@@ -10,7 +9,16 @@ namespace VSHUD
         public static void Postfix(GuiDialogEditWayPoint __instance)
         {
             int wp = __instance.GetField<int>("wpIndex");
-            FloatyWaypointManagement.WaypointElements.Where(a => a.waypointID == wp).Single().MarkDirty();
+            lock (FloatyWaypointManagement.WaypointElements)
+            {
+                foreach(var val in FloatyWaypointManagement.WaypointElements)
+                {
+                    if (wp == val.waypointID)
+                    {
+                        val.MarkDirty();
+                    }
+                }
+            }
         }
     }
 }

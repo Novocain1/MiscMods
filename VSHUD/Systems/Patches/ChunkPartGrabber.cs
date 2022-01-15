@@ -14,7 +14,6 @@ namespace VSHUD
         public static int Seed = 0;
         public static Vec3i SpawnPos;
         public static bool Initialized = false;
-        private static VSHUDMain vshudMain;
 
         public static void Initialize(ICoreClientAPI api)
         {
@@ -33,7 +32,6 @@ namespace VSHUD
                 }
             }, "init world obj export");
             Initialized = true;
-            vshudMain = api.ModLoader.GetModSystem<VSHUDMain>();
         }
 
         public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod, bool IsEdgePiece)
@@ -45,15 +43,18 @@ namespace VSHUD
             Directory.CreateDirectory(filePath);
             filePath = Path.Combine(filePath, fileName + ".obj");
 
-            long[] id = new long[] { 0, 0 };
-            id[0] |= (long)chunkX;
-            id[0] |= (long)chunkY << 32;
-            id[1] |= (long)chunkZ;
-            id[1] |= (long)pass << 32;
-            id[1] |= (long)lod << 40;
-            id[1] |= (long)(IsEdgePiece ? 0 : 1) << 48;
+            lock (MassFileExportSystem.toExportLast)
+            {
+                long[] id = new long[] { 0, 0 };
+                id[0] |= (long)chunkX;
+                id[0] |= (long)chunkY << 32;
+                id[1] |= (long)chunkZ;
+                id[1] |= (long)pass << 32;
+                id[1] |= (long)lod << 40;
+                id[1] |= (long)(IsEdgePiece ? 0 : 1) << 48;
 
-            vshudMain.massFileExportSystem.EnqeueExport(new ExportableChunkPart(mesh, filePath, fileName, id));
+                MassFileExportSystem.toExportLast.Push(new ExportableChunkPart(mesh, filePath, fileName, id));
+            }
         }
         
         public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)

@@ -14,8 +14,6 @@ namespace VSHUD
     {
         public CommandFloatyWaypoints(ICoreClientAPI capi, WaypointUtils utils) : base(capi)
         {
-            VSHUDMain vshudMain = capi.ModLoader.GetModSystem<VSHUDMain>();
-
             Command = "wpcfg";
 
             RegisterSubCommand("deathdebug", new SubCommand((player, groupId, args) =>
@@ -94,7 +92,10 @@ namespace VSHUD
             RegisterSubCommand("export", new SubCommand((player, groupId, args) =>
             {
                 string filePath = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints");
-                vshudMain.massFileExportSystem.EnqeueExport(new ExportableJsonObject(utils.WaypointsRel, filePath));
+                lock (MassFileExportSystem.toExport)
+                {
+                    MassFileExportSystem.toExport.Push(new ExportableJsonObject(utils.WaypointsRel, filePath));
+                }
             }, "Exports waypoints as a JSON file located in your game data folder."));
 
             RegisterSubCommand("import", new SubCommand((player, groupId, args) =>

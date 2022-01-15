@@ -7,22 +7,21 @@ using System.Linq;
 
 namespace VSHUD
 {
-    public class WaypointTextUpdateSystem : ClientSystem
+    class WaypointTextUpdateSystem : ClientSystem
     {
         ICoreClientAPI capi;
 
-        public void EnqueueIfNotAlreadyFast(HudElementWaypoint wp)
+        public static void EnqueueIfNotAlreadyFast(HudElementWaypoint wp)
         {
-            if (!priority.Contains(wp)) priority.Push(wp);
+            if (!Priority.Contains(wp)) Priority.Push(wp);
         }
-        
-        public void EnqueueIfNotAlready(HudElementWaypoint wp)
+        public static void EnqueueIfNotAlready(HudElementWaypoint wp)
         {
-            if (!textTasks.Contains(wp)) textTasks.Enqueue(wp);
+            if (!TextTasks.Contains(wp)) TextTasks.Enqueue(wp);
         }
 
-        private ConcurrentQueue<HudElementWaypoint> textTasks = new ConcurrentQueue<HudElementWaypoint>();
-        private ConcurrentStack<HudElementWaypoint> priority = new ConcurrentStack<HudElementWaypoint>();
+        public static ConcurrentQueue<HudElementWaypoint> TextTasks = new ConcurrentQueue<HudElementWaypoint>();
+        public static ConcurrentStack<HudElementWaypoint> Priority = new ConcurrentStack<HudElementWaypoint>();
 
         public WaypointTextUpdateSystem(ClientMain game) : base(game)
         {
@@ -35,17 +34,17 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt)
         {
-            for (int i = 0; i < priority.Count; i++)
+            for (int i = 0; i < Priority.Count; i++)
             {
-                if (priority.TryPop(out var elem))
+                if (Priority.TryPop(out var elem))
                 {
                     UpdateDialog(elem);
                 }
             }
             
-            for (int i = 0; i < textTasks.Count; i++)
+            for (int i = 0; i < TextTasks.Count; i++)
             {
-                if (textTasks.TryDequeue(out var elem))
+                if (TextTasks.TryDequeue(out var elem))
                 {
                     lock (elem)
                     {
@@ -77,9 +76,9 @@ namespace VSHUD
         public override void Dispose(ClientMain game)
         {
             base.Dispose(game);
-            for (int i = 0; i < textTasks.Count; )
+            for (int i = 0; i < TextTasks.Count; )
             {
-                if (textTasks.TryDequeue(out var a)) i++;
+                if (TextTasks.TryDequeue(out var a)) i++;
             }
         }
     }

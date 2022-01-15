@@ -164,7 +164,6 @@
     <Compile Include="Systems\Patches\TriggerRepopulation.cs" />
     <Compile Include="Systems\VanillaPatches.cs" />
     <Compile Include="Abstract\ClientModSystem.cs" />
-    <Compile Include="Utility\ThreadStuff.cs" />
     <Compile Include="VSHUDMain.cs" />
   </ItemGroup>
   <ItemGroup>

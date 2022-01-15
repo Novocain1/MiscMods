@@ -129,14 +129,11 @@ namespace VSHUD
 
                 capi.SendMyWaypoints();
 
-                capi.InjectClientThread("WaypointDialogUpdate", true, waypointTextUpdateSystem = new WaypointTextUpdateSystem(capi.World as ClientMain));
-                capi.InjectClientThread("Floaty Waypoint Management", true, floatyWaypointManagement = new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
+                capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
+                capi.InjectClientThread("Floaty Waypoint Management", 30, new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
             };
         }
-
-        public WaypointTextUpdateSystem waypointTextUpdateSystem;
-        public FloatyWaypointManagement floatyWaypointManagement;
-
+        
         public bool ViewWaypoints(KeyCombination t1)
         {
             Config.FloatyWaypoints = !Config.FloatyWaypoints;

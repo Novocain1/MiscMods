@@ -9,10 +9,9 @@ using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
-    public class FloatyWaypointManagement : ClientSystem
+    class FloatyWaypointManagement : ClientSystem
     {
-        public static ConcurrentStack<HudElementWaypoint> WaypointElements { get => instance.waypointElements; }
-        public ConcurrentStack<HudElementWaypoint> waypointElements = new ConcurrentStack<HudElementWaypoint>();
+        public static ConcurrentStack<HudElementWaypoint> WaypointElements { get; set; } = new ConcurrentStack<HudElementWaypoint>();
         public static bool mainThreadProcessing = false;
 
         ICoreClientAPI capi;
@@ -20,8 +19,6 @@ namespace VSHUD
         public static bool forceRepop = false;
 
         public static void TriggerRepopulation() => forceRepop = true;
-
-        public static FloatyWaypointManagement instance;
 
         public FloatyWaypointManagement(ClientMain game, WaypointUtils utils) : base(game) 
         {
@@ -41,7 +38,6 @@ namespace VSHUD
                 return false;
             });
             Update();
-            instance = this;
         }
 
         public static string GetWaypointsHash()
@@ -188,7 +184,7 @@ namespace VSHUD
                                 dynText.Font.Color = wp.dColor;
                                 dynText.RecomposeText();
 
-                                utils.waypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
+                                WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
                                 wp.Dirty = false;
                             }
                             catch (System.IndexOutOfRangeException)
@@ -200,7 +196,7 @@ namespace VSHUD
                     }
                     else if (wp.displayText || wp.IsOpened())
                     {
-                        utils.waypointTextUpdateSystem.EnqueueIfNotAlready(wp);
+                        WaypointTextUpdateSystem.EnqueueIfNotAlready(wp);
                     }
                 }
                 mainThreadProcessing = false;
@@ -309,7 +305,6 @@ namespace VSHUD
                 val?.Dispose();
             }
             WaypointElements?.Clear();
-            capi = null;
         }
     }
 }
