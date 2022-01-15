@@ -22,7 +22,7 @@ namespace VSHUD
             
             capi.Event.LevelFinalize += () =>
             {
-                capi.InjectClientThread("LightUtil", 40, new LightUtilSystem(api.World as ClientMain, config));
+                capi.InjectClientThread("LightUtil", true, new LightUtilSystem(api.World as ClientMain, config));
             };
         }
 

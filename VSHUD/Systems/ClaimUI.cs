@@ -16,7 +16,7 @@ namespace VSHUD
         {
             GuiDialogClaimUI gui = new GuiDialogClaimUI(api);
 
-            api.Input.RegisterHotKey("claimgui", "Open Claim GUI", GlKeys.L, HotkeyType.GUIOrOtherControls);
+            api.Input.RegisterHotKey("vshud.claimgui", "(VSHUD) Open Claim GUI", GlKeys.K, HotkeyType.GUIOrOtherControls);
 
             api.Event.LevelFinalize += () =>
             {

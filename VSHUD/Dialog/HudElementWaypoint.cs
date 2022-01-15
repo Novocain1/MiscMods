@@ -63,13 +63,16 @@ namespace VSHUD
                 Dirty = true;
             };
         }
+        
+        WaypointUtils utils;
 
         public HudElementWaypoint(ICoreClientAPI capi, WaypointRelative waypoint) : base(capi)
         {
             this.waypoint = waypoint;
             DialogTitle = waypoint.Title;
 
-            config = capi.ModLoader.GetModSystem<WaypointUtils>().Config;
+            utils = capi.ModLoader.GetModSystem<WaypointUtils>();
+            config = utils.Config;
             UpdateEditDialog();
 
             renderer = new PillarRenderer(capi, this);
@@ -95,8 +98,8 @@ namespace VSHUD
             SingleComposer.Bounds.fixedOffsetY = 0;
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
-
-            WaypointTextUpdateSystem.TextTasks.Enqueue(this);
+            
+            utils.waypointTextUpdateSystem.EnqueueIfNotAlreadyFast(this);
         }
 
         protected virtual double FloatyDialogPosition => 0.75;

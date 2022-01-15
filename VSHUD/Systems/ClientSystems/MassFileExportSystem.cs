@@ -196,13 +196,23 @@ namespace VSHUD
 
     class MassFileExportSystem : ClientSystem
     {
-        public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
+        public void EnqeueExportFast(Exportable exportable)
+        {
+            toExport.Push(exportable);
+        }
 
-        public static ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
+        public void EnqeueExport(Exportable exportable)
+        {
+            toExportLast.Push(exportable);
+        }
 
-        public static void Clear() => Clear<Exportable>();
+        private ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
-        public static void Clear<T>()
+        private ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
+
+        public void Clear() => Clear<Exportable>();
+
+        public void Clear<T>()
         {
             if (toExport.IsEmpty) return;
 
