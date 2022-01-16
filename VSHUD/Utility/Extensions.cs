@@ -440,11 +440,11 @@ namespace VSHUD
 
     public static class ExtraMath
     {
-        static SHA512 fiveTwelveHasher = SHA512.Create();
+        static SHA256 twoFiftySixHasher = SHA256.Create();
 
         public static string Sha512Hash(string value)
         {
-            var hash = fiveTwelveHasher.ComputeHash(Encoding.UTF8.GetBytes(value));
+            var hash = twoFiftySixHasher.ComputeHash(Encoding.UTF8.GetBytes(value));
             string hashString = "";
             for (int i = 0; i < hash.Length; i++)
             {
