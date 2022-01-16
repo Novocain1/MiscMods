@@ -442,7 +442,7 @@ namespace VSHUD
     {
         static SHA256 twoFiftySixHasher = SHA256.Create();
 
-        public static string Sha512Hash(string value)
+        public static string Sha256Hash(string value)
         {
             var hash = twoFiftySixHasher.ComputeHash(Encoding.UTF8.GetBytes(value));
             string hashString = "";

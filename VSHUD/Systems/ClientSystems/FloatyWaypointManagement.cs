@@ -59,7 +59,7 @@ namespace VSHUD
                         str += wp?.waypoint?.Title ?? "";
                         str += wp?.waypoint?.Index ?? 00;
                     }
-                    return ExtraMath.Sha512Hash(str);
+                    return ExtraMath.Sha256Hash(str);
                 }
                 else return null;
             }

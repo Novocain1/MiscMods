@@ -25,7 +25,7 @@ namespace VSHUD
                     str += i;
                 }
 
-                string incomingHash = ExtraMath.Sha512Hash(str);
+                string incomingHash = ExtraMath.Sha256Hash(str);
 
                 if (currentHash == incomingHash)
                 {
