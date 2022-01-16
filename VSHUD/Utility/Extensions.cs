@@ -444,8 +444,13 @@ namespace VSHUD
 
         public static string Sha512Hash(string value)
         {
-            var hash = fiveTwelveHasher.ComputeHash(SerializerUtil.Serialize(value));
-            return Encoding.Default.GetString(hash);
+            var hash = fiveTwelveHasher.ComputeHash(Encoding.UTF8.GetBytes(value));
+            string hashString = "";
+            for (int i = 0; i < hash.Length; i++)
+            {
+                hashString += hash[i].ToString("x");
+            }
+            return hashString;
         }
     }
 
