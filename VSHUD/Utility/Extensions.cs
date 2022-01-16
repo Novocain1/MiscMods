@@ -448,7 +448,7 @@ namespace VSHUD
             string hashString = "";
             for (int i = 0; i < hash.Length; i++)
             {
-                hashString += hash[i].ToString("x");
+                hashString += hash[i].ToString("x2");
             }
             return hashString;
         }
