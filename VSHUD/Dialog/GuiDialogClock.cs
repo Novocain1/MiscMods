@@ -80,8 +80,8 @@ namespace VSHUD
             if (Config.Temperature) stringBuilder.AppendLine(string.Format("Temperature: {0}°C", Math.Round(climate.Temperature)));
             if (Config.Rainfall) stringBuilder.AppendLine(string.Format("Rainfall: {0}%, Fertility: {1}%", Math.Round(climate.Rainfall, 3) * 100, Math.Round(climate.Fertility, 3) * 100));
             if (Config.WindVelocity) stringBuilder.AppendLine(string.Format("Wind Velocity: {0}", GlobalConstants.CurrentWindSpeedClient.Sanitize()));
-            if (Config.LocalTemporalStability) stringBuilder.AppendLine(string.Format("Temporal Stability: {0}", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos), 3)));
-            if (Config.PlayerTemporalStability) stringBuilder.AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability, 3) * 100));
+            if (Config.LocalTemporalStability) stringBuilder.AppendLine(string.Format("Local Temporal Stability: {0}%", Math.Round(capi.ModLoader.GetModSystem<SystemTemporalStability>().GetTemporalStability(entityPos) * 100, 3)));
+            if (Config.PlayerTemporalStability) stringBuilder.AppendLine(string.Format("Player Temporal Stability: {0}%", Math.Round(stability * 100, 3)));
             if (Config.TemporalStormInfo)
             {
                 double daysOrHours = Math.Round(nextStormDays > 1 ? nextStormDays : nextStormDays * 24, 2);
