@@ -30,6 +30,11 @@ namespace VSHUD
         public int ClockColor { get; set; } = ColorUtil.WhiteArgb;
     }
 
+    public class PlacementPreviewConfig
+    {
+        public Dictionary<string, string[]> KnownBrokenByVersion { get; set; } = new Dictionary<string, string[]>();
+    }
+
     public class VSHUDConfig
     {
         public double DotRange { get; set; } = 2000.0;
@@ -57,6 +62,7 @@ namespace VSHUD
         public bool LUOpaque { get; set; } = true;
         public bool CreateChunkObjs { get; set; } = false;
 
+        public PlacementPreviewConfig PlacementPreviewConfig { get; set; } = new PlacementPreviewConfig();
         public bool PRShow { get; set; } = true;
         public bool PRTint { get; set; } = false;
         public float[] PRTintColor { get; set; } = new float[] { 0, 0, 3 };
@@ -102,6 +108,7 @@ namespace VSHUD
 
                 Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
                 SaveConfig(capi);
+                SetPlacementPreviewBlock.Initialize();
                 return true;
             }
             catch (Exception)
@@ -116,6 +123,8 @@ namespace VSHUD
         {
             if (allowSaving || force)
             {
+                SetPlacementPreviewBlock.Save();
+
                 capi.StoreModConfig(Config, "vshud.json");
                 allowSaving = true;
             }

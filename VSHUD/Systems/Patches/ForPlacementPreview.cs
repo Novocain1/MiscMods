@@ -9,6 +9,7 @@ using Vintagestory.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
@@ -45,7 +46,43 @@ namespace VSHUD
     [HarmonyPatch(typeof(Block), "OnHeldIdle")]
     public class SetPlacementPreviewBlock
     {
-        static HashSet<Type> KnownBroken = new HashSet<Type>();
+        static HashSet<Type> KnownBroken { 
+            get => KnownBrokenByVersion[GameVersion.LongGameVersion];
+            set => KnownBrokenByVersion[GameVersion.LongGameVersion] = value;
+        }
+
+        static Dictionary<string, HashSet<Type>> KnownBrokenByVersion = new Dictionary<string, HashSet<Type>>();
+        static PlacementPreviewConfig Config { get => ConfigLoader.Config.PlacementPreviewConfig; }
+
+        public static void Initialize()
+        {
+            KnownBroken = new HashSet<Type>();
+            var broken = Config.KnownBrokenByVersion;
+            foreach (var val in broken)
+            {
+                KnownBrokenByVersion[val.Key] = new HashSet<Type>();
+                foreach (var known in val.Value)
+                {
+                    KnownBrokenByVersion[val.Key].Add(AccessTools.TypeByName(known));
+                }
+            }
+        }
+
+        public static void Save()
+        {
+            foreach (var val in KnownBrokenByVersion)
+            {
+                string[] strings = new string[val.Value.Count];
+                var types = val.Value.ToArray();
+
+                for (int i = 0; i < strings.Length; i++)
+                {
+                    strings[i] = types[i].AssemblyQualifiedName;
+                }
+
+                Config.KnownBrokenByVersion[val.Key] = strings;
+            }
+        }
 
         public static void Postfix(Block __instance, ItemSlot slot, EntityAgent byEntity)
         {
@@ -82,6 +119,7 @@ namespace VSHUD
                         catch (Exception)
                         {
                             KnownBroken.Add(__instance.GetType());
+                            ConfigLoader.SaveConfig((ICoreClientAPI)byEntity.World.Api);
                         }
 
                         if (blockSel.DidOffset)
@@ -99,6 +137,12 @@ namespace VSHUD
         }
     }
 
+    [HarmonyPatch(typeof(BlockAngledGears), "DidConnectAt")]
+    public class DidConnectAtHalt0
+    {
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+    }
+
     [HarmonyPatch(typeof(BlockAccessorBase), "SpawnBlockEntity")]
     public class SpawnBlockEntityHalt
     {
@@ -107,6 +151,12 @@ namespace VSHUD
 
     [HarmonyPatch(typeof(BlockAccessorRelaxed), "ExchangeBlock")]
     public class ExchangeBlockHalt
+    {
+        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+    }
+
+    [HarmonyPatch(typeof(BEBehaviorMPAngledGears), "SetOrientations")]
+    public class SetOrientationHalt
     {
         public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
     }
