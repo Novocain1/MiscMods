@@ -12,6 +12,11 @@ using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
 using OpenTK.Graphics.OpenGL;
+using Vintagestory.GameContent;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace VSHUD
 {
@@ -29,6 +34,60 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
+
+            api.RegisterCommand("exportmap", "Exports the map as pngs.", "", (p, a) =>
+            {
+                var cMap = api.ModLoader.GetModSystem<WorldMapManager>()?.MapLayers?.OfType<ChunkMapLayer>()?.Single();
+                if (cMap != null)
+                {
+                    var mapDB = cMap.GetField<MapDB>("mapdb");
+                    var bA = api.World.BlockAccessor;
+                    
+                    Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+                    Rectangle rect = new Rectangle(0, 0, bA.ChunkSize, bA.ChunkSize);
+
+                    VSHUDTaskSystem.Actions.Enqueue(() =>
+                    {
+                        for (int x = 0; x < bA.MapSizeX / bA.ChunkSize; x++)
+                        {
+                            for (int z = 0; z < bA.MapSizeZ / bA.ChunkSize; z++)
+                            {
+                                var mChunk = new Vec2i(x, z);
+                                
+                                if (bA.GetMapChunk(mChunk) != null)
+                                {
+                                    VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
+                                    {
+                                        var piece = mapDB.GetMapPiece(mChunk);
+                                        if (piece != null)
+                                        {
+                                            BitmapData bmpData = img.LockBits(rect, ImageLockMode.ReadWrite, img.PixelFormat);
+
+                                            for (int i = 0; i < piece.Pixels.Length; i++)
+                                            {
+                                                int r = ColorUtil.ColorR(piece.Pixels[i]);
+                                                int g = ColorUtil.ColorG(piece.Pixels[i]);
+                                                int b = ColorUtil.ColorB(piece.Pixels[i]);
+                                                int newpix = b << 16 | g << 08 | r << 00;
+
+                                                Marshal.WriteInt32(bmpData.Scan0, i * sizeof(int), newpix);
+                                            }
+
+                                            string path = Path.Combine(GamePaths.DataPath, "SavedMaps", api.World.Seed.ToString());
+                                            
+                                            Directory.CreateDirectory(path);
+                                            
+                                            img.Save(Path.Combine(path, string.Format("{0} {1}.png", mChunk.X, mChunk.Y)), ImageFormat.Png);
+                                            img.UnlockBits(bmpData);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
             api.RegisterCommand("obj", "", "", (p, a) =>
             {
                 var bs = api.World.Player.CurrentBlockSelection;
