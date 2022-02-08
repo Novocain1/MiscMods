@@ -24,7 +24,7 @@ namespace VSHUD
             {
                 capi.Shader.ReloadShaders();
                 capi.InjectClientThread("File Export", 1000, new MassFileExportSystem(capi.World as ClientMain));
-                capi.InjectClientThread("VSHUD Tasks", 1, new VSHUDTaskSystem(capi.World as ClientMain));
+                capi.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(capi.World as ClientMain));
             };
         }
 
