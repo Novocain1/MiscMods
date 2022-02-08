@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using Vintagestory.API.Client;
 using System;
+using System.Collections;
 
 namespace VSHUD
 {
@@ -25,16 +26,16 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt)
         {
-            ProcessActions(Actions);
             ProcessMainThreadActions();
+            ProcessActions(Actions).MoveNext();
         }
 
         public void ProcessMainThreadActions()
         {
-            game.EnqueueMainThreadTask(() => ProcessActions(MainThreadActions), "");
+            game.EnqueueMainThreadTask(() => ProcessActions(MainThreadActions).MoveNext(), "");
         }
 
-        public void ProcessActions(ConcurrentQueue<Action> actions)
+        public IEnumerator ProcessActions(ConcurrentQueue<Action> actions)
         {
             if (actions != null)
             {
@@ -42,6 +43,7 @@ namespace VSHUD
                 {
                     bool success = actions.TryDequeue(out Action action);
                     if (success) action?.Invoke();
+                    yield return null;
                 }
             }
         }

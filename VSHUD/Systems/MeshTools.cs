@@ -46,17 +46,25 @@ namespace VSHUD
                     Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
                     Rectangle rect = new Rectangle(0, 0, bA.ChunkSize, bA.ChunkSize);
 
+                    api.ShowChatMessage(string.Format("Searching {0} chunks for map tiles...", (bA.MapSizeX / bA.ChunkSize) * (bA.MapSizeZ / bA.ChunkSize)));
+
                     VSHUDTaskSystem.Actions.Enqueue(() =>
                     {
+                        ulong searchedCount = 0;
+                        ulong foundCount = 0;
+
                         for (int x = 0; x < bA.MapSizeX / bA.ChunkSize; x++)
                         {
                             for (int z = 0; z < bA.MapSizeZ / bA.ChunkSize; z++)
                             {
                                 var mChunk = new Vec2i(x, z);
-                                
+                                searchedCount++;
+
                                 if (bA.GetMapChunk(mChunk) != null)
                                 {
-                                    VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
+                                    foundCount++;
+
+                                    VSHUDTaskSystem.Actions.Enqueue(() =>
                                     {
                                         var piece = mapDB.GetMapPiece(mChunk);
                                         if (piece != null)
@@ -65,10 +73,10 @@ namespace VSHUD
 
                                             for (int i = 0; i < piece.Pixels.Length; i++)
                                             {
-                                                int r = ColorUtil.ColorR(piece.Pixels[i]);
+                                                int b = ColorUtil.ColorR(piece.Pixels[i]);
                                                 int g = ColorUtil.ColorG(piece.Pixels[i]);
-                                                int b = ColorUtil.ColorB(piece.Pixels[i]);
-                                                int newpix = b << 16 | g << 08 | r << 00;
+                                                int r = ColorUtil.ColorB(piece.Pixels[i]);
+                                                int newpix = r << 16 | g << 08 | b << 00;
 
                                                 Marshal.WriteInt32(bmpData.Scan0, i * sizeof(int), newpix);
                                             }
@@ -76,14 +84,23 @@ namespace VSHUD
                                             string path = Path.Combine(GamePaths.DataPath, "SavedMaps", api.World.Seed.ToString());
                                             
                                             Directory.CreateDirectory(path);
-                                            
-                                            img.Save(Path.Combine(path, string.Format("{0} {1}.png", mChunk.X, mChunk.Y)), ImageFormat.Png);
+                                            var dft = api.World.DefaultSpawnPosition.AsBlockPos;
+                                            var pos = new Vec2i(dft.X / bA.ChunkSize, dft.Z / bA.ChunkSize);
+                                            pos.X -= mChunk.X;
+                                            pos.Y -= mChunk.Y;
+
+                                            img.Save(Path.Combine(path, string.Format("X={0} Z={1}.png", pos.X, pos.Y)), ImageFormat.Png);
                                             img.UnlockBits(bmpData);
                                         }
                                     });
                                 }
                             }
                         }
+
+                        VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
+                        {
+                            api.ShowChatMessage(string.Format("Found {0} tiles, enqueued export tasks.", foundCount));
+                        });
                     });
                 }
             });
