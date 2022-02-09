@@ -27,6 +27,8 @@ namespace VSHUD
         {
             if (__instance.ItemClass == EnumItemClass.Item)
             {
+                if (slot is ItemSlotOffhand) return;
+
                 if (__instance is ItemStone)
                 {
                     var loc0 = __instance.CodeWithPath("loosestones-" + __instance.LastCodePart() + "-free");
@@ -88,7 +90,7 @@ namespace VSHUD
         {
             if (byEntity.World.Side.IsClient())
             {
-                if (!(slot is DummySlot) && slot is ItemSlotOffhand) return;
+                if (slot is ItemSlotOffhand) return;
 
                 if ((byEntity.World as ClientMain).ElapsedMilliseconds % 4 == 0)
                 {   
@@ -232,7 +234,6 @@ namespace VSHUD
         public static void Postfix(ref int blockId, BlockPos pos)
         {
             if (ShouldNotSkipOriginal) return;
-
             SetBlockRedirect.blockId = blockId;
 
             xyz[0] = pos.X;
