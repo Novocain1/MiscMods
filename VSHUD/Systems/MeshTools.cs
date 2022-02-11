@@ -35,15 +35,16 @@ namespace VSHUD
         {
             this.capi = api;
 
-            api.RegisterCommand("exportmap", "Exports the map as pngs.", "", (p, a) =>
+            api.RegisterCommand("exportmap", "Exports the map as pngs.", "", (p, args) =>
             {
+                var fmt = System.Drawing.Imaging.PixelFormat.Format32bppRgb;
                 var cMap = api.ModLoader.GetModSystem<WorldMapManager>()?.MapLayers?.OfType<ChunkMapLayer>()?.Single();
                 if (cMap != null)
                 {
                     var mapDB = cMap.GetField<MapDB>("mapdb");
                     var bA = api.World.BlockAccessor;
                     
-                    Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+                    Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, fmt);
                     Rectangle rect = new Rectangle(0, 0, bA.ChunkSize, bA.ChunkSize);
 
                     api.ShowChatMessage(string.Format("Searching {0} chunks for map tiles...", (bA.MapSizeX / bA.ChunkSize) * (bA.MapSizeZ / bA.ChunkSize)));
@@ -52,6 +53,10 @@ namespace VSHUD
                     {
                         ulong searchedCount = 0;
                         ulong foundCount = 0;
+
+                        string path = Path.Combine(GamePaths.DataPath, "SavedMaps", api.World.Seed.ToString());
+
+                        Directory.CreateDirectory(path);
 
                         for (int x = 0; x < bA.MapSizeX / bA.ChunkSize; x++)
                         {
@@ -70,7 +75,7 @@ namespace VSHUD
                                         if (piece != null)
                                         {
                                             BitmapData bmpData = img.LockBits(rect, ImageLockMode.ReadWrite, img.PixelFormat);
-
+                                            
                                             for (int i = 0; i < piece.Pixels.Length; i++)
                                             {
                                                 int b = ColorUtil.ColorR(piece.Pixels[i]);
@@ -80,12 +85,10 @@ namespace VSHUD
 
                                                 Marshal.WriteInt32(bmpData.Scan0, i * sizeof(int), newpix);
                                             }
-
-                                            string path = Path.Combine(GamePaths.DataPath, "SavedMaps", api.World.Seed.ToString());
                                             
-                                            Directory.CreateDirectory(path);
                                             var dft = api.World.DefaultSpawnPosition.AsBlockPos;
                                             var pos = new Vec2i(dft.X / bA.ChunkSize, dft.Z / bA.ChunkSize);
+                                            
                                             pos.X -= mChunk.X;
                                             pos.Y -= mChunk.Y;
 
@@ -95,6 +98,69 @@ namespace VSHUD
                                     });
                                 }
                             }
+                        }
+
+                        bool stitch = args.PopWord()?.ToLowerInvariant() == "stitch";
+                        
+                        if (stitch)
+                        {
+                            VSHUDTaskSystem.Actions.Enqueue(() =>
+                            {
+                                Bitmap blankTile = new Bitmap(32, 32, fmt);
+
+                                string stitchPath = Path.Combine(path, "stitch");
+                                Directory.CreateDirectory(stitchPath);
+                                string[] files = Directory.GetFiles(path);
+                                int minX = 0, maxX = 0, minY = 0, maxY = 0;
+
+                                foreach (var file in files)
+                                {
+                                    string[] xy = Path.GetFileName(file).Replace(".png", "").Split(' ');
+                                    xy[0] = xy[0].Remove(0, 2);
+                                    xy[1] = xy[1].Remove(0, 2);
+                                    
+                                    int xParse = int.Parse(xy[0]);
+                                    int yParse = int.Parse(xy[1]);
+
+                                    minX = minX > xParse ? xParse : minX;
+                                    minY = minY > yParse ? yParse : minY;
+                                    maxX = maxX < xParse ? xParse : maxX;
+                                    maxY = maxY < yParse ? yParse : maxY;
+                                }
+
+                                int sizeX = Math.Abs(minX - maxX) * 32;
+                                int sizeY = Math.Abs(minY - maxY) * 32;
+
+                                Bitmap stitched = new Bitmap(sizeX, sizeY, fmt);
+
+                                using (var canvas = Graphics.FromImage(stitched))
+                                {
+                                    canvas.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                                    for (int x = minX, lx = 0; x < maxX; x++, lx++)
+                                    {
+                                        for (int y = minY, ly = 0; y < maxY; y++, ly++)
+                                        {
+                                            string file = Path.Combine(path, string.Format("X={0} Z={1}.png", x, y));
+
+                                            if (File.Exists(file))
+                                            {
+                                                var bmpf = (Bitmap)Image.FromFile(file);
+
+                                                canvas.DrawImage(bmpf, stitched.Width - (lx * 32), stitched.Height - (ly * 32));
+
+                                                bmpf.Dispose();
+                                            }
+                                            else
+                                            {
+                                                canvas.DrawImage(blankTile, stitched.Width - (lx * 32), stitched.Height - (ly * 32));
+                                            }
+                                        }
+                                    }
+                                    canvas.Save();
+                                }
+
+                                stitched.Save(Path.Combine(stitchPath, "0.png"), ImageFormat.Png);
+                            });
                         }
 
                         VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
