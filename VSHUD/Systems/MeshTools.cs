@@ -44,6 +44,13 @@ namespace VSHUD
                     var mapDB = cMap.GetField<MapDB>("mapdb");
                     var bA = api.World.BlockAccessor;
                     
+                    //save to db before looking
+                    {
+                        var toSave = cMap.GetField<Dictionary<Vec2i, MapPieceDB>>("toSaveList");
+                        mapDB.SetMapPieces(toSave);
+                        toSave.Clear();
+                    }
+                    
                     Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, fmt);
                     Rectangle rect = new Rectangle(0, 0, bA.ChunkSize, bA.ChunkSize);
 
@@ -104,6 +111,11 @@ namespace VSHUD
                         
                         if (stitch)
                         {
+                            VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
+                            {
+                                api.ShowChatMessage(string.Format("Stitching...", foundCount));
+                            });
+
                             VSHUDTaskSystem.Actions.Enqueue(() =>
                             {
                                 Bitmap blankTile = new Bitmap(32, 32, fmt);
