@@ -57,7 +57,6 @@ namespace VSHUD
                         VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
                         {
                             var mapDats = cMap.GetField<ConcurrentDictionary<Vec2i, MultiChunkMapComponent>>("loadedMapData");
-                            var dft = api.World.DefaultSpawnPosition.AsBlockPos;
                             
                             foreach (var mapDat in mapDats)
                             {
@@ -69,13 +68,8 @@ namespace VSHUD
                                     GL.BindTexture(TextureTarget.Texture2D, texture.TextureId);
                                     
                                     GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
-                                    
-                                    var pos = new Vec2i(dft.X / bA.ChunkSize, dft.Z / bA.ChunkSize);
 
-                                    pos.X -= mapDat.Value.chunkCoord.X;
-                                    pos.Y -= mapDat.Value.chunkCoord.Y;
-
-                                    img.Save(Path.Combine(path, string.Format("X={0} Z={1}.png", pos.X - 1, pos.Y - 1)), ImageFormat.Png);
+                                    img.Save(Path.Combine(path, string.Format("X={0} Z={1}.png", mapDat.Value.chunkCoord.X, mapDat.Value.chunkCoord.Y)), ImageFormat.Png);
                                     img.UnlockBits(bmpData);
                                 }
                             }
@@ -92,7 +86,7 @@ namespace VSHUD
                                     Directory.CreateDirectory(stitchPath);
                                     string[] files = Directory.GetFiles(path);
                                     int minX = 0, maxX = 0, minY = 0, maxY = 0;
-
+                                    int i = 0;
                                     foreach (var file in files)
                                     {
                                         string[] xy = Path.GetFileName(file).Replace(".png", "").Split(' ');
@@ -101,23 +95,19 @@ namespace VSHUD
 
                                         int xParse = int.Parse(xy[0]);
                                         int yParse = int.Parse(xy[1]);
+                                        if (i == 0) { minX = xParse; maxX = xParse; minY = yParse; maxY = yParse; }
 
                                         minX = minX > xParse ? xParse : minX;
                                         minY = minY > yParse ? yParse : minY;
                                         maxX = maxX < xParse ? xParse : maxX;
                                         maxY = maxY < yParse ? yParse : maxY;
+                                        i++;
                                     }
 
-                                    maxX += 3;
-                                    maxY += 3;
+                                    int w = maxX - minX;
+                                    int h = maxY - minY;
 
-                                    int sizeX = Math.Abs(minX - maxX) * bA.ChunkSize * 3;
-                                    int sizeY = Math.Abs(minY - maxY) * bA.ChunkSize * 3;
-
-                                    Bitmap stitched = new Bitmap(sizeX, sizeY, fmt);
-
-                                    int centerW = stitched.Width / 2;
-                                    int centerH = stitched.Height / 2;
+                                    Bitmap stitched = new Bitmap(w * bA.ChunkSize * 3, h * bA.ChunkSize * 3, fmt);
 
                                     using (var canvas = Graphics.FromImage(stitched))
                                     {
@@ -125,9 +115,12 @@ namespace VSHUD
 
                                         for (int x = minX; x < maxX; x++)
                                         {
-                                            for (int y = minY; y < maxY; y++)
+                                            for (int y = minX; y < maxY; y++)
                                             {
                                                 string file = Path.Combine(path, string.Format("X={0} Z={1}.png", x, y));
+
+                                                int lx = minX - x;
+                                                int ly = minY - y;
 
                                                 if (File.Exists(file))
                                                 {
@@ -138,7 +131,7 @@ namespace VSHUD
                                                     using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                                                     {
                                                         Bitmap bmp = (Bitmap)Image.FromStream(fs);
-                                                        canvas.DrawImage(bmp, centerW - (x * bA.ChunkSize), centerH - (y * bA.ChunkSize));
+                                                        canvas.DrawImage(bmp, (w - lx) * bA.ChunkSize, (h - ly) * bA.ChunkSize);
                                                     }
                                                 }
                                             }
