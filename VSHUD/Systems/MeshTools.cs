@@ -17,6 +17,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Collections.Concurrent;
+using System.Security.AccessControl;
 
 namespace VSHUD
 {
@@ -43,141 +45,109 @@ namespace VSHUD
                 {
                     var mapDB = cMap.GetField<MapDB>("mapdb");
                     var bA = api.World.BlockAccessor;
-                    
-                    //save to db before looking
-                    {
-                        var toSave = cMap.GetField<Dictionary<Vec2i, MapPieceDB>>("toSaveList");
-                        mapDB.SetMapPieces(toSave);
-                        toSave.Clear();
-                    }
-                    
-                    Bitmap img = new Bitmap(bA.ChunkSize, bA.ChunkSize, fmt);
-                    Rectangle rect = new Rectangle(0, 0, bA.ChunkSize, bA.ChunkSize);
 
-                    api.ShowChatMessage(string.Format("Searching {0} chunks for map tiles...", (bA.MapSizeX / bA.ChunkSize) * (bA.MapSizeZ / bA.ChunkSize)));
+                    Bitmap img = new Bitmap(bA.ChunkSize * 3, bA.ChunkSize * 3, fmt);
+                    Rectangle rect = new Rectangle(0, 0, bA.ChunkSize * 3, bA.ChunkSize * 3);
 
                     VSHUDTaskSystem.Actions.Enqueue(() =>
                     {
-                        ulong searchedCount = 0;
-                        ulong foundCount = 0;
-
                         string path = Path.Combine(GamePaths.DataPath, "SavedMaps", api.World.Seed.ToString());
 
                         Directory.CreateDirectory(path);
-
-                        for (int x = 0; x < bA.MapSizeX / bA.ChunkSize; x++)
-                        {
-                            for (int z = 0; z < bA.MapSizeZ / bA.ChunkSize; z++)
-                            {
-                                var mChunk = new Vec2i(x, z);
-                                searchedCount++;
-
-                                if (bA.GetMapChunk(mChunk) != null)
-                                {
-                                    foundCount++;
-
-                                    VSHUDTaskSystem.Actions.Enqueue(() =>
-                                    {
-                                        var piece = mapDB.GetMapPiece(mChunk);
-                                        if (piece != null)
-                                        {
-                                            BitmapData bmpData = img.LockBits(rect, ImageLockMode.ReadWrite, img.PixelFormat);
-                                            
-                                            for (int i = 0; i < piece.Pixels.Length; i++)
-                                            {
-                                                int b = ColorUtil.ColorR(piece.Pixels[i]);
-                                                int g = ColorUtil.ColorG(piece.Pixels[i]);
-                                                int r = ColorUtil.ColorB(piece.Pixels[i]);
-                                                int newpix = r << 16 | g << 08 | b << 00;
-
-                                                Marshal.WriteInt32(bmpData.Scan0, i * sizeof(int), newpix);
-                                            }
-                                            
-                                            var dft = api.World.DefaultSpawnPosition.AsBlockPos;
-                                            var pos = new Vec2i(dft.X / bA.ChunkSize, dft.Z / bA.ChunkSize);
-                                            
-                                            pos.X -= mChunk.X;
-                                            pos.Y -= mChunk.Y;
-
-                                            img.Save(Path.Combine(path, string.Format("X={0} Z={1}.png", pos.X, pos.Y)), ImageFormat.Png);
-                                            img.UnlockBits(bmpData);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-
-                        bool stitch = args.PopWord()?.ToLowerInvariant() == "stitch";
-                        
-                        if (stitch)
-                        {
-                            VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
-                            {
-                                api.ShowChatMessage(string.Format("Stitching...", foundCount));
-                            });
-
-                            VSHUDTaskSystem.Actions.Enqueue(() =>
-                            {
-                                Bitmap blankTile = new Bitmap(32, 32, fmt);
-
-                                string stitchPath = Path.Combine(path, "stitch");
-                                Directory.CreateDirectory(stitchPath);
-                                string[] files = Directory.GetFiles(path);
-                                int minX = 0, maxX = 0, minY = 0, maxY = 0;
-
-                                foreach (var file in files)
-                                {
-                                    string[] xy = Path.GetFileName(file).Replace(".png", "").Split(' ');
-                                    xy[0] = xy[0].Remove(0, 2);
-                                    xy[1] = xy[1].Remove(0, 2);
-                                    
-                                    int xParse = int.Parse(xy[0]);
-                                    int yParse = int.Parse(xy[1]);
-
-                                    minX = minX > xParse ? xParse : minX;
-                                    minY = minY > yParse ? yParse : minY;
-                                    maxX = maxX < xParse ? xParse : maxX;
-                                    maxY = maxY < yParse ? yParse : maxY;
-                                }
-
-                                int sizeX = Math.Abs(minX - maxX) * 32;
-                                int sizeY = Math.Abs(minY - maxY) * 32;
-
-                                Bitmap stitched = new Bitmap(sizeX, sizeY, fmt);
-
-                                using (var canvas = Graphics.FromImage(stitched))
-                                {
-                                    canvas.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-                                    for (int x = minX, lx = 0; x < maxX; x++, lx++)
-                                    {
-                                        for (int y = minY, ly = 0; y < maxY; y++, ly++)
-                                        {
-                                            string file = Path.Combine(path, string.Format("X={0} Z={1}.png", x, y));
-
-                                            if (File.Exists(file))
-                                            {
-                                                var bmpf = (Bitmap)Image.FromFile(file);
-
-                                                canvas.DrawImage(bmpf, stitched.Width - (lx * 32), stitched.Height - (ly * 32));
-
-                                                bmpf.Dispose();
-                                            }
-                                            else
-                                            {
-                                                canvas.DrawImage(blankTile, stitched.Width - (lx * 32), stitched.Height - (ly * 32));
-                                            }
-                                        }
-                                    }
-                                    canvas.Save();
-                                }
-
-                                stitched.Save(Path.Combine(stitchPath, "0.png"), ImageFormat.Png);
-                            });
-                        }
-
                         VSHUDTaskSystem.MainThreadActions.Enqueue(() =>
                         {
-                            api.ShowChatMessage(string.Format("Found {0} tiles, enqueued export tasks.", foundCount));
+                            var mapDats = cMap.GetField<ConcurrentDictionary<Vec2i, MultiChunkMapComponent>>("loadedMapData");
+                            var dft = api.World.DefaultSpawnPosition.AsBlockPos;
+                            
+                            foreach (var mapDat in mapDats)
+                            {
+                                var texture = mapDat.Value.Texture;
+                                if (texture != null)
+                                {
+                                    BitmapData bmpData = img.LockBits(rect, ImageLockMode.ReadWrite, img.PixelFormat);
+
+                                    GL.BindTexture(TextureTarget.Texture2D, texture.TextureId);
+                                    
+                                    GL.GetTexImage(TextureTarget.Texture2D, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+                                    
+                                    var pos = new Vec2i(dft.X / bA.ChunkSize, dft.Z / bA.ChunkSize);
+
+                                    pos.X -= mapDat.Value.chunkCoord.X;
+                                    pos.Y -= mapDat.Value.chunkCoord.Y;
+
+                                    img.Save(Path.Combine(path, string.Format("X={0} Z={1}.png", pos.X - 1, pos.Y - 1)), ImageFormat.Png);
+                                    img.UnlockBits(bmpData);
+                                }
+                            }
+
+                            bool stitch = args.PopWord()?.ToLowerInvariant() == "stitch";
+
+                            if (stitch)
+                            {
+                                VSHUDTaskSystem.Actions.Enqueue(() =>
+                                {
+                                    Bitmap blankTile = new Bitmap(bA.ChunkSize * 3, bA.ChunkSize * 3, fmt);
+
+                                    string stitchPath = Path.Combine(path, "stitch");
+                                    Directory.CreateDirectory(stitchPath);
+                                    string[] files = Directory.GetFiles(path);
+                                    int minX = 0, maxX = 0, minY = 0, maxY = 0;
+
+                                    foreach (var file in files)
+                                    {
+                                        string[] xy = Path.GetFileName(file).Replace(".png", "").Split(' ');
+                                        xy[0] = xy[0].Remove(0, 2);
+                                        xy[1] = xy[1].Remove(0, 2);
+
+                                        int xParse = int.Parse(xy[0]);
+                                        int yParse = int.Parse(xy[1]);
+
+                                        minX = minX > xParse ? xParse : minX;
+                                        minY = minY > yParse ? yParse : minY;
+                                        maxX = maxX < xParse ? xParse : maxX;
+                                        maxY = maxY < yParse ? yParse : maxY;
+                                    }
+
+                                    maxX += 3;
+                                    maxY += 3;
+
+                                    int sizeX = Math.Abs(minX - maxX) * bA.ChunkSize * 3;
+                                    int sizeY = Math.Abs(minY - maxY) * bA.ChunkSize * 3;
+
+                                    Bitmap stitched = new Bitmap(sizeX, sizeY, fmt);
+
+                                    int centerW = stitched.Width / 2;
+                                    int centerH = stitched.Height / 2;
+
+                                    using (var canvas = Graphics.FromImage(stitched))
+                                    {
+                                        canvas.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+
+                                        for (int x = minX; x < maxX; x++)
+                                        {
+                                            for (int y = minY; y < maxY; y++)
+                                            {
+                                                string file = Path.Combine(path, string.Format("X={0} Z={1}.png", x, y));
+
+                                                if (File.Exists(file))
+                                                {
+                                                    FileInfo fileInfo = new FileInfo(file);
+
+                                                    while (IsFileLocked(fileInfo)) ; ;
+
+                                                    using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+                                                    {
+                                                        Bitmap bmp = (Bitmap)Image.FromStream(fs);
+                                                        canvas.DrawImage(bmp, centerW - (x * bA.ChunkSize), centerH - (y * bA.ChunkSize));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        canvas.Save();
+                                    }
+                                    stitched.Save(Path.Combine(stitchPath, "0.png"), ImageFormat.Png);
+                                });
+                            }
                         });
                     });
                 }
@@ -267,6 +237,28 @@ namespace VSHUD
                     }
                 }
             });
+        }
+
+        public bool IsFileLocked(FileInfo file)
+        {
+            try
+            {
+                using (FileStream stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    stream.Close();
+                }
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+
+            //file is not locked
+            return false;
         }
     }
 
