@@ -107,20 +107,17 @@ namespace VSHUD
                                     int w = maxX - minX;
                                     int h = maxY - minY;
 
-                                    Bitmap stitched = new Bitmap(w * bA.ChunkSize * 3, h * bA.ChunkSize * 3, fmt);
+                                    Bitmap stitched = new Bitmap(w * bA.ChunkSize, h * bA.ChunkSize, fmt);
 
                                     using (var canvas = Graphics.FromImage(stitched))
                                     {
                                         canvas.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-
-                                        for (int x = minX; x < maxX; x++)
+                                        for (int x = minX, lx = 0; x < maxX; x++, lx++)
                                         {
-                                            for (int y = minX; y < maxY; y++)
+                                            for (int y = minX, ly = 0; y < maxY; y++, ly++)
                                             {
-                                                string file = Path.Combine(path, string.Format("X={0} Z={1}.png", x, y));
-
-                                                int lx = minX - x;
-                                                int ly = minY - y;
+                                                string name = string.Format("X={0} Z={1}", x, y);
+                                                string file = Path.Combine(path, string.Format("{0}.png", name));
 
                                                 if (File.Exists(file))
                                                 {
@@ -131,7 +128,7 @@ namespace VSHUD
                                                     using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                                                     {
                                                         Bitmap bmp = (Bitmap)Image.FromStream(fs);
-                                                        canvas.DrawImage(bmp, (w - lx) * bA.ChunkSize, (h - ly) * bA.ChunkSize);
+                                                        canvas.DrawImage(bmp, lx * bA.ChunkSize, ly * bA.ChunkSize);
                                                     }
                                                 }
                                             }
