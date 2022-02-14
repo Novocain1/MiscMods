@@ -59,6 +59,7 @@ namespace VSHUD
         public static void Initialize()
         {
             KnownBroken = new HashSet<Type>();
+
             var broken = Config.KnownBrokenByVersion;
             foreach (var val in broken)
             {

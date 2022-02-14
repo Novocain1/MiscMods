@@ -104,7 +104,11 @@ namespace VSHUD
         {
             try
             {
-                if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { SaveConfig(capi); return true; }
+                if ((capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json")) == null) { 
+                    SaveConfig(capi);
+                    SetPlacementPreviewBlock.Initialize();
+                    return true; 
+                }
 
                 Config = capi.LoadModConfig<VSHUDConfig>("vshud.json") ?? capi.LoadModConfig<VSHUDConfig>("waypointutils.json");
                 SaveConfig(capi);
