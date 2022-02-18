@@ -162,7 +162,7 @@
     <Compile Include="Systems\WaypointUtils.cs" />
     <Compile Include="Systems\Patches\ProduceFloatyDamages.cs" />
     <Compile Include="Systems\Patches\TriggerRepopulation.cs" />
-    <Compile Include="Systems\VanillaPatches.cs" />
+    <Compile Include="Systems\UniversalHarmonyPatcher.cs" />
     <Compile Include="Abstract\ClientModSystem.cs" />
     <Compile Include="VSHUDMain.cs" />
   </ItemGroup>
