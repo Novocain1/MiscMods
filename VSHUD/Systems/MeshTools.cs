@@ -37,6 +37,8 @@ namespace VSHUD
         {
             this.capi = api;
 
+            var Main = api.ModLoader.GetModSystem<VSHUDMain>();
+
             api.RegisterCommand("exportmap", "Exports the map as pngs.", "", (p, args) =>
             {
                 var fmt = System.Drawing.Imaging.PixelFormat.Format32bppRgb;
@@ -170,10 +172,7 @@ namespace VSHUD
 
                 if (mesh != null)
                 {
-                    lock (MassFileExportSystem.toExport)
-                    {
-                        MassFileExportSystem.toExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, name + ".obj"), name + ".obj"));
-                    }
+                    Main.fileExport.Push(new ExportableMesh(mesh, Path.Combine(GamePaths.DataPath, name + ".obj"), name + ".obj"));
                 }
             });
 
@@ -187,7 +186,7 @@ namespace VSHUD
                         capi.ShowChatMessage(string.Format("Chunk Tesselator .obj Caching {0}.", ConfigLoader.Config.CreateChunkObjs ? "Enabled" : "Disabled"));
                         break;
                     case "clear":
-                        MassFileExportSystem.Clear<ExportableChunkPart>();
+                        Main.fileExport.Clear<ExportableChunkPart>();
                         break;
                     default:
                         break;
@@ -221,10 +220,7 @@ namespace VSHUD
 
                 if (mesh != null)
                 {
-                    lock (MassFileExportSystem.toExport)
-                    {
-                        MassFileExportSystem.toExport.Push(new ExportableJsonObject(mesh, Path.Combine(GamePaths.DataPath, name)));
-                    }
+                    Main.fileExport.toExport.Push(new ExportableJsonObject(mesh, Path.Combine(GamePaths.DataPath, name)));
                 }
             });
         }

@@ -15,13 +15,13 @@ namespace RandomTests
         public float fallTime;
         public bool isLeaves;
 
-        public FallingTreeRenderer(ICoreClientAPI capi, BlockPos pos, bool isLeaves, MeshData treeMesh, float fallTime, BlockFacing fallDirection, EnumRenderStage pass)
+        public FallingTreeRenderer(ICoreClientAPI capi, BlockPos pos, bool isLeaves, MeshRef treeMesh, float fallTime, BlockFacing fallDirection, EnumRenderStage pass)
         {
             if (pos == null || treeMesh == null) return;
 
             this.capi = capi;
             this.pos = pos;
-            this.treeMesh = capi.Render.UploadMesh(treeMesh);
+            this.treeMesh = treeMesh;
             this.fallDirection = fallDirection;
             this.isLeaves = isLeaves;
             startFallTime = this.fallTime = fallTime;
@@ -39,6 +39,8 @@ namespace RandomTests
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
+            fallTime -= deltaTime;
+
             if (fallTime < -1)
             {
                 capi.Event.UnregisterRenderer(this, stage);
@@ -61,30 +63,32 @@ namespace RandomTests
             prevProg?.Stop();
 
             IShaderProgram sProg = shadowPass ? rpi.GetEngineShader(EnumShaderProgram.Shadowmapentityanimated) : rpi.PreparedStandardShader(pos.X, pos.Y, pos.Z);
-
+            
             var mat = ModelMat
                     .Identity()
                     .Translate(pos.X - camPos.X, pos.Y - camPos.Y, pos.Z - camPos.Z)
                 ;
 
+            float deg = 90.0f;
+
             switch (fallDirection.Code)
             {
                 case "north":
-                    mat.RotateXDeg(GameMath.Max(percent * 90.0f - 90.0f, -90.0f));
+                    mat.RotateXDeg(GameMath.Max(percent * deg - deg, -deg));
                     break;
                 case "south":
                     mat.Translate(0, 0, 1);
-                    mat.RotateXDeg(GameMath.Min(percent * -90.0f + 90.0f, 90.0f));
+                    mat.RotateXDeg(GameMath.Min(percent * -deg + deg, deg));
                     mat.Translate(0, 0, -1);
                     break;
                 case "east":
                     mat.Translate(1, 0, 1);
-                    mat.RotateZDeg(GameMath.Max(percent * 90.0f - 90.0f, -90.0f));
+                    mat.RotateZDeg(GameMath.Max(percent * deg - deg, -deg));
                     mat.Translate(-1, 0, -1);
                     break;
                 case "west":
                     mat.Translate(0, 0, 1);
-                    mat.RotateZDeg(GameMath.Min(percent * -90.0f + 90.0f, 90.0f));
+                    mat.RotateZDeg(GameMath.Min(percent * -deg + deg, deg));
                     mat.Translate(0, 0, -1);
                     break;
                 default:
@@ -97,7 +101,9 @@ namespace RandomTests
             {
                 var prog = (IStandardShaderProgram)sProg;
 
-                prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0];
+                int id = capi.BlockTextureAtlas.AtlasTextureIds[0];
+
+                prog.Tex2D = id;
                 prog.ModelMatrix = matVals;
 
                 prog.AlphaTest = 0.4f;
@@ -119,8 +125,6 @@ namespace RandomTests
             sProg.Stop();
             
             prevProg?.Use();
-
-            fallTime -= deltaTime;
         }
     }
 }

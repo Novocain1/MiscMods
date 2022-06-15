@@ -45,6 +45,8 @@ namespace VSHUD
         
         public bool Closeable { get => opened && !ShouldBeVisible; }
         public bool Openable { get => !opened && ShouldBeVisible; }
+        
+        WaypointUtils utils;
 
         public bool ShouldBeVisible { get => 
                 (distance <= config.DotRange && !ColorCheck) 
@@ -69,7 +71,8 @@ namespace VSHUD
             this.waypoint = waypoint;
             DialogTitle = waypoint.Title;
 
-            config = capi.ModLoader.GetModSystem<WaypointUtils>().Config;
+            utils = capi.ModLoader.GetModSystem<WaypointUtils>();
+            config = utils.Config;
             UpdateEditDialog();
 
             renderer = new PillarRenderer(capi, this);
@@ -96,7 +99,8 @@ namespace VSHUD
             SingleComposer.Bounds.absMarginX = 0;
             SingleComposer.Bounds.absMarginY = 0;
 
-            WaypointTextUpdateSystem.TextTasks.Enqueue(this);
+
+            utils.textUpdateSystem.EnqueueIfNotAlready(this);
         }
 
         protected virtual double FloatyDialogPosition => 0.75;

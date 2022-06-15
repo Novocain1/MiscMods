@@ -13,9 +13,12 @@ using Vintagestory.Client.NoObf;
 
 namespace VSHUD
 {
-    class VSHUDMain : ClientModSystem
+    public class VSHUDMain : ClientModSystem
     {
         ICoreClientAPI capi;
+        
+        public MassFileExportSystem fileExport;
+        public VSHUDTaskSystem taskSystem;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -23,8 +26,8 @@ namespace VSHUD
             api.Event.LevelFinalize += () =>
             {
                 capi.Shader.ReloadShaders();
-                capi.InjectClientThread("File Export", 1000, new MassFileExportSystem(capi.World as ClientMain));
-                capi.InjectClientThread("VSHUD Tasks", 30, new VSHUDTaskSystem(capi.World as ClientMain));
+                capi.InjectClientThread("File Export", 1000, fileExport = new MassFileExportSystem(capi.World as ClientMain));
+                capi.InjectClientThread("VSHUD Tasks", 30, taskSystem = new VSHUDTaskSystem(capi.World as ClientMain));
             };
         }
 

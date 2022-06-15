@@ -26,6 +26,9 @@ namespace VSHUD
     {
         ICoreClientAPI capi;
         public VSHUDConfig Config;
+        public VSHUDMain Main;
+        public WaypointTextUpdateSystem textUpdateSystem;
+
         public WorldMapManager MapManager { get => capi.ModLoader.GetModSystem<WorldMapManager>(); }
         public WaypointMapLayer WPLayer { get => MapManager.MapLayers.OfType<WaypointMapLayer>().Single(); }
         public static Dictionary<string, LoadedTexture> texturesByIcon;
@@ -91,6 +94,7 @@ namespace VSHUD
         public override void StartClientSide(ICoreClientAPI api)
         {
             base.StartClientSide(api);
+            Main = api.ModLoader.GetModSystem<VSHUDMain>();
             capi = api;
             PopulateTextures(capi);
             HudElementWaypoint.quadModel = capi.Render.UploadMesh(QuadMeshUtil.GetQuad());
@@ -129,7 +133,7 @@ namespace VSHUD
 
                 capi.SendMyWaypoints();
 
-                capi.InjectClientThread("WaypointDialogUpdate", 20, new WaypointTextUpdateSystem(capi.World as ClientMain));
+                capi.InjectClientThread("WaypointDialogUpdate", 20, textUpdateSystem = new WaypointTextUpdateSystem(capi.World as ClientMain));
                 capi.InjectClientThread("Floaty Waypoint Management", 30, new FloatyWaypointManagement(capi.World as ClientMain, api.ModLoader.GetModSystem<WaypointUtils>()));
             };
         }

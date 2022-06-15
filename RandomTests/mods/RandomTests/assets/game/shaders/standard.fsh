@@ -14,7 +14,7 @@ uniform sampler2D tex;
 uniform float extraGodray = 0;
 uniform float alphaTest = 0.001;
 uniform float ssaoAttn = 0;
-
+uniform int applySsao = 1;
 
 // Texture overlay "hack"
 // We only have the base texture UV coordinates, which, for blocks and items in inventory is the block or item texture atlas, but none uv coords for a dedicated overlay texture
@@ -25,6 +25,7 @@ uniform vec2 overlayTextureSize;
 uniform vec2 baseTextureSize;
 uniform vec2 baseUvOrigin;
 uniform int normalShaded;
+
 
 in vec2 uv;
 in vec4 color;
@@ -60,6 +61,7 @@ void main () {
 	} else {
 		outColor = texture(tex, uv) * color;
 	}
+    outColor.rgb = getColorMapped(tex, texture(tex, uv)).rgb;
 
 #if BLOOM == 0
 	outColor.rgb *= 1 + glowLevel;
@@ -69,16 +71,11 @@ void main () {
 		float b = min(1, getBrightnessFromNormal(normal, 1, 0.45) + glowLevel);
 		outColor *= vec4(b, b, b, 1);
 	}
-	
-//	outColor.rgb += rgbaGlow.rgb * min(0.8, glowLevel * rgbaGlow.a);
-	//outColor.rgb = rgbaGlow.rgb;
-	
 	outColor = applyFogAndShadow(outColor, fogAmount);
-	//outColor=vec4(1,0,0,1);
-	outColor *= getColorMapping(tex);
-
-	if (outColor.a < alphaTest) discard;
 	
+#if NORMALVIEW == 0
+	if (outColor.a < alphaTest) discard;
+#endif
 	
 	float glow = 0;
 #if SHINYEFFECT > 0	
@@ -86,8 +83,16 @@ void main () {
 #endif
 
 #if SSAOLEVEL > 0
-	outGPosition = vec4(fragPosition.xyz, fogAmount + glowLevel);
+	if (applySsao > 0) {
+		outGPosition = vec4(fragPosition.xyz, fogAmount + glowLevel);
+	} else {
+		outGPosition = vec4(fragPosition.xyz, 1);
+	}
 	outGNormal = vec4(gnormal.xyz, ssaoAttn);
+#endif
+
+#if NORMALVIEW > 0
+	outColor = vec4((normal.x + 1) / 2, (normal.y + 1)/2, (normal.z+1)/2, 1);	
 #endif
 
 	outGlow = vec4(glowLevel + glow, extraGodray - fogAmount, 0, outColor.a);

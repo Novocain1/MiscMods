@@ -16,7 +16,7 @@ using Newtonsoft.Json;
 
 namespace VSHUD
 {
-    interface IExportable : IDisposable
+    public interface IExportable : IDisposable
     {
         bool Enabled { get; set; }
         bool Disposeable { get; set; }
@@ -25,7 +25,7 @@ namespace VSHUD
         void Export();
     }
 
-    abstract class Exportable : IExportable
+    public abstract class Exportable : IExportable
     {
         public Exportable(string filePath, string fileName = null)
         {
@@ -42,7 +42,7 @@ namespace VSHUD
         public abstract void Dispose();
     }
 
-    class ExportableJsonObject : Exportable
+    public class ExportableJsonObject : Exportable
     {
         public object thing;
 
@@ -70,7 +70,7 @@ namespace VSHUD
         }
     }
 
-    class ExportableChunkPart : ExportableMesh
+    public class ExportableChunkPart : ExportableMesh
     {
         public override bool Enabled { get => ConfigLoader.Config.CreateChunkObjs; set => Enabled = value; }
         public bool Is(ExportableChunkPart part)
@@ -84,7 +84,7 @@ namespace VSHUD
         }
     }
 
-    class ExportableMesh : Exportable
+    public class ExportableMesh : Exportable
     {
         public MeshData Mesh;
         public override bool Enabled { get; set; } = true;
@@ -194,15 +194,25 @@ namespace VSHUD
         }
     }
 
-    class MassFileExportSystem : ClientSystem
+    public class MassFileExportSystem : ClientSystem
     {
-        public static ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
+        public ConcurrentStack<Exportable> toExport = new ConcurrentStack<Exportable>();
 
-        public static ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
+        public ConcurrentStack<Exportable> toExportLast = new ConcurrentStack<Exportable>();
 
-        public static void Clear() => Clear<Exportable>();
+        public void Push(Exportable exportable)
+        {
+            toExportLast.Push(exportable);
+        }
 
-        public static void Clear<T>()
+        public void PushFast(Exportable exportable)
+        {
+            toExport.Push(exportable);
+        }
+
+        public void Clear() => Clear<Exportable>();
+
+        public void Clear<T>()
         {
             if (toExport.IsEmpty) return;
 

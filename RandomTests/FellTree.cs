@@ -67,21 +67,8 @@ namespace RandomTests
                     else if (isLeaves || isBranchy)
                     {
                         ColorMapData colormap = worldmap.getColorMapData(block, x, y, z);
-
-                        addMesh.CustomInts = new CustomMeshDataPartInt()
-                        {
-                            InterleaveOffsets = new int[addMesh.VerticesCount],
-                            InterleaveSizes = new int[addMesh.VerticesCount],
-                            InterleaveStride = 8,
-                            Conversion = DataConversion.Integer
-                        };
-
-                        for (int j = 0; j < addMesh.VerticesCount; j++)
-                        {
-                            addMesh.CustomInts.InterleaveOffsets[j] = j * 4;
-                            addMesh.CustomInts.InterleaveSizes[j] = 2;
-                            addMesh.CustomInts.Add(colormap.Value);
-                        }
+                        //addMesh.ClimateColorMapIds = new byte[] { colormap. };
+                        addMesh.AddColorMapIndex(colormap.ClimateMapIndex, colormap.SeasonMapIndex);
 
                         if (logMesh != null) addMesh.Translate(xSubOrigin, ySubOrigin, zSubOrigin);
                         if (leavesMesh == null) leavesMesh = addMesh;
@@ -132,9 +119,11 @@ namespace RandomTests
 
             double windspeed = world.Api.ModLoader.GetModSystem<WeatherSystemBase>()?.WeatherDataSlowAccess.GetWindSpeed(byEntity.SidedPos.XYZ) ?? 0;
 
+            Stack<BlockPos> foundPositions = __instance.FindTree(world, blockSel.Position);
+            if (foundPositions.Count == 0) return;
 
             string treeType;
-            Stack<BlockPos> foundPositions = __instance.FindTree(world, blockSel.Position, out treeType);
+            treeType = world.BlockAccessor.GetBlock(foundPositions.First()).LastCodePart();
 
             Block leavesBranchyBlock = world.GetBlock(new AssetLocation("leavesbranchy-grown-" + treeType));
             Block leavesBlock = world.GetBlock(new AssetLocation("leaves-grown-" + treeType));
@@ -147,7 +136,6 @@ namespace RandomTests
             }
 
             var chopFace = blockSel.Face;
-            var fallDirection = chopFace.IsHorizontal ? chopFace.Opposite : BlockFacing.HORIZONTALS_ANGLEORDER[world.Rand.Next(0, 3)];
 
             bool damageable = __instance.DamagedBy != null && __instance.DamagedBy.Contains(EnumItemDamageSource.BlockBreaking);
 
@@ -162,6 +150,12 @@ namespace RandomTests
             Stack<int> blockIds = new Stack<int>();
             Stack<int> positions = new Stack<int>();
             Stack<bool> bools = new Stack<bool>();
+            int maxY = foundPositions.Max(p => p.Y);
+            int treeHeight = maxY - originPos.Y;
+
+            BlockFacing fallDirection;
+
+            fallDirection = chopFace.IsHorizontal ? chopFace.Opposite : BlockFacing.HORIZONTALS_ANGLEORDER[world.Rand.Next(0, 3)];
 
             while (foundPositions.Count > 0)
             {
@@ -215,16 +209,18 @@ namespace RandomTests
 
                 if (LastLogs != null)
                 {
-                    new FallingTreeRenderer(capi, originPos, false, LastLogs, fallTime, fallDirection, EnumRenderStage.Opaque);
-                    new FallingTreeRenderer(capi, originPos, false, LastLogs, fallTime, fallDirection, EnumRenderStage.ShadowNear);
-                    new FallingTreeRenderer(capi, originPos, false, LastLogs, fallTime, fallDirection, EnumRenderStage.ShadowFar);
+                    var logref = capi.Render.UploadMesh(LastLogs);
+                    new FallingTreeRenderer(capi, originPos, false, logref, fallTime, fallDirection, EnumRenderStage.Opaque);
+                    new FallingTreeRenderer(capi, originPos, false, logref, fallTime, fallDirection, EnumRenderStage.ShadowNear);
+                    new FallingTreeRenderer(capi, originPos, false, logref, fallTime, fallDirection, EnumRenderStage.ShadowFar);
                 }
 
                 if (LastLeaves != null)
                 {
-                    new FallingTreeRenderer(capi, originPos, true, LastLeaves, fallTime, fallDirection, EnumRenderStage.Opaque);
-                    new FallingTreeRenderer(capi, originPos, true, LastLeaves, fallTime, fallDirection, EnumRenderStage.ShadowNear);
-                    new FallingTreeRenderer(capi, originPos, true, LastLeaves, fallTime, fallDirection, EnumRenderStage.ShadowFar);
+                    var leafref = capi.Render.UploadMesh(LastLeaves);
+                    new FallingTreeRenderer(capi, originPos, true, leafref, fallTime, fallDirection, EnumRenderStage.Opaque);
+                    new FallingTreeRenderer(capi, originPos, true, leafref, fallTime, fallDirection, EnumRenderStage.ShadowNear);
+                    new FallingTreeRenderer(capi, originPos, true, leafref, fallTime, fallDirection, EnumRenderStage.ShadowFar);
                 }
             }
 

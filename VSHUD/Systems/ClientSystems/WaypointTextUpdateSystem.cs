@@ -7,21 +7,21 @@ using System.Linq;
 
 namespace VSHUD
 {
-    class WaypointTextUpdateSystem : ClientSystem
+    public class WaypointTextUpdateSystem : ClientSystem
     {
         ICoreClientAPI capi;
 
-        public static void EnqueueIfNotAlreadyFast(HudElementWaypoint wp)
+        public void EnqueueIfNotAlreadyFast(HudElementWaypoint wp)
         {
             if (!Priority.Contains(wp)) Priority.Push(wp);
         }
-        public static void EnqueueIfNotAlready(HudElementWaypoint wp)
+        public void EnqueueIfNotAlready(HudElementWaypoint wp)
         {
             if (!TextTasks.Contains(wp)) TextTasks.Enqueue(wp);
         }
 
-        public static ConcurrentQueue<HudElementWaypoint> TextTasks = new ConcurrentQueue<HudElementWaypoint>();
-        public static ConcurrentStack<HudElementWaypoint> Priority = new ConcurrentStack<HudElementWaypoint>();
+        public ConcurrentQueue<HudElementWaypoint> TextTasks = new ConcurrentQueue<HudElementWaypoint>();
+        public ConcurrentStack<HudElementWaypoint> Priority = new ConcurrentStack<HudElementWaypoint>();
 
         public WaypointTextUpdateSystem(ClientMain game) : base(game)
         {

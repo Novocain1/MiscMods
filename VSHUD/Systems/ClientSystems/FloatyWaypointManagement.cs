@@ -19,11 +19,16 @@ namespace VSHUD
         public static bool forceRepop = false;
 
         public static void TriggerRepopulation() => forceRepop = true;
+        WaypointTextUpdateSystem textUpdateSystem;
+
 
         public FloatyWaypointManagement(ClientMain game, WaypointUtils utils) : base(game) 
         {
             capi = game.Api as ICoreClientAPI;
+
             this.utils = utils;
+            textUpdateSystem = utils.textUpdateSystem;
+
             capi.Input.RegisterHotKey("editfloatywaypoint", "Edit Floaty Waypoint", GlKeys.R, HotkeyType.GUIOrOtherControls);
             capi.Input.SetHotKeyHandler("editfloatywaypoint", (k) =>
             {
@@ -184,7 +189,7 @@ namespace VSHUD
                                 dynText.Font.Color = wp.dColor;
                                 dynText.RecomposeText();
 
-                                WaypointTextUpdateSystem.EnqueueIfNotAlreadyFast(wp);
+                                textUpdateSystem.EnqueueIfNotAlreadyFast(wp);
                                 wp.Dirty = false;
                             }
                             catch (System.IndexOutOfRangeException)
@@ -196,7 +201,7 @@ namespace VSHUD
                     }
                     else if (wp.displayText || wp.IsOpened())
                     {
-                        WaypointTextUpdateSystem.EnqueueIfNotAlready(wp);
+                        textUpdateSystem.EnqueueIfNotAlready(wp);
                     }
                 }
                 mainThreadProcessing = false;

@@ -92,10 +92,9 @@ namespace VSHUD
             RegisterSubCommand("export", new SubCommand((player, groupId, args) =>
             {
                 string filePath = Path.Combine(GamePaths.DataPath, args.PopWord() ?? "waypoints");
-                lock (MassFileExportSystem.toExport)
-                {
-                    MassFileExportSystem.toExport.Push(new ExportableJsonObject(utils.WaypointsRel, filePath));
-                }
+
+                utils.Main.fileExport.PushFast(new ExportableJsonObject(utils.WaypointsRel, filePath));
+
             }, "Exports waypoints as a JSON file located in your game data folder."));
 
             RegisterSubCommand("import", new SubCommand((player, groupId, args) =>

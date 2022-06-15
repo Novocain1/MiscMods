@@ -13,8 +13,7 @@ namespace RandomTests
             int id = block.Id;
 
             var tesselatormanager = tesselator as ShapeTesselatorManager;
-
-            var lod0 = (tesselatormanager.blockModelDatasLod0.ContainsKey(id) ? tesselatormanager.blockModelDatasLod0[id] : null)?.Clone();
+            
             var lod1 = tesselatormanager.blockModelDatas[id].Clone();
             var lod0alt = tesselatormanager.altblockModelDatasLod0[id];
             var lod1alt = tesselatormanager.altblockModelDatasLod1[id];
@@ -37,11 +36,6 @@ namespace RandomTests
             {
                 tesselated = lod1;
                 tesselated.IndicesMax = tesselated.Indices.Count();
-                if (lod0 != null)
-                {
-                    lod0.IndicesMax = lod0.Indices.Count();
-                    if (tesselated != lod0) tesselated.AddMeshData(lod0);
-                }
             }
 
             tesselated?.CompactBuffers();

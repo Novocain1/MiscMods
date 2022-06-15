@@ -31,7 +31,6 @@ out vec4 rgbaFog;
 out vec4 rgbaGlow;
 out float fogAmount;
 
-flat out int renderFlags;
 out vec3 normal;
 #if SSAOLEVEL > 0
 out vec4 fragPosition;
@@ -39,6 +38,7 @@ out vec4 gnormal;
 #endif
 
 
+#include vertexflagbits.ash
 #include shadowcoords.vsh
 #include fogandlight.vsh
 #include vertexwarp.vsh
@@ -48,8 +48,7 @@ void main(void)
 {
 	vec4 worldPos = modelMatrix * vec4(vertexPositionIn, 1.0);
 	
-	bool isLeaves = (((flags | addRenderFlags) & 0x8000000) > 0); 
-	
+	bool isLeaves = (((flags | addRenderFlags) & 0x8000000) > 0);
 	if (dontWarpVertices == 0) {
 		worldPos = applyVertexWarping(flags | addRenderFlags, worldPos);
 	}
@@ -57,8 +56,8 @@ void main(void)
 	vec4 camPos = viewMatrix * worldPos;
 	
 	uv = uvIn;
-	int glow = min(255, extraGlow + (flags & 0xff));
-	renderFlags = glow | (flags & ~0xff);
+	int glow = min(255, extraGlow + (flags & GlowLevelBitMask));
+	int renderFlags = glow | (flags & ~GlowLevelBitMask);
 	rgbaGlow = rgbaGlowIn;
 	
 	color = rgbaTint * applyLight(rgbaAmbientIn, rgbaLightIn, renderFlags, camPos) * colorIn;
@@ -70,13 +69,13 @@ void main(void)
 	rgbaFog = rgbaFogIn;
 	gl_Position = projectionMatrix * camPos;
 	calcShadowMapCoords(viewMatrix, worldPos);
-	calcColorMapUvs(colormapData, vec4(vertexPositionIn + origin, 1.0) + vec4(playerpos,1), rgbaLightIn.a, isLeaves);
+	calcColorMapUvs(colormapData, vec4(vertexPositionIn + origin, 1.0) + vec4(playerpos, 1), rgbaLightIn.a, isLeaves);
 	
 	fogAmount = getFogLevel(worldPos, fogMinIn, fogDensityIn);
 	
 	gl_Position.w += extraZOffset;
 	
-	normal = unpackNormal(flags >> 15);
+	normal = unpackNormal(flags);
 	normal = normalize((modelMatrix * vec4(normal.x, normal.y, normal.z, 0)).xyz);
 	
 	#if SSAOLEVEL > 0

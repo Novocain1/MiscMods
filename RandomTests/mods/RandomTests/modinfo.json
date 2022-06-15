@@ -1,7 +1,7 @@
 {
     "type": "code",
 	"name": "Random Tests",
-	"modid": "randomtests",
+	"modid": "novocain.randomtests",
 	"description" : "Random Tests",
 	"authors": ["Novocain"],
 	"version": "1.0.0",
