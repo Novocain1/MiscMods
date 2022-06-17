@@ -90,9 +90,6 @@ namespace VSHUD
         {
             capi = api;
             allowSaving = LoadConfig();
-            ChunkPartGrabber.Seed = api.World.Seed;
-            var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
-            ChunkPartGrabber.SpawnPos = spawnChunk;
 
             api.RegisterCommand("vshudforcesave", "Force saves vshud user settings with the current settings state.", "", (a, b) => SaveConfig(true));
         }

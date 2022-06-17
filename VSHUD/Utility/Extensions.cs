@@ -436,6 +436,26 @@ namespace VSHUD
             var MapManager = capi.ModLoader.GetModSystem<WorldMapManager>();
             capi.Event.EnqueueMainThreadTask(() => capi.Event.RegisterCallback(dt => MapManager.GetField<IClientNetworkChannel>("clientChannel").SendPacket(new OnViewChangedPacket() { NowVisible = new List<Vec2i>(), NowHidden = new List<Vec2i>() }), 500), "");
         }
+
+        public static VSHUDMain VSHUD(this ChunkTesselator chunkTesselator)
+        {
+            return chunkTesselator.Capi().ModLoader.GetModSystem<VSHUDMain>();
+        }
+
+        public static VSHUDMain VSHUD(this ICoreClientAPI capi)
+        {
+            return capi.ModLoader.GetModSystem<VSHUDMain>();
+        }
+
+        public static ICoreClientAPI Capi(this ChunkTesselator chunkTesselator)
+        {
+            return (ICoreClientAPI)chunkTesselator.GetField<ClientMain>("game").Api;
+        }
+
+        public static ChunkPartGrabber GetChunkPartGrabber(this ChunkTesselator chunkTesselator)
+        {
+            return chunkTesselator.Capi().ModLoader.GetModSystem<ChunkPartGrabber>();
+        }
     }
 
     public static class ExtraMath

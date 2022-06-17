@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace VSHUD
 {
-    class VSHUDTaskSystem : ClientSystem
+    public class VSHUDTaskSystem : ClientSystem
     {
         public static ConcurrentQueue<Action> Actions = new ConcurrentQueue<Action>();
         public static ConcurrentQueue<Action> MainThreadActions = new ConcurrentQueue<Action>();
