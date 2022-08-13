@@ -51,6 +51,9 @@ namespace VSHUD
         public bool LightLevels { get; set; } = false;
         public EnumLightLevelType LightLevelType { get; set; } = EnumLightLevelType.OnlyBlockLight;
         public int LightRadius { get; set; } = 8;
+
+        internal int LightVolume { get => (int)Math.Round(4.0 / 3.0 * Math.PI * LightRadius * LightRadius * LightRadius); }
+
         public int MinLLID { get; set; } = 128;
         public float LightLevelAlpha { get; set; } = 0.8f;
         public int LightLevelRed { get; set; } = 8;

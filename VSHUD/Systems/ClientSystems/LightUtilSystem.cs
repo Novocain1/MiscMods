@@ -130,7 +130,7 @@ namespace VSHUD
         {
             this.config = config;
             capi = (ICoreClientAPI)game.Api;
-            highlights = new BlockHighlights(config.LightRadius * config.LightRadius * config.LightRadius);
+            highlights = new BlockHighlights(config.LightVolume);
         }
 
         public override string Name => "LightUtil";
@@ -170,9 +170,9 @@ namespace VSHUD
                 }
                 Reset();
                 
-                if (highlights.size != config.LightRadius * config.LightRadius * config.LightRadius)
+                if (highlights.size != config.LightVolume)
                 {
-                    highlights.Resize(config.LightRadius * config.LightRadius * config.LightRadius);
+                    highlights.Resize(config.LightVolume);
                 }
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
