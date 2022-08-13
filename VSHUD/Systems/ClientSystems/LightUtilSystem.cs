@@ -32,8 +32,8 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt) => LightHighlight();
 
-        ConcurrentStack<BlockPos> tempPositions = new ConcurrentStack<BlockPos>();
-        ConcurrentStack<int> tempColors = new ConcurrentStack<int>();
+        List<BlockPos> tempPositions = new List<BlockPos>();
+        List<int> tempColors = new List<int>();
 
         public void Reset()
         {
@@ -41,13 +41,13 @@ namespace VSHUD
             tempColors.Clear();
         }
 
-        public void PushColor(BlockPos pos, int color)
+        public void AddColor(BlockPos pos, int color)
         {
-            tempPositions.Push(pos);
-            tempColors.Push(color);
+            tempPositions.Add(pos);
+            tempColors.Add(color);
         }
 
-        ConcurrentQueue<BlockPos> emptyList = new ConcurrentQueue<BlockPos>();
+        List<BlockPos> emptyList = new List<BlockPos>();
         int tempColor = 0;
         
         BlockPos start = new BlockPos();
@@ -55,7 +55,6 @@ namespace VSHUD
         BlockPos dPos = new BlockPos();
         BlockPos cPos = new BlockPos();
         BlockPos uPos = new BlockPos();
-
         public void LightHighlight(BlockPos pos = null)
         {
             try
@@ -121,7 +120,7 @@ namespace VSHUD
                             tempColor = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
                         }
 
-                        PushColor(iPos.Copy(), tempColor);
+                        AddColor(iPos.Copy(), tempColor);
                     }
                 });
                 if (tempColors.Count < 1)
@@ -130,14 +129,19 @@ namespace VSHUD
                     return;
                 }
 
-                capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, tempPositions.ToList(), tempColors.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary), "addLU");
+                UpdateHighlights();
             }
             catch (Exception) { }
         }
 
+        public void UpdateHighlights()
+        {
+            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, tempPositions, tempColors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary), "addLU");
+        }
+
         public void ClearLightLevelHighlights()
         {
-            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, emptyList.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes), "removeLU");
+            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, emptyList, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes), "removeLU");
         }
     }
 }
