@@ -15,6 +15,112 @@ using Vintagestory.GameContent;
 
 namespace VSHUD
 {
+    struct BlockHighlight
+    {
+        public bool empty;
+
+        public int x;
+        public int y;
+        public int z;
+        public int c;
+
+        public BlockHighlight(bool empty)
+        {
+            this.empty = empty;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.c = 0;
+        }
+
+        public BlockHighlight(int x, int y, int z, int c, bool empty)
+        {
+            this.empty = empty;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.c = c;
+        }
+
+        public BlockHighlight(BlockPos pos, int color)
+        {
+            x = pos.X;
+            y = pos.Y;
+            z = pos.Z;
+            c = color;
+            empty = false;
+        }
+
+        public void AsVanilla(out BlockPos pos, out int color)
+        {
+            pos = new BlockPos(x, y, z);
+            color = c;
+        }
+    }
+
+    struct BlockHighlights
+    {
+        public BlockHighlight[] blockHighlights;
+        public int size;
+        public int indexOfLast;
+
+        public BlockHighlights(int size)
+        {
+            this.size = size;
+            blockHighlights = new BlockHighlight[size];
+            blockHighlights.Fill(new BlockHighlight(true));
+            indexOfLast = 0;
+        }
+
+        public void Resize(int size)
+        {
+            this.size = size;
+            blockHighlights = new BlockHighlight[size];
+            blockHighlights.Fill(new BlockHighlight(true));
+            indexOfLast = 0;
+        }
+
+        public void Add(BlockHighlight highlight)
+        {
+            if (indexOfLast < blockHighlights.Length)
+            {
+                blockHighlights[indexOfLast].x = highlight.x;
+                blockHighlights[indexOfLast].y = highlight.y;
+                blockHighlights[indexOfLast].z = highlight.z;
+                blockHighlights[indexOfLast].c = highlight.c;
+                blockHighlights[indexOfLast].empty = false;
+
+                indexOfLast++;
+            }
+        }
+
+        public void Clear()
+        {
+            for (int i = 0; i < indexOfLast; i++)
+            {
+                blockHighlights[i].empty = true;
+            }
+            indexOfLast = 0;
+        }
+
+        public void AsVanilla(out List<BlockPos> positions, out List<int> colors)
+        {
+            positions = new List<BlockPos>();
+            colors = new List<int>();
+
+            for (int i = 0; i < indexOfLast; i++)
+            {
+                BlockHighlight highlight = blockHighlights[i];
+                if (!highlight.empty)
+                {
+                    blockHighlights[i].AsVanilla(out BlockPos pos, out int col);
+                    positions.Add(pos);
+                    colors.Add(col);
+                }
+            }
+        }
+    }
+
     class LightUtilSystem : ClientSystem
     {
         ICoreClientAPI capi;
@@ -24,6 +130,7 @@ namespace VSHUD
         {
             this.config = config;
             capi = (ICoreClientAPI)game.Api;
+            highlights = new BlockHighlights(config.LightRadius * config.LightRadius * config.LightRadius);
         }
 
         public override string Name => "LightUtil";
@@ -32,19 +139,16 @@ namespace VSHUD
 
         public override void OnSeperateThreadGameTick(float dt) => LightHighlight();
 
-        List<BlockPos> tempPositions = new List<BlockPos>();
-        List<int> tempColors = new List<int>();
+        BlockHighlights highlights;
 
         public void Reset()
         {
-            tempPositions.Clear();
-            tempColors.Clear();
+            highlights.Clear();
         }
 
         public void AddColor(BlockPos pos, int color)
         {
-            tempPositions.Add(pos);
-            tempColors.Add(color);
+            highlights.Add(new BlockHighlight(pos, color));
         }
 
         List<BlockPos> emptyList = new List<BlockPos>();
@@ -65,6 +169,11 @@ namespace VSHUD
                     return;
                 }
                 Reset();
+                
+                if (highlights.size != config.LightRadius * config.LightRadius * config.LightRadius)
+                {
+                    highlights.Resize(config.LightRadius * config.LightRadius * config.LightRadius);
+                }
 
                 pos = pos ?? capi.World.Player.Entity.SidedPos.AsBlockPos.UpCopy();
                 int rad = config.LightRadius;
@@ -87,13 +196,15 @@ namespace VSHUD
                     uPos.Set(iPos.X, iPos.Y + 1, iPos.Z);
 
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
+                    int levelMax = capi.World.BlockAccessor.GetLightLevel(cPos, EnumLightLevelType.TimeOfDaySunLight);
 
                     bool rep = !config.LUSpawning || blockEntityFarmland != null || capi.World.BlockAccessor.GetBlock(uPos).IsReplacableBy(block);
                     bool opq = !config.LUOpaque || blockEntityFarmland != null || block.AllSidesOpaque;
 
                     if (rep && opq)
                     {
-                        float fLevel = level / 32.0f;
+                        float fLevel = GameMath.Min(level, levelMax) / 32.0f;
+
                         int alpha = (int)Math.Round(config.LightLevelAlpha * 255);
                         if (config.Nutrients && blockEntityFarmland != null)
                         {
@@ -123,7 +234,7 @@ namespace VSHUD
                         AddColor(iPos.Copy(), tempColor);
                     }
                 });
-                if (tempColors.Count < 1)
+                if (highlights.indexOfLast < 1)
                 {
                     ClearLightLevelHighlights();
                     return;
@@ -131,17 +242,25 @@ namespace VSHUD
 
                 UpdateHighlights();
             }
-            catch (Exception) { }
+            catch (Exception) 
+            { 
+            }
         }
 
         public void UpdateHighlights()
         {
-            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, tempPositions, tempColors, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary), "addLU");
+            highlights.AsVanilla(out List<BlockPos> hPos, out List<int> cols);
+
+            capi.Event.EnqueueMainThreadTask(() =>
+            {
+                capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, hPos, cols, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Arbitrary);
+            }
+            , "addLU");
         }
 
         public void ClearLightLevelHighlights()
         {
-            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, emptyList, EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes), "removeLU");
+            capi.Event.EnqueueMainThreadTask(() => capi.World.HighlightBlocks(capi.World.Player, config.MinLLID, emptyList.ToList(), EnumHighlightBlocksMode.Absolute, EnumHighlightShape.Cubes), "removeLU");
         }
     }
 }
