@@ -26,6 +26,9 @@ namespace VSHUD
 
             sidedPatchCode = string.Format("{0}.{1}.{2}", modName, patchCode, api.Side);
             harmonyInstance = new Harmony(sidedPatchCode);
+#if DEBUG
+            Harmony.DEBUG = true;
+#endif
             harmonyInstance.PatchAll();
 
             Dictionary<string, int> counts = new Dictionary<string, int>();

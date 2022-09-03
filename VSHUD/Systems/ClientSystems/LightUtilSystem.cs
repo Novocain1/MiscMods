@@ -146,9 +146,9 @@ namespace VSHUD
             highlights.Clear();
         }
 
-        public void AddColor(BlockPos pos, int color)
+        public void AddColor(int x, int y, int z, int color)
         {
-            highlights.Add(new BlockHighlight(pos, color));
+            highlights.Add(new BlockHighlight(x, y, z, color, false));
         }
 
         List<BlockPos> emptyList = new List<BlockPos>();
@@ -181,19 +181,19 @@ namespace VSHUD
                 start.Set(pos.X - rad, pos.Y - rad, pos.Z - rad);
                 end.Set(pos.X + rad, pos.Y + rad, pos.Z + rad);
 
-                capi.World.BlockAccessor.WalkBlocks(start, end, (block, iPos) =>
+                capi.World.BlockAccessor.WalkBlocks(start, end, (block, x, y, z) =>
                 {
-                    if (block == null || iPos == null || block.Id == 0) return;
+                    if (block == null || block.Id == 0) return;
 
-                    dPos.Set(pos.X - iPos.X, pos.Y - iPos.Y, pos.Z - iPos.Z);
+                    dPos.Set(pos.X - x, pos.Y - y, pos.Z - z);
                     
                     if (!rad.InsideRadius(dPos.X, dPos.Y, dPos.Z)) return;
 
-                    BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(iPos) as BlockEntityFarmland;
+                    BlockEntityFarmland blockEntityFarmland = capi.World.BlockAccessor.GetBlockEntity(x, y ,z) as BlockEntityFarmland;
                     bool abv = blockEntityFarmland == null && config.LUShowAbove;
 
-                    cPos.Set(iPos.X, abv ? iPos.Y + 1 : iPos.Y, iPos.Z);
-                    uPos.Set(iPos.X, iPos.Y + 1, iPos.Z);
+                    cPos.Set(x, abv ? y + 1 : y, z);
+                    uPos.Set(x, y + 1, z);
 
                     int level = capi.World.BlockAccessor.GetLightLevel(cPos, config.LightLevelType);
                     int levelMax = capi.World.BlockAccessor.GetLightLevel(cPos, EnumLightLevelType.TimeOfDaySunLight);
@@ -231,7 +231,7 @@ namespace VSHUD
                             tempColor = level > config.LightLevelRed ? ColorUtil.ToRgba(alpha, 0, (int)(fLevel * 255), 0) : ColorUtil.ToRgba(alpha, 0, 0, (int)(Math.Max(fLevel, 0.2) * 255));
                         }
 
-                        AddColor(iPos.Copy(), tempColor);
+                        AddColor(x, y, z, tempColor);
                     }
                 });
                 if (highlights.indexOfLast < 1)

@@ -198,7 +198,7 @@ namespace VSHUD
             if (selClone == null || invBlock == null || pos == null || !config.PRShow || Ignored || SneakCheck) return;
             selClone.Position = selClone.Position.GetBlock(capi).IsReplacableBy(invBlock) ? selClone.Position : selClone.Position.Offset(selClone.Face);
 
-            toBlock = capi.World.BlockAccessor.GetBlock(SetBlockRedirect.blockId);
+            toBlock = capi.World.BlockAccessor.GetBlock(SetBlockRedirectMaster.blockId);
             if (toBlock == null || toBlock.Id == 0) return;
             
             BlockPos adjPos = selClone.Position;

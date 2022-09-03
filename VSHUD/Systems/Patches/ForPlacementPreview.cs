@@ -39,7 +39,7 @@ namespace VSHUD
 
                     if (block != null) block.OnHeldIdle(new DummySlot(new ItemStack(block)), byEntity);
                 }
-                else SetBlockRedirect.blockId = 0;
+                else SetBlockRedirectMaster.blockId = 0;
             }
         }
     }
@@ -99,7 +99,7 @@ namespace VSHUD
 
                     if (!KnownBroken.Contains(__instance.GetType()) && player?.CurrentBlockSelection != null && slot?.Itemstack != null)
                     {
-                        SetBlockRedirect.setBlock = false;
+                        SetBlockRedirectMaster.setBlock = false;
 
                         var blockSel = player.CurrentBlockSelection;
                         Block onBlock = byEntity.World.BlockAccessor.GetBlock(blockSel.Position);
@@ -131,10 +131,10 @@ namespace VSHUD
                             blockSel.DidOffset = false;
                         }
 
-                        if (!works) SetBlockRedirect.blockId = 0;
-                        SetBlockRedirect.setBlock = true;
+                        if (!works) SetBlockRedirectMaster.blockId = 0;
+                        SetBlockRedirectMaster.setBlock = true;
                     }
-                    else SetBlockRedirect.blockId = 0;
+                    else SetBlockRedirectMaster.blockId = 0;
                 }
             }
         }
@@ -143,36 +143,42 @@ namespace VSHUD
     [HarmonyPatch(typeof(BlockAngledGears), "DidConnectAt")]
     public class DidConnectAtHalt0
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
     }
 
-    [HarmonyPatch(typeof(BlockAccessorBase), "SpawnBlockEntity")]
-    public class SpawnBlockEntityHalt
+    [HarmonyPatch(typeof(BlockAccessorBase), "SpawnBlockEntity", typeof(BlockEntity))]
+    public class SpawnBlockEntityHalt0
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
+    }
+
+    [HarmonyPatch(typeof(BlockAccessorBase), "SpawnBlockEntity", typeof(string), typeof(BlockPos), typeof(ItemStack))]
+    public class SpawnBlockEntityHalt1
+    {
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
     }
 
     [HarmonyPatch(typeof(BlockAccessorRelaxed), "ExchangeBlock")]
     public class ExchangeBlockHalt
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
     }
 
     [HarmonyPatch(typeof(BEBehaviorMPAngledGears), "SetOrientations")]
     public class SetOrientationHalt
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
     }
 
     [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
     public class SetDecorHalt0
     {
         public static bool Prefix() => 
-            SetBlockRedirect.ShouldNotSkipOriginal;
+            SetBlockRedirectMaster.ShouldNotSkipOriginal;
 
         public static void Postfix(ref bool __result)
         {
-            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+            if (SetBlockRedirectMaster.ShouldNotSkipOriginal) return;
 
             __result = true;
         }
@@ -181,11 +187,11 @@ namespace VSHUD
     [HarmonyPatch(typeof(WorldChunk), "SetDecor", new Type[] { typeof(IBlockAccessor), typeof(Block), typeof(BlockPos), typeof(int) })]
     public class SetDecorHalt1
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
 
         public static void Postfix(ref bool __result)
         {
-            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+            if (SetBlockRedirectMaster.ShouldNotSkipOriginal) return;
 
             __result = true;
         }
@@ -194,17 +200,17 @@ namespace VSHUD
     [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(BlockFacing) })]
     public class SetDecorRedirect0
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
 
         public static void Postfix(ref bool __result, Block block, BlockPos position)
         {
-            if (SetBlockRedirect.ShouldNotSkipOriginal) return;
+            if (SetBlockRedirectMaster.ShouldNotSkipOriginal) return;
 
-            SetBlockRedirect.blockId = block.Id;
+            SetBlockRedirectMaster.blockId = block.Id;
 
-            SetBlockRedirect.xyz[0] = position.X;
-            SetBlockRedirect.xyz[1] = position.Y;
-            SetBlockRedirect.xyz[2] = position.Z;
+            SetBlockRedirectMaster.xyz[0] = position.X;
+            SetBlockRedirectMaster.xyz[1] = position.Y;
+            SetBlockRedirectMaster.xyz[2] = position.Z;
             __result = true;
         }
     }
@@ -212,7 +218,7 @@ namespace VSHUD
     [HarmonyPatch(typeof(BlockAccessorBase), "SetDecor", new Type[] { typeof(Block), typeof(BlockPos), typeof(int) })]
     public class SetDecorRedirect1
     {
-        public static bool Prefix() => SetBlockRedirect.ShouldNotSkipOriginal;
+        public static bool Prefix() => SetBlockRedirectMaster.ShouldNotSkipOriginal;
 
         public static void Postfix(ref bool __result, Block block, BlockPos position)
         {
@@ -220,8 +226,21 @@ namespace VSHUD
         }
     }
 
-    [HarmonyPatch(typeof(BlockAccessorRelaxed), "SetBlock")]
-    public class SetBlockRedirect
+    [HarmonyPatch(typeof(BlockAccessorRelaxed), "SetBlock", typeof(int), typeof(BlockPos), typeof(int))]
+    public class SetBlockRedirect0
+    {
+        public static bool Prefix() => SetBlockRedirectMaster.Prefix();
+        public static void Postfix(ref int blockId, BlockPos pos) => SetBlockRedirectMaster.Postfix(ref blockId, pos);
+    }
+
+    [HarmonyPatch(typeof(BlockAccessorRelaxed), "SetBlock", typeof(int), typeof(BlockPos), typeof(ItemStack))]
+    public class SetBlockRedirect1
+    {
+        public static bool Prefix() => SetBlockRedirectMaster.Prefix();
+        public static void Postfix(ref int blockId, BlockPos pos) => SetBlockRedirectMaster.Postfix(ref blockId, pos);
+    }
+
+    public class SetBlockRedirectMaster
     {   
         public static bool ShouldNotSkipOriginal { get => setBlock || CheckAppSideAnywhere.Side == EnumAppSide.Server; }
 
@@ -235,7 +254,7 @@ namespace VSHUD
         public static void Postfix(ref int blockId, BlockPos pos)
         {
             if (ShouldNotSkipOriginal) return;
-            SetBlockRedirect.blockId = blockId;
+            SetBlockRedirectMaster.blockId = blockId;
 
             xyz[0] = pos.X;
             xyz[1] = pos.Y;

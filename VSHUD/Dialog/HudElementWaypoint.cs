@@ -57,8 +57,8 @@ namespace VSHUD
         public void UpdateEditDialog()
         {
             waypointEditDialog?.Dispose();
-
-            waypointEditDialog = new GuiDialogEditWayPoint(capi, waypoint.OwnWaypoint, waypointID);
+            
+            waypointEditDialog = new GuiDialogEditWayPoint(capi, utils.WPLayer, waypoint.OwnWaypoint, waypointID);
 
             waypointEditDialog.OnClosed += () =>
             {

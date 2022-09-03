@@ -456,6 +456,14 @@ namespace VSHUD
         {
             return chunkTesselator.Capi().ModLoader.GetModSystem<ChunkPartGrabber>();
         }
+
+        static BlockPos tmpBlockPos = new BlockPos();
+
+        public static BlockEntity GetBlockEntity(this IBlockAccessor bA, int x, int y, int z)
+        {
+            tmpBlockPos.Set(x, y, z);
+            return bA.GetBlockEntity(tmpBlockPos);
+        }
     }
 
     public static class ExtraMath
