@@ -15,27 +15,31 @@ namespace VSHUD
         public int Seed = 0;
         public Vec3i SpawnPos;
         MassFileExportSystem fileExport;
+        public override double ExecuteOrder() => 1.0;
 
         public override void StartClientSide(ICoreClientAPI api)
         {
-            string path = Path.Combine(GamePaths.DataPath, "WorldParts");
-            path = Path.Combine(path, api.World.Seed.ToString(), "Textures");
-            Directory.CreateDirectory(path);
-
-            ClientMain game = (api.World as ClientMain);
-            game.SetField("guiShaderProg", ShaderPrograms.Gui);
-            BlockTextureAtlasManager mgr = game.GetField<BlockTextureAtlasManager>("BlockAtlasManager");
-
-            for (int i = 0; i < mgr.Atlasses.Count; i++)
+            api.Event.LevelFinalize += () =>
             {
-                mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
-            }
+                string path = Path.Combine(GamePaths.DataPath, "WorldParts");
+                path = Path.Combine(path, api.World.Seed.ToString(), "Textures");
+                Directory.CreateDirectory(path);
 
-            fileExport = api.VSHUD().fileExport;
+                ClientMain game = (api.World as ClientMain);
+                game.SetField("guiShaderProg", ShaderPrograms.Gui);
+                BlockTextureAtlasManager mgr = game.GetField<BlockTextureAtlasManager>("BlockAtlasManager");
 
-            Seed = api.World.Seed;
-            var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
-            SpawnPos = spawnChunk;
+                for (int i = 0; i < mgr.Atlasses.Count; i++)
+                {
+                    mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
+                }
+
+                fileExport = api.VSHUD().fileExport;
+
+                Seed = api.World.Seed;
+                var spawnChunk = api.World.DefaultSpawnPosition.AsBlockPos.GetChunkPos(api.World.BlockAccessor);
+                SpawnPos = spawnChunk;
+            };
         }
 
         public static void PushToStack(MeshData mesh, int chunkX, int chunkY, int chunkZ, EnumChunkRenderPass pass, int lod, bool IsEdgePiece, ChunkPartGrabber grabber)

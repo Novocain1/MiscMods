@@ -351,9 +351,15 @@ namespace VSHUD
             {
                 lock (toExportLast)
                 {
-                    Prepare();
-                    PushToBottom();
-                    ProcessStackedExportables();
+                    try
+                    {
+                        Prepare();
+                        PushToBottom();
+                        ProcessStackedExportables();
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
         }

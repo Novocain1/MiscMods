@@ -9,7 +9,7 @@ using Vintagestory.Client.NoObf;
     Side = "Client",
     Authors = new[] { "Novocain" },
     IconPath = "creative/textures/block/command01-inside.png",
-    Version = "2.1.0")]
+    Version = "2.1.1")]
 
 namespace VSHUD
 {
