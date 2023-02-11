@@ -75,6 +75,9 @@ namespace VSHUD
         public bool FDShow { get; set; } = true;
         public float FDRange { get; set; } = 100.0f;
 
+        //write custom data like vs vertex flags as undefined lines in exported objs
+        public bool MEWriteCustomData { get; set; } = false;
+
         public ClockShowConfig ClockShowConfig { get; set; } = new ClockShowConfig();
 
         public List<int> DisabledColors { get; set; } = new List<int>();

@@ -132,37 +132,54 @@ namespace VSHUD
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
                         tw.WriteLine();
-                        tw.Write(string.Format("v {0} {1} {2}", Mesh.xyz[i * 3 + 0].ToString("F6"), Mesh.xyz[i * 3 + 1].ToString("F6"), Mesh.xyz[i * 3 + 2].ToString("F6")));
+                        //tw.Write(string.Format("v {0} {1} {2}", Mesh.xyz[i * 3 + 0].ToString("F6"), Mesh.xyz[i * 3 + 1].ToString("F6"), Mesh.xyz[i * 3 + 2].ToString("F6")));
+                        int vC = Mesh.CustomInts.Values[i];
+
+                        tw.Write
+                        (
+                            string.Format("v {0} {1} {2} {3} {4} {5}", 
+                            Mesh.xyz[i * 3 + 0].ToString("F6"), 
+                            Mesh.xyz[i * 3 + 1].ToString("F6"), 
+                            Mesh.xyz[i * 3 + 2].ToString("F6"),
+
+                            //bake into rgb max of block color and sun color
+                            GameMath.Max(Mesh.Rgba[i * 4 + 0] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6"),
+                            GameMath.Max(Mesh.Rgba[i * 4 + 1] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6"),
+                            GameMath.Max(Mesh.Rgba[i * 4 + 2] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6")
+                        ));
                     }
 
-                    for (int i = 0; i < Mesh.FlagsCount; i++)
+                    if (ConfigLoader.Config.MEWriteCustomData)
                     {
-                        tw.WriteLine();
-                        tw.Write(string.Format("vf {0}", Mesh.Flags[i].ToString()));
-                    }
+                        for (int i = 0; i < Mesh.FlagsCount; i++)
+                        {
+                            tw.WriteLine();
+                            tw.Write(string.Format("vf {0}", Mesh.Flags[i].ToString()));
+                        }
 
-                    for (int i = 0; i < (Mesh.CustomBytes?.Count ?? 0); i++)
-                    {
-                        tw.WriteLine();
-                        tw.Write(string.Format("cb {0}", Mesh.CustomBytes.Values[i].ToString()));
-                    }
+                        for (int i = 0; i < (Mesh.CustomBytes?.Count ?? 0); i++)
+                        {
+                            tw.WriteLine();
+                            tw.Write(string.Format("cb {0}", Mesh.CustomBytes.Values[i].ToString()));
+                        }
 
-                    for (int i = 0; i < (Mesh.CustomFloats?.Count ?? 0); i++)
-                    {
-                        tw.WriteLine();
-                        tw.Write(string.Format("cf {0}", Mesh.CustomFloats.Values[i].ToString("F6")));
-                    }
+                        for (int i = 0; i < (Mesh.CustomFloats?.Count ?? 0); i++)
+                        {
+                            tw.WriteLine();
+                            tw.Write(string.Format("cf {0}", Mesh.CustomFloats.Values[i].ToString("F6")));
+                        }
 
-                    for (int i = 0; i < (Mesh.CustomInts?.Count ?? 0); i++)
-                    {
-                        tw.WriteLine();
-                        tw.Write(string.Format("ci {0}", Mesh.CustomInts.Values[i].ToString()));
-                    }
+                        for (int i = 0; i < (Mesh.CustomInts?.Count ?? 0); i++)
+                        {
+                            tw.WriteLine();
+                            tw.Write(string.Format("ci {0}", Mesh.CustomInts.Values[i].ToString()));
+                        }
 
-                    for (int i = 0; i < (Mesh.CustomShorts?.Count ?? 0); i++)
-                    {
-                        tw.WriteLine();
-                        tw.Write(string.Format("cs {0}", Mesh.CustomShorts.Values[i].ToString()));
+                        for (int i = 0; i < (Mesh.CustomShorts?.Count ?? 0); i++)
+                        {
+                            tw.WriteLine();
+                            tw.Write(string.Format("cs {0}", Mesh.CustomShorts.Values[i].ToString()));
+                        }
                     }
 
                     for (int i = 0; i < uvs.Length / 2; i++)
@@ -170,9 +187,6 @@ namespace VSHUD
                         tw.WriteLine();
                         tw.Write(string.Format("vt {0} {1}", uvs[i * 2 + 0].ToString("F6"), uvs[i * 2 + 1].ToString("F6")));
                     }
-
-                    tw.WriteLine();
-                    tw.Write("usemtl TextureAtlas");
 
                     for (int i = 0; i < Mesh.Indices.Length / 3; i++)
                     {
