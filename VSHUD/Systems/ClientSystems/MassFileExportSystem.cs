@@ -132,8 +132,6 @@ namespace VSHUD
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
                         tw.WriteLine();
-                        //tw.Write(string.Format("v {0} {1} {2}", Mesh.xyz[i * 3 + 0].ToString("F6"), Mesh.xyz[i * 3 + 1].ToString("F6"), Mesh.xyz[i * 3 + 2].ToString("F6")));
-                        int vC = Mesh.CustomInts.Values[i];
 
                         tw.Write
                         (
