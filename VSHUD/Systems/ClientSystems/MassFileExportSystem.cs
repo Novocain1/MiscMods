@@ -378,8 +378,35 @@ namespace VSHUD
 
         public void ProcessStackedExportables()
         {
-            for (int i = 0; i < toExport.Count; i++)
+            int curCount = toExport.Count;
+            
+            int lastd = -1;
+
+            if (curCount > 0) VSHUDTaskSystem.MainThreadActionsAPI.Enqueue((api) => api.ShowChatMessage("VSHUD File Export System received a batch of exportables, processing now."));
+
+            for (int i = 0; i < curCount; i++)
             {
+                int d = (int)((double)i / curCount * 10.0);
+
+                if (d > lastd)
+                {
+                    string _ = string.Format("Exporting... |{0}{1}{2}{3}{4}{5}{6}{7}{8}|",
+                        d > 0 ? "|" : " ",
+                        d > 1 ? "|" : " ",
+                        d > 2 ? "|" : " ",
+                        d > 3 ? "|" : " ",
+                        d > 4 ? "|" : " ",
+                        d > 5 ? "|" : " ",
+                        d > 6 ? "|" : " ",
+                        d > 7 ? "|" : " ",
+                        d > 8 ? "|" : " "
+                    );
+
+                    VSHUDTaskSystem.MainThreadActionsAPI.Enqueue((api) => api.ShowChatMessage(_));
+                }
+                
+                lastd = d;
+
                 if (toExport.TryPop(out Exportable exportable))
                 {
                     if (exportable.Enabled)
@@ -397,6 +424,8 @@ namespace VSHUD
                     }
                 }
             }
+
+            if (curCount > 0) VSHUDTaskSystem.MainThreadActionsAPI.Enqueue((api) => api.ShowChatMessage("Batch done!"));
         }
 
         public override void Dispose(ClientMain game)

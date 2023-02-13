@@ -10,6 +10,7 @@ namespace VSHUD
     {
         public static ConcurrentQueue<Action> Actions = new ConcurrentQueue<Action>();
         public static ConcurrentQueue<Action> MainThreadActions = new ConcurrentQueue<Action>();
+        public static ConcurrentQueue<Action<ICoreClientAPI>> MainThreadActionsAPI = new ConcurrentQueue<Action<ICoreClientAPI>>();
 
         public ClientMain game;
 
@@ -33,6 +34,7 @@ namespace VSHUD
         public void ProcessMainThreadActions()
         {
             game.EnqueueMainThreadTask(() => ProcessActions(MainThreadActions).MoveNext(), "");
+            game.EnqueueMainThreadTask(() => ProcessActionsAPI(MainThreadActionsAPI).MoveNext(), "");
         }
 
         public IEnumerator ProcessActions(ConcurrentQueue<Action> actions)
@@ -43,6 +45,19 @@ namespace VSHUD
                 {
                     bool success = actions.TryDequeue(out Action action);
                     if (success) action?.Invoke();
+                    yield return null;
+                }
+            }
+        }
+
+        public IEnumerator ProcessActionsAPI(ConcurrentQueue<Action<ICoreClientAPI>> actions)
+        {
+            if (actions != null)
+            {
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    bool success = actions.TryDequeue(out Action<ICoreClientAPI> action);
+                    if (success) action?.Invoke((ICoreClientAPI)game.Api);
                     yield return null;
                 }
             }
