@@ -14,6 +14,15 @@ namespace VSHUD
         TwelveHour, TwentyFourHour
     }
 
+    public enum EnumBakeDataFlags
+    {
+        None       = 0b000,
+        BlockLight = 0b001,
+        SunLight   = 0b010,
+        Glow       = 0b100,
+        All        = 0b111,
+    }
+
     public class ClockShowConfig
     {
         public bool Calendar { get; set; } = true;
@@ -77,6 +86,8 @@ namespace VSHUD
 
         //write custom data like vs vertex flags as undefined lines in exported objs
         public bool MEWriteCustomData { get; set; } = false;
+
+        public EnumBakeDataFlags ExpMeshFlags { get; set; } = EnumBakeDataFlags.BlockLight | EnumBakeDataFlags.Glow;
 
         public ClockShowConfig ClockShowConfig { get; set; } = new ClockShowConfig();
 

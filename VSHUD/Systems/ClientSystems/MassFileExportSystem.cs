@@ -108,6 +108,8 @@ namespace VSHUD
         {
             try
             {
+                var flags = new VertexFlags();
+
                 Mesh.Translate(-0.5f, -0.5f, -0.5f);
 
                 float[] uvs = Mesh.Uv;
@@ -128,22 +130,57 @@ namespace VSHUD
                         Mesh.Uv[i * 4 + 2] = transform[2];
                         Mesh.Uv[i * 4 + 3] = transform[3];
                     }
+                    int[] rgb = new int[] { 0, 0, 0 };
+                    
+                    int exFlags = (int)ConfigLoader.Config.ExpMeshFlags;
 
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
+                        rgb[0] = 0;
+                        rgb[1] = 0;
+                        rgb[2] = 0;
+
+                        flags.All = Mesh.Flags[i];
+
+                        if (((exFlags >> 0) & 1) != 0)
+                        {
+                            rgb[0] = GameMath.Max(rgb[0], Mesh.Rgba[i * 4 + 0]);
+                            rgb[1] = GameMath.Max(rgb[1], Mesh.Rgba[i * 4 + 1]);
+                            rgb[2] = GameMath.Max(rgb[2], Mesh.Rgba[i * 4 + 2]);
+                        }
+                        
+                        if (((exFlags >> 1) & 1) != 0)
+                        {
+                            rgb[0] = GameMath.Max(rgb[0], Mesh.Rgba[i * 4 + 3]);
+                            rgb[1] = GameMath.Max(rgb[1], Mesh.Rgba[i * 4 + 3]);
+                            rgb[2] = GameMath.Max(rgb[2], Mesh.Rgba[i * 4 + 3]);
+                        }
+                        
+                        if (((exFlags >> 2) & 1) != 0)
+                        {
+                            rgb[0] = GameMath.Max(rgb[0], flags.GlowLevel);
+                            rgb[1] = GameMath.Max(rgb[1], flags.GlowLevel);
+                            rgb[2] = GameMath.Max(rgb[2], flags.GlowLevel);
+                        }
+
+                        rgb[0] = GameMath.Min(rgb[0], 255);
+                        rgb[1] = GameMath.Min(rgb[1], 255);
+                        rgb[2] = GameMath.Min(rgb[2], 255);
+
                         tw.WriteLine();
 
                         tw.Write
                         (
-                            string.Format("v {0} {1} {2} {3} {4} {5}", 
-                            Mesh.xyz[i * 3 + 0].ToString("F6"), 
-                            Mesh.xyz[i * 3 + 1].ToString("F6"), 
+                            string.Format(
+                            "v {0} {1} {2} {3} {4} {5}",
+                            Mesh.xyz[i * 3 + 0].ToString("F6"),
+                            Mesh.xyz[i * 3 + 1].ToString("F6"),
                             Mesh.xyz[i * 3 + 2].ToString("F6"),
 
-                            //bake into rgb max of block color and sun color
-                            GameMath.Max(Mesh.Rgba[i * 4 + 0] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6"),
-                            GameMath.Max(Mesh.Rgba[i * 4 + 1] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6"),
-                            GameMath.Max(Mesh.Rgba[i * 4 + 2] / 255f, Mesh.Rgba[i * 4 + 3] / 255f).ToString("F6")
+                            //bake into rgb glow level
+                            (rgb[0] / 255f).ToString("F6"),
+                            (rgb[1] / 255f).ToString("F6"),
+                            (rgb[2] / 255f).ToString("F6")
                         ));
                     }
 
