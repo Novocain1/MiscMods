@@ -84,9 +84,6 @@ namespace VSHUD
         public bool FDShow { get; set; } = true;
         public float FDRange { get; set; } = 100.0f;
 
-        //write custom data like vs vertex flags as undefined lines in exported objs
-        public bool MEWriteCustomData { get; set; } = false;
-
         public EnumBakeDataFlags ExpMeshFlags { get; set; } = EnumBakeDataFlags.BlockLight | EnumBakeDataFlags.Glow;
 
         public ClockShowConfig ClockShowConfig { get; set; } = new ClockShowConfig();

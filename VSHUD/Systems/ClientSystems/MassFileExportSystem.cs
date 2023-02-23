@@ -104,6 +104,8 @@ namespace VSHUD
             throw new NotImplementedException();
         }
 
+        int[] tmpRGB = new int[] { 0, 0, 0 };
+
         public virtual void ExportAsObj()
         {
             try
@@ -112,7 +114,8 @@ namespace VSHUD
 
                 Mesh.Translate(-0.5f, -0.5f, -0.5f);
 
-                float[] uvs = Mesh.Uv;
+                float[] uvs = new float[Mesh.Uv.Length];
+                Mesh.Uv.CopyTo(uvs, 0);
 
                 using (TextWriter tw = new StreamWriter(FilePath))
                 {
@@ -121,51 +124,53 @@ namespace VSHUD
                     for (int i = 0; i < Mesh.Uv.Length / 4; i++)
                     {
                         if (i + 4 > Mesh.UvCount) continue;
-                        float[] transform = new float[] { Mesh.Uv[i * 4 + 0], Mesh.Uv[i * 4 + 1], Mesh.Uv[i * 4 + 2], Mesh.Uv[i * 4 + 3] };
+                        float[] transform = new float[] { uvs[i * 4 + 0], uvs[i * 4 + 1], uvs[i * 4 + 2], uvs[i * 4 + 3] };
 
                         Mat22.Scale(transform, transform, new float[] { 1.0f, -1.0f });
                         Mat22X.Translate(transform, transform, new float[] { 0.0f, 1.0f });
-                        Mesh.Uv[i * 4 + 0] = transform[0];
-                        Mesh.Uv[i * 4 + 1] = transform[1];
-                        Mesh.Uv[i * 4 + 2] = transform[2];
-                        Mesh.Uv[i * 4 + 3] = transform[3];
+                        uvs[i * 4 + 0] = transform[0];
+                        uvs[i * 4 + 1] = transform[1];
+                        uvs[i * 4 + 2] = transform[2];
+                        uvs[i * 4 + 3] = transform[3];
                     }
-                    int[] rgb = new int[] { 0, 0, 0 };
                     
                     int exFlags = (int)ConfigLoader.Config.ExpMeshFlags;
 
                     for (int i = 0; i < Mesh.VerticesCount; i++)
                     {
-                        rgb[0] = 0;
-                        rgb[1] = 0;
-                        rgb[2] = 0;
+                        tmpRGB[0] = 0;
+                        tmpRGB[1] = 0;
+                        tmpRGB[2] = 0;
 
                         flags.All = Mesh.Flags[i];
 
+                        //Blocklight Flag
                         if (((exFlags >> 0) & 1) != 0)
                         {
-                            rgb[0] = GameMath.Max(rgb[0], Mesh.Rgba[i * 4 + 0]);
-                            rgb[1] = GameMath.Max(rgb[1], Mesh.Rgba[i * 4 + 1]);
-                            rgb[2] = GameMath.Max(rgb[2], Mesh.Rgba[i * 4 + 2]);
-                        }
-                        
-                        if (((exFlags >> 1) & 1) != 0)
-                        {
-                            rgb[0] = GameMath.Max(rgb[0], Mesh.Rgba[i * 4 + 3]);
-                            rgb[1] = GameMath.Max(rgb[1], Mesh.Rgba[i * 4 + 3]);
-                            rgb[2] = GameMath.Max(rgb[2], Mesh.Rgba[i * 4 + 3]);
-                        }
-                        
-                        if (((exFlags >> 2) & 1) != 0)
-                        {
-                            rgb[0] = GameMath.Max(rgb[0], flags.GlowLevel);
-                            rgb[1] = GameMath.Max(rgb[1], flags.GlowLevel);
-                            rgb[2] = GameMath.Max(rgb[2], flags.GlowLevel);
+                            tmpRGB[0] = GameMath.Max(tmpRGB[0], Mesh.Rgba[i * 4 + 0]);
+                            tmpRGB[1] = GameMath.Max(tmpRGB[1], Mesh.Rgba[i * 4 + 1]);
+                            tmpRGB[2] = GameMath.Max(tmpRGB[2], Mesh.Rgba[i * 4 + 2]);
                         }
 
-                        rgb[0] = GameMath.Min(rgb[0], 255);
-                        rgb[1] = GameMath.Min(rgb[1], 255);
-                        rgb[2] = GameMath.Min(rgb[2], 255);
+                        //Sunlight Flag
+                        if (((exFlags >> 1) & 1) != 0)
+                        {
+                            tmpRGB[0] = GameMath.Max(tmpRGB[0], Mesh.Rgba[i * 4 + 3]);
+                            tmpRGB[1] = GameMath.Max(tmpRGB[1], Mesh.Rgba[i * 4 + 3]);
+                            tmpRGB[2] = GameMath.Max(tmpRGB[2], Mesh.Rgba[i * 4 + 3]);
+                        }
+
+                        //Glow Flag
+                        if (((exFlags >> 2) & 1) != 0)
+                        {
+                            tmpRGB[0] = GameMath.Max(tmpRGB[0], flags.GlowLevel);
+                            tmpRGB[1] = GameMath.Max(tmpRGB[1], flags.GlowLevel);
+                            tmpRGB[2] = GameMath.Max(tmpRGB[2], flags.GlowLevel);
+                        }
+
+                        tmpRGB[0] = GameMath.Min(tmpRGB[0], 255);
+                        tmpRGB[1] = GameMath.Min(tmpRGB[1], 255);
+                        tmpRGB[2] = GameMath.Min(tmpRGB[2], 255);
 
                         tw.WriteLine();
 
@@ -177,44 +182,10 @@ namespace VSHUD
                             Mesh.xyz[i * 3 + 1].ToString("F6"),
                             Mesh.xyz[i * 3 + 2].ToString("F6"),
 
-                            //bake into rgb glow level
-                            (rgb[0] / 255f).ToString("F6"),
-                            (rgb[1] / 255f).ToString("F6"),
-                            (rgb[2] / 255f).ToString("F6")
+                            (tmpRGB[0] / 255f).ToString("F6"),
+                            (tmpRGB[1] / 255f).ToString("F6"),
+                            (tmpRGB[2] / 255f).ToString("F6")
                         ));
-                    }
-
-                    if (ConfigLoader.Config.MEWriteCustomData)
-                    {
-                        for (int i = 0; i < Mesh.FlagsCount; i++)
-                        {
-                            tw.WriteLine();
-                            tw.Write(string.Format("vf {0}", Mesh.Flags[i].ToString()));
-                        }
-
-                        for (int i = 0; i < (Mesh.CustomBytes?.Count ?? 0); i++)
-                        {
-                            tw.WriteLine();
-                            tw.Write(string.Format("cb {0}", Mesh.CustomBytes.Values[i].ToString()));
-                        }
-
-                        for (int i = 0; i < (Mesh.CustomFloats?.Count ?? 0); i++)
-                        {
-                            tw.WriteLine();
-                            tw.Write(string.Format("cf {0}", Mesh.CustomFloats.Values[i].ToString("F6")));
-                        }
-
-                        for (int i = 0; i < (Mesh.CustomInts?.Count ?? 0); i++)
-                        {
-                            tw.WriteLine();
-                            tw.Write(string.Format("ci {0}", Mesh.CustomInts.Values[i].ToString()));
-                        }
-
-                        for (int i = 0; i < (Mesh.CustomShorts?.Count ?? 0); i++)
-                        {
-                            tw.WriteLine();
-                            tw.Write(string.Format("cs {0}", Mesh.CustomShorts.Values[i].ToString()));
-                        }
                     }
 
                     for (int i = 0; i < uvs.Length / 2; i++)
