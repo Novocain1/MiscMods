@@ -31,7 +31,7 @@ namespace VSHUD
 
                 for (int i = 0; i < mgr.Atlasses.Count; i++)
                 {
-                    mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextureIds[i]);
+                    mgr.Atlasses[i].Export(Path.Combine(path, "blockAtlas-" + i), game, mgr.AtlasTextures[i].TextureId);
                 }
 
                 fileExport = api.VSHUD().fileExport;
@@ -61,7 +61,7 @@ namespace VSHUD
 
             grabber.fileExport.Push(new ExportableChunkPart(mesh, filePath, fileName, id));
         }
-        
+
         public static void Postfix(ChunkTesselator __instance, int chunkX, int chunkY, int chunkZ, TesselatedChunk tessChunk)
         {
             if (!Process) return;

@@ -24,7 +24,7 @@ namespace VSHUD
         VSHUDConfig config { get => capi.ModLoader.GetModSystem<WaypointUtils>().Config; }
         ShapeTesselatorManager tesselatormanager { get => capi.TesselatorManager as ShapeTesselatorManager; }
         bool shouldDispose = true;
-        
+
         List<Type> NonCulledTypes { get; set; }
         List<Type> IgnoredTypes { get; set; }
         List<Type> SneakPlacedTypes { get; set; }
@@ -66,7 +66,7 @@ namespace VSHUD
             };
         }
 
-        public Block GetInvBlock() 
+        public Block GetInvBlock()
         {
             Block block = invStack?.Block;
             if (block == null && invItem != null)
@@ -108,7 +108,7 @@ namespace VSHUD
             }
             else if (toBlock is BlockChisel)
             {
-                mRef = capi.ModLoader.GetModSystem<ChiselBlockModelCache>().GetOrCreateMeshRef(invStack);
+                mRef = capi.ModLoader.GetModSystem<MicroBlockModelCache>().GetOrCreateMeshRef(invStack);
                 shouldDispose = false;
                 return;
             }
@@ -133,7 +133,7 @@ namespace VSHUD
                 mesh.CompactBuffers();
             }
             else
-            { 
+            {
                 mesh = lod1;
                 mesh.IndicesMax = mesh.Indices.Count();
                 if (lod0 != null)
@@ -157,7 +157,7 @@ namespace VSHUD
             if (mRef != null && shouldDispose) mRef.Dispose();
             shouldDispose = true;
             MeshData rotMesh = mesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, toBlock.GetRotY(playerPos, playerSelection), 0);
-            
+
             mRef = rpi.UploadMesh(rotMesh);
         }
 
@@ -200,12 +200,12 @@ namespace VSHUD
 
             toBlock = capi.World.BlockAccessor.GetBlock(SetBlockRedirectMaster.blockId);
             if (toBlock == null || toBlock.Id == 0) return;
-            
+
             BlockPos adjPos = selClone.Position;
 
             UpdateBlockMesh(toBlock, adjPos);
             if (mRef == null) return;
-            
+
             if (!capi.World.BlockAccessor.GetBlock(adjPos).IsReplacableBy(invBlock)) return;
             rpi.GlToggleBlend(true);
 
@@ -214,14 +214,15 @@ namespace VSHUD
             Vec2f offset = adjPos.GetOffset(toBlock);
 
             IStandardShaderProgram prog = rpi.PreparedStandardShader(adjPos.X, adjPos.Y, adjPos.Z);
-            prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0];
+            //prog.Tex2D = capi.BlockTextureAtlas.AtlasTextureIds[0]; capi.BlockTextureAtlas.AtlasTextures[0]
+            prog.Tex2D = capi.BlockTextureAtlas.AtlasTextures[0].TextureId;
 
             prog.ModelMatrix = ModelMat
                 .Identity()
                 .Translate(adjPos.X - camPos.X, adjPos.Y - camPos.Y, adjPos.Z - camPos.Z)
                 .Translate(offset.X, 0, offset.Y)
                 .Values;
-            
+
             prog.ViewMatrix = rpi.CameraMatrixOriginf;
             prog.ProjectionMatrix = rpi.CurrentProjectionMatrix;
             Vec4f col = new Vec4f(1.0f, 1.0f, 1.0f, config.PROpacity);
@@ -230,7 +231,7 @@ namespace VSHUD
             {
                 col.Add(new Vec4f(config.PRTintColor[0], config.PRTintColor[1], config.PRTintColor[2], 0.0f));
             }
-            
+
             prog.SsaoAttn = 0;
             prog.AlphaTest = 0.05f;
             prog.RgbaTint = new Vec4f(col.R, col.G, col.B, config.PROpacity);
