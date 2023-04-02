@@ -1,10 +1,43 @@
 ﻿using Vintagestory.API.Client;
+using Vintagestory.API.Common;
+using Vintagestory.API.Common.CommandAbbr;
 using Vintagestory.API.MathTools;
 
 namespace VSHUD
 {
     public class CommandPlacementPreview : VSHUDCommand
     {
+
+        protected void RegisterCommands(ICoreClientAPI capi)
+        {
+            var parsers = capi.ChatCommands.Parsers;
+
+            capi.ChatCommands
+                .GetOrCreate("pconfig")
+                .IgnoreAdditionalArgs()
+                .WithDesc("Configure placement preview.")
+                .HandleWith(_ => TextCommandResult.Error("Specify subcommand."))
+                .BeginSub("show")
+                    .WithDesc("Switches placement preview on/off")
+                    .WithArgs(parsers.OptionalBool("on/off"))
+                    .HandleWith(TogglePlacementPreview)
+                .EndSub()
+                .BeginSub("tint")
+                    .WithDesc("Switches tinting placement preview meshes on/off")
+                    .WithArgs(parsers.OptionalBool("on/off"))
+                    .HandleWith(TogglePlacementPreviewTint)
+                .EndSub();
+        }
+        private TextCommandResult TogglePlacementPreview(TextCommandCallingArgs args)
+        {
+            Config.PRShow = (args.Parsers[0].IsMissing) ? !Config.PRShow : (bool)args[0];
+            return TextCommandResult.Success($"Block placement preview set to {Config.PRShow}.");
+        }
+        private TextCommandResult TogglePlacementPreviewTint(TextCommandCallingArgs args)
+        {
+            Config.PRTint = (args.Parsers[0].IsMissing) ? !Config.PRTint : (bool)args[0];
+            return TextCommandResult.Success($"Block placement preview set to {Config.PRTint}.");
+        }
         public CommandPlacementPreview(ICoreClientAPI capi) : base(capi)
         {
             Command = "pconfig";

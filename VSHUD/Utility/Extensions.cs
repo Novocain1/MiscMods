@@ -182,10 +182,7 @@ namespace VSHUD
 
         public static void InitializeAnimators(this BlockEntityAnimationUtil util, Vec3f rot, params string[] CacheDictKeys )
         {
-            foreach (var val in CacheDictKeys)
-            {
-                util.InitializeAnimator(val, rot);
-            }
+            util.InitializeAnimators(rot, CacheDictKeys);
         }
 
         public static void InitializeAnimators(this BlockEntityAnimationUtil util, Vec3f rot, List<string> CacheDictKeys)
@@ -300,7 +297,7 @@ namespace VSHUD
         public static float GetRotY(this Block block, Vec3d entityPos, BlockSelection blockSel)
         {
             BlockPos targetPos = blockSel.DidOffset ? blockSel.Position.AddCopy(blockSel.Face.Opposite) : blockSel.Position;
-            
+
             if (targetPos != null)
             {
                 if (block is BlockAnvil)
@@ -509,7 +506,7 @@ namespace VSHUD
 
             List<Thread> clientThreads = (world as ClientMain).GetField<List<Thread>>("clientThreads");
             Stack<ClientSystem> vanillaSystems = new Stack<ClientSystem>((world as ClientMain).GetField<ClientSystem[]>("clientSystems"));
-            
+
             foreach (var system in systems)
             {
                 vanillaSystems.Push(system);
@@ -522,9 +519,9 @@ namespace VSHUD
                 IsBackground = true,
                 Name = name
             };
-            
+
             thread.Start();
-            
+
             clientThreads.Add(thread);
 
             return thread;

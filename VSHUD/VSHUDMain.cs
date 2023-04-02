@@ -9,14 +9,14 @@ using Vintagestory.Client.NoObf;
     Side = "Client",
     Authors = new[] { "Novocain" },
     IconPath = "creative/textures/block/command01-inside.png",
-    Version = "2.1.2")]
+    Version = "2.2.0")]
 
 namespace VSHUD
 {
     public class VSHUDMain : ClientModSystem
     {
         ICoreClientAPI capi;
-        
+
         public MassFileExportSystem fileExport;
         public VSHUDTaskSystem taskSystem;
 
